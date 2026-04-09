@@ -10,6 +10,7 @@ use App\Http\Controllers\AvisController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InscriptionEtablissementController;
 use App\Http\Controllers\PhoneController;
+use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
 // Homepage
@@ -45,6 +46,9 @@ Route::get('/contact-top-institut.html', [ContactController::class, 'showGeneral
 Route::post('/contact', [ContactController::class, 'sendGeneral'])->name('contact.send');
 Route::get('/contact-etablissement/{etablissement}', [ContactController::class, 'showEtablissement'])->name('contact.etablissement');
 Route::post('/contact-etablissement/{etablissement}', [ContactController::class, 'sendEtablissement'])->name('contact.etablissement.send');
+
+// Sitemap
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 // Static pages
 Route::view('/mentions_legales.html', 'pages.mentions-legales')->name('mentions-legales');

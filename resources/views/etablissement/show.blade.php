@@ -1,9 +1,60 @@
-<x-layouts.app :title="$etablissement->titre . ' - TopInstitut'">
+<x-layouts.app
+    :title="$etablissement->titre . ' - ' . $etablissement->type_label . ' à ' . $etablissement->ville . ' - TopInstitut'"
+    :description="$etablissement->titre . ', ' . strtolower($etablissement->type_label) . ' à ' . $etablissement->ville . ($etablissement->nb_avis > 0 ? '. Note : ' . number_format($etablissement->moyenne, 1, ',', '') . '/5 (' . $etablissement->nb_avis . ' avis)' : '') . '. Adresse, horaires, avis et coordonnées.'"
+>
     @if($etablissement->latitude && $etablissement->longitude)
         @push('head')
             <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css" />
         @endpush
     @endif
+
+    @push('jsonld')
+    <x-breadcrumb-jsonld :items="[
+        ['name' => 'Accueil', 'url' => '/'],
+        ['name' => $etablissement->type_label, 'url' => '/recherche_institut.html'],
+        ['name' => $etablissement->titre],
+    ]" />
+    @endpush
+
+    {{-- Schema.org LocalBusiness --}}
+    @push('jsonld')
+    <script type="application/ld+json">
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'BeautySalon',
+        'name' => $etablissement->titre,
+        'description' => $etablissement->accroche ?: Str::limit(strip_tags($etablissement->description), 200),
+        'url' => url($etablissement->url),
+        'telephone' => $etablissement->telephone,
+        'address' => [
+            '@type' => 'PostalAddress',
+            'streetAddress' => $etablissement->adresse,
+            'postalCode' => $etablissement->cp,
+            'addressLocality' => $etablissement->ville,
+            'addressCountry' => 'FR',
+        ],
+    ] + ($etablissement->latitude ? [
+        'geo' => [
+            '@type' => 'GeoCoordinates',
+            'latitude' => $etablissement->latitude,
+            'longitude' => $etablissement->longitude,
+        ],
+    ] : [])
+    + ($etablissement->nb_avis > 0 ? [
+        'aggregateRating' => [
+            '@type' => 'AggregateRating',
+            'ratingValue' => number_format($etablissement->moyenne, 1, '.', ''),
+            'bestRating' => '5',
+            'worstRating' => '1',
+            'ratingCount' => $etablissement->nb_avis,
+        ],
+    ] : [])
+    + ($etablissement->photo ? [
+        'image' => asset('storage/etablissements/' . $etablissement->id . '/' . $etablissement->photos->first()?->filename),
+    ] : []), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+    </script>
+    @endpush
+
     <div class="max-w-7xl mx-auto px-4 py-8">
         {{-- Breadcrumb --}}
         <nav class="text-sm text-gray-500 mb-6">

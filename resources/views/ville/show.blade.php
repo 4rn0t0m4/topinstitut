@@ -1,4 +1,12 @@
-<x-layouts.app :title="'Instituts de beauté à ' . $ville->nom_ville . ' - TopInstitut'">
+<x-layouts.app :title="'Instituts de beauté à ' . $ville->nom_ville . ' (' . $ville->code_postal . ') - TopInstitut'" :description="'Liste des instituts de beauté, spas et esthéticiennes à ' . $ville->nom_ville . ' (' . $ville->code_postal . '). Consultez les avis, horaires et coordonnées.'">
+    @push('jsonld')
+    <x-breadcrumb-jsonld :items="[
+        ['name' => 'Accueil', 'url' => '/'],
+        ['name' => $ville->departementRelation->departement ?? '', 'url' => '/departement-' . ($ville->departementRelation->departement_url ?? '') . '.html'],
+        ['name' => $ville->nom_ville],
+    ]" />
+    @endpush
+
     <div class="max-w-7xl mx-auto px-4 py-8">
         <nav class="text-sm text-gray-500 mb-6">
             <a href="{{ route('home') }}" class="hover:text-pink-600">Accueil</a>

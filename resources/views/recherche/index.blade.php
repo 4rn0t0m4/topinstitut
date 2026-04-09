@@ -1,4 +1,4 @@
-<x-layouts.app title="Recherche - TopInstitut">
+<x-layouts.app title="Rechercher un institut de beauté - TopInstitut" description="Recherchez un institut de beauté, spa, esthéticienne ou thalasso par nom, ville ou catégorie de prestation.">
     <div class="max-w-7xl mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-6">Recherche</h1>
 

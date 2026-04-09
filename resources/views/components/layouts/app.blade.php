@@ -48,7 +48,7 @@
         </div>
     @endif
 
-    @if($errors->any())
+    @if(isset($errors) && $errors->any())
         <div class="max-w-7xl mx-auto px-4 mt-4">
             <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 <ul class="list-disc list-inside">
@@ -94,5 +94,6 @@
             </div>
         </div>
     </footer>
+    @stack('jsonld')
 </body>
 </html>

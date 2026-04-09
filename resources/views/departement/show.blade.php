@@ -1,4 +1,11 @@
-<x-layouts.app :title="'Instituts de beauté ' . $departement->article . $departement->departement . ' - TopInstitut'">
+<x-layouts.app :title="'Instituts de beauté ' . $departement->article . $departement->departement . ' - TopInstitut'" :description="'Tous les instituts de beauté, spas et esthéticiennes ' . $departement->article . $departement->departement . '. Trouvez le meilleur institut près de chez vous.'">
+    @push('jsonld')
+    <x-breadcrumb-jsonld :items="[
+        ['name' => 'Accueil', 'url' => '/'],
+        ['name' => $departement->departement],
+    ]" />
+    @endpush
+
     <div class="max-w-7xl mx-auto px-4 py-8">
         <nav class="text-sm text-gray-500 mb-6">
             <a href="{{ route('home') }}" class="hover:text-pink-600">Accueil</a>

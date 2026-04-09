@@ -1,4 +1,20 @@
-<x-layouts.app title="TopInstitut - Annuaire des instituts de beauté en France">
+<x-layouts.app title="TopInstitut - Annuaire des instituts de beauté, spas et thalassos en France" description="Trouvez les meilleurs instituts de beauté, esthéticiennes à domicile, spas et thalassos près de chez vous. Avis clients, horaires, coordonnées.">
+    @push('jsonld')
+    <script type="application/ld+json">
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'WebSite',
+        'name' => 'TopInstitut',
+        'url' => url('/'),
+        'description' => 'Annuaire des instituts de beauté, spas et thalassos en France',
+        'potentialAction' => [
+            '@type' => 'SearchAction',
+            'target' => url('/recherche_institut.html') . '?nom={search_term_string}',
+            'query-input' => 'required name=search_term_string',
+        ],
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+    </script>
+    @endpush
     {{-- Hero / Search --}}
     <section class="bg-gradient-to-r from-pink-500 to-pink-600 text-white py-16">
         <div class="max-w-4xl mx-auto px-4 text-center">
@@ -28,7 +44,7 @@
                             <h3 class="font-semibold text-gray-900">{{ $avis->titre }}</h3>
                             <p class="text-sm text-gray-600 mt-1">{{ Str::limit($avis->contenu, 100) }}</p>
                             <div class="mt-3 flex justify-between items-center text-xs text-gray-400">
-                                <span>par {{ $avis->user->pseudo }}</span>
+                                <span>par {{ $avis->auteur_name }}</span>
                                 <a href="{{ $avis->etablissement->url }}" class="text-pink-600 hover:underline">{{ $avis->etablissement->titre }}</a>
                             </div>
                         </div>
