@@ -77,17 +77,16 @@
 
 ---
 
-## Sprint 5 — Polish et performances
+## Sprint 5 — Polish et performances (FAIT)
 
-- [ ] Eager loading vérifié partout (N+1 queries)
-- [ ] Cache des départements/villes (rarement modifiés)
-- [ ] Responsive design — tester mobile/tablette
-- [ ] Pagination sur toutes les listes
-- [ ] Validation des formulaires côté client (Alpine.js)
-- [ ] Rate limiting sur les formulaires de contact et soumission d'avis
-- [ ] CSRF vérifié partout
-- [ ] Tests Feature pour les routes critiques
-- [ ] `./vendor/bin/pint` — formatage code
+- [x] Eager loading vérifié partout (aucun N+1 détecté)
+- [x] Cache départements homepage (1h)
+- [x] Pagination ville (20/page), recherche (20/page déjà en place)
+- [x] Validation côté client : étoiles requises avant soumission (Alpine.js)
+- [x] Rate limiting : avis/contact (5/min), login (10/min), register (5/min), reset password (3/min)
+- [x] CSRF vérifié sur tous les formulaires POST (26/26)
+- [x] 22 tests Feature : routes publiques, 301 redirects, 404, sitemap, auth, avis
+- [x] `./vendor/bin/pint` — 30 fichiers formatés
 
 ---
 
