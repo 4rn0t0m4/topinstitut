@@ -1,0 +1,48 @@
+<x-layouts.app title="Mon espace - TopInstitut">
+    <div class="max-w-5xl mx-auto px-4 py-8">
+        <h1 class="text-2xl font-bold mb-6">Mon espace</h1>
+
+        <div class="grid md:grid-cols-3 gap-6">
+            {{-- Profile card --}}
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <h2 class="font-semibold mb-3">Mon profil</h2>
+                <p class="text-sm text-gray-600">{{ $user->pseudo }}</p>
+                <p class="text-sm text-gray-500">{{ $user->email }}</p>
+                <p class="text-sm text-gray-500 mt-2">{{ $user->avis_nb }} avis publiés</p>
+                <a href="{{ route('client.profil.edit') }}" class="text-pink-600 text-sm hover:underline mt-3 inline-block">Modifier mon profil</a>
+            </div>
+
+            {{-- Establishments --}}
+            <div class="md:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-semibold">Mes établissements</h2>
+                </div>
+
+                @forelse($etablissements as $etab)
+                    <div class="bg-white rounded-lg shadow-sm border p-4 mb-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <a href="{{ $etab->url }}" class="font-medium hover:text-pink-600">{{ $etab->titre }}</a>
+                                <p class="text-sm text-gray-500">{{ $etab->type_label }} - {{ $etab->ville }}</p>
+                            </div>
+                            <span class="text-sm text-gray-400">{{ $etab->avis_count }} avis</span>
+                        </div>
+                        <div class="flex gap-3 mt-3 text-sm">
+                            <a href="{{ route('client.etablissement.edit', $etab) }}" class="text-pink-600 hover:underline">Coordonnées</a>
+                            <a href="{{ route('client.etablissement.presentation', $etab) }}" class="text-pink-600 hover:underline">Présentation</a>
+                            <a href="{{ route('client.etablissement.horaires', $etab) }}" class="text-pink-600 hover:underline">Horaires</a>
+                            <a href="{{ route('client.etablissement.photos', $etab) }}" class="text-pink-600 hover:underline">Photos</a>
+                            <a href="{{ route('client.etablissement.avis', $etab) }}" class="text-pink-600 hover:underline">Avis</a>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-gray-500">Vous ne gérez aucun établissement.</p>
+                @endforelse
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <a href="{{ route('client.mes-avis') }}" class="text-pink-600 hover:underline text-sm">Voir mes avis</a>
+        </div>
+    </div>
+</x-layouts.app>

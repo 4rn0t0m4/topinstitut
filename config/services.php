@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'audiotel' => [
+        'enabled' => env('AUDIOTEL_ENABLED', false),
+        'id_client' => env('AUDIOTEL_ID_CLIENT', 'BWIAPVJkBWEDYQBuB3MENlZiUzJWMAc7'),
+        'id_service' => env('AUDIOTEL_ID_SERVICE', 'BWIAPVJkBWQDZgA1B28ELFY5UzdWNQcxAj0='),
+    ],
+
 ];
