@@ -48,7 +48,7 @@ class AvisController extends Controller
         if (! $request->user()) {
             $this->sendConfirmationEmail($avis);
 
-            return back()->with('success', 'Merci ! Un email de confirmation vous a été envoyé à ' . $avis->email_auteur . '. Veuillez cliquer sur le lien pour valider votre avis.');
+            return back()->with('success', 'Merci ! Un email de confirmation vous a été envoyé à '.$avis->email_auteur.'. Veuillez cliquer sur le lien pour valider votre avis.');
         }
 
         return back()->with('success', 'Votre avis a été soumis et sera publié après modération.');

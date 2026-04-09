@@ -12,6 +12,7 @@ class RatingService
 
         if ($avis->isEmpty()) {
             $etablissement->update(['moyenne' => 0, 'nb_avis' => 0]);
+
             return;
         }
 

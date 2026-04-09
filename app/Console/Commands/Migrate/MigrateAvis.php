@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 class MigrateAvis extends Command
 {
     protected $signature = 'migrate:legacy-avis';
+
     protected $description = 'Migre les avis et votes utile/inutile depuis la base legacy';
 
     public function handle(): int
@@ -38,6 +39,7 @@ class MigrateAvis extends Command
 
                 if (! $etab || ! $user) {
                     $skipped++;
+
                     continue;
                 }
 
@@ -122,6 +124,7 @@ class MigrateAvis extends Command
     private function convert(string $value): string
     {
         $result = mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
+
         return $result !== false ? $result : $value;
     }
 }

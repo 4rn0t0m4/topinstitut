@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 class MigrateDepartements extends Command
 {
     protected $signature = 'migrate:legacy-departements';
+
     protected $description = 'Migre les départements depuis la base legacy';
 
     public function handle(): int
@@ -53,12 +54,14 @@ class MigrateDepartements extends Command
         }
 
         $this->info("$count départements migrés.");
+
         return self::SUCCESS;
     }
 
     private function convert(string $value): string
     {
         $result = mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
+
         return $result !== false ? $result : $value;
     }
 }

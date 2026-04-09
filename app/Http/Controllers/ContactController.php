@@ -50,7 +50,7 @@ class ContactController extends Controller
             Mail::raw($request->contenu, function ($message) use ($request, $etablissement) {
                 $message->from($request->email)
                     ->to($etablissement->email)
-                    ->subject('Message via TopInstitut - ' . $etablissement->titre);
+                    ->subject('Message via TopInstitut - '.$etablissement->titre);
             });
         }
 

@@ -2,12 +2,15 @@
 
 namespace App\Console\Commands\Migrate;
 
+use App\Services\SlugService;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class MigrateEtablissements extends Command
 {
     protected $signature = 'migrate:legacy-etablissements';
+
     protected $description = 'Migre les établissements, slugs, catégories et administrateurs depuis la base legacy';
 
     public function handle(): int
@@ -34,21 +37,21 @@ class MigrateEtablissements extends Command
 
                 $slug = trim($row->url);
                 if (! $slug) {
-                    $slug = \App\Services\SlugService::generate($row->titre);
+                    $slug = SlugService::generate($row->titre);
                 }
 
                 // Garantir l'unicité du slug
                 $baseSlug = $slug;
                 $i = 1;
                 while (DB::table('etablissements')->where('slug', $slug)->exists()) {
-                    $slug = $baseSlug . '-' . $i++;
+                    $slug = $baseSlug.'-'.$i++;
                 }
 
                 $createdAt = null;
                 if ($row->date_inscription) {
                     $createdAt = is_numeric($row->date_inscription)
-                        ? \Carbon\Carbon::createFromTimestamp((int) $row->date_inscription)
-                        : \Carbon\Carbon::parse($row->date_inscription);
+                        ? Carbon::createFromTimestamp((int) $row->date_inscription)
+                        : Carbon::parse($row->date_inscription);
                 }
 
                 DB::table('etablissements')->insert([
@@ -115,7 +118,7 @@ class MigrateEtablissements extends Command
             }
 
             $createdAt = $row->date
-                ? \Carbon\Carbon::createFromTimestamp((int) $row->date)
+                ? Carbon::createFromTimestamp((int) $row->date)
                 : now();
 
             DB::table('etablissement_slugs')->insert([
@@ -202,6 +205,7 @@ class MigrateEtablissements extends Command
     private function convert(string $value): string
     {
         $result = mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
+
         return $result !== false ? $result : $value;
     }
 }

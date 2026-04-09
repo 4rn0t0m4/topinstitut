@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 class MigrateHoraires extends Command
 {
     protected $signature = 'migrate:legacy-horaires';
+
     protected $description = 'Migre les horaires depuis la base legacy';
 
     private const JOUR_MAP = [
@@ -33,18 +34,21 @@ class MigrateHoraires extends Command
             $etab = DB::table('etablissements')->where('legacy_id', $row->idEtablissement)->first();
             if (! $etab) {
                 $skipped++;
+
                 continue;
             }
 
             $jour = self::JOUR_MAP[strtolower(trim($row->jour))] ?? null;
             if (! $jour) {
                 $skipped++;
+
                 continue;
             }
 
             // Éviter les doublons (etablissement_id + jour unique)
             if (DB::table('horaires')->where('etablissement_id', $etab->id)->where('jour', $jour)->exists()) {
                 $skipped++;
+
                 continue;
             }
 
@@ -63,6 +67,7 @@ class MigrateHoraires extends Command
         }
 
         $this->info("$count horaires migrés, $skipped ignorés.");
+
         return self::SUCCESS;
     }
 
@@ -83,6 +88,7 @@ class MigrateHoraires extends Command
             if ($h > 23 || $min > 59) {
                 return null;
             }
+
             return sprintf('%02d:%02d:00', $h, $min);
         }
 
@@ -93,6 +99,7 @@ class MigrateHoraires extends Command
             if ($h > 23 || $min > 59) {
                 return null;
             }
+
             return sprintf('%02d:%02d:00', $h, $min);
         }
 

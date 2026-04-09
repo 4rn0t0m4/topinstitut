@@ -2,12 +2,14 @@
 
 namespace App\Console\Commands\Migrate;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class MigrateActualites extends Command
 {
     protected $signature = 'migrate:legacy-actualites';
+
     protected $description = 'Migre les actualités depuis la base legacy';
 
     public function handle(): int
@@ -30,8 +32,8 @@ class MigrateActualites extends Command
             $createdAt = null;
             if ($row->last_maj) {
                 $createdAt = is_numeric($row->last_maj)
-                    ? \Carbon\Carbon::createFromTimestamp((int) $row->last_maj)
-                    : \Carbon\Carbon::parse($row->last_maj);
+                    ? Carbon::createFromTimestamp((int) $row->last_maj)
+                    : Carbon::parse($row->last_maj);
             }
 
             DB::table('actualites')->insert([
@@ -47,12 +49,14 @@ class MigrateActualites extends Command
         }
 
         $this->info("$count actualités migrées.");
+
         return self::SUCCESS;
     }
 
     private function convert(string $value): string
     {
         $result = mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
+
         return $result !== false ? $result : $value;
     }
 }

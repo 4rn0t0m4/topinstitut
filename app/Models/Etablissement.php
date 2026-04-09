@@ -56,7 +56,7 @@ class Etablissement extends Model
 
     public function getUrlAttribute(): string
     {
-        return '/' . $this->type_slug . '/' . $this->slug . '.html';
+        return '/'.$this->type_slug.'/'.$this->slug.'.html';
     }
 
     // --- Scopes ---

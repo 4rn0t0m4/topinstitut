@@ -14,7 +14,7 @@ class EtablissementController extends Controller
         $query = Etablissement::query();
 
         if ($request->filled('search')) {
-            $query->where('titre', 'like', '%' . $request->search . '%');
+            $query->where('titre', 'like', '%'.$request->search.'%');
         }
 
         if ($request->filled('valide')) {
@@ -59,7 +59,7 @@ class EtablissementController extends Controller
 
     public function create()
     {
-        return view('admin.etablissements.edit', ['etablissement' => new Etablissement()]);
+        return view('admin.etablissements.edit', ['etablissement' => new Etablissement]);
     }
 
     public function store(Request $request)

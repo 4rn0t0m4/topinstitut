@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 class RecalculateRatings extends Command
 {
     protected $signature = 'migrate:recalculate-ratings';
+
     protected $description = 'Recalcule moyenne et nb_avis pour tous les établissements';
 
     public function handle(RatingService $ratingService): int
@@ -30,6 +31,7 @@ class RecalculateRatings extends Command
         $bar->finish();
         $this->newLine();
         $this->info("$updated établissements recalculés.");
+
         return self::SUCCESS;
     }
 }

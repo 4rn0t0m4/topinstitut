@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\EtablissementController;
 use App\Http\Controllers\Admin\AvisController;
 use App\Http\Controllers\Admin\CategorieController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EtablissementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

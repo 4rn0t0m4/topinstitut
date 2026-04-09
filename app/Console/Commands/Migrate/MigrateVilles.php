@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 class MigrateVilles extends Command
 {
     protected $signature = 'migrate:legacy-villes';
+
     protected $description = 'Migre les villes depuis la base legacy';
 
     public function handle(): int
@@ -30,7 +31,7 @@ class MigrateVilles extends Command
                 // Garantir l'unicité de l'URL
                 $url = $row->url;
                 if (isset($seenUrls[$url])) {
-                    $url = $url . '-' . $row->id;
+                    $url = $url.'-'.$row->id;
                 }
                 $seenUrls[$url] = true;
 
@@ -55,12 +56,14 @@ class MigrateVilles extends Command
         $bar->finish();
         $this->newLine();
         $this->info("$count villes migrées.");
+
         return self::SUCCESS;
     }
 
     private function convert(string $value): string
     {
         $result = mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
+
         return $result !== false ? $result : $value;
     }
 }

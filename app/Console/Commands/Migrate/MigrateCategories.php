@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 class MigrateCategories extends Command
 {
     protected $signature = 'migrate:legacy-categories';
+
     protected $description = 'Migre les catégories de prestation depuis la base legacy';
 
     public function handle(): int
@@ -40,13 +41,15 @@ class MigrateCategories extends Command
             }
         }
 
-        $this->info(count($rows) . " catégories migrées ($updated avec parent).");
+        $this->info(count($rows)." catégories migrées ($updated avec parent).");
+
         return self::SUCCESS;
     }
 
     private function convert(string $value): string
     {
         $result = mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
+
         return $result !== false ? $result : $value;
     }
 }

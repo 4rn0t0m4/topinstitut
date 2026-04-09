@@ -1,16 +1,16 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\EtablissementController;
-use App\Http\Controllers\DepartementController;
-use App\Http\Controllers\VilleController;
-use App\Http\Controllers\RechercheController;
 use App\Http\Controllers\AvisController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\DepartementController;
+use App\Http\Controllers\EtablissementController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InscriptionEtablissementController;
 use App\Http\Controllers\PhoneController;
+use App\Http\Controllers\RechercheController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\VilleController;
 use Illuminate\Support\Facades\Route;
 
 // Homepage
@@ -33,7 +33,7 @@ Route::get('/recherche_institut.html', [RechercheController::class, 'index'])->n
 Route::post('/ajax/phone', [PhoneController::class, 'reveal'])->name('phone.reveal');
 
 // Reviews
-Route::post('/avis', [AvisController::class, 'store'])->name('avis.store');
+Route::post('/avis', [AvisController::class, 'store'])->middleware('throttle:5,1')->name('avis.store');
 Route::get('/avis/confirmer/{token}', [AvisController::class, 'confirmerEmail'])->name('avis.confirmer');
 Route::post('/ajax/avis-utile', [AvisController::class, 'toggleUtile'])->middleware('auth')->name('avis.utile');
 
@@ -43,9 +43,9 @@ Route::post('/ajouter-un-institut-de-beaute', [InscriptionEtablissementControlle
 
 // Contact
 Route::get('/contact-top-institut.html', [ContactController::class, 'showGeneral'])->name('contact');
-Route::post('/contact', [ContactController::class, 'sendGeneral'])->name('contact.send');
+Route::post('/contact', [ContactController::class, 'sendGeneral'])->middleware('throttle:5,1')->name('contact.send');
 Route::get('/contact-etablissement/{etablissement}', [ContactController::class, 'showEtablissement'])->name('contact.etablissement');
-Route::post('/contact-etablissement/{etablissement}', [ContactController::class, 'sendEtablissement'])->name('contact.etablissement.send');
+Route::post('/contact-etablissement/{etablissement}', [ContactController::class, 'sendEtablissement'])->middleware('throttle:5,1')->name('contact.etablissement.send');
 
 // Sitemap
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
@@ -58,11 +58,11 @@ Route::view('/cgv.html', 'pages.cgv')->name('cgv');
 // Auth
 Route::middleware('guest')->group(function () {
     Route::get('/connexion', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/connexion', [AuthController::class, 'login']);
+    Route::post('/connexion', [AuthController::class, 'login'])->middleware('throttle:10,1');
     Route::get('/inscription', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/inscription', [AuthController::class, 'register']);
+    Route::post('/inscription', [AuthController::class, 'register'])->middleware('throttle:5,1');
     Route::get('/mot-de-passe-oublie', [AuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('/mot-de-passe-oublie', [AuthController::class, 'sendResetLink'])->name('password.email');
+    Route::post('/mot-de-passe-oublie', [AuthController::class, 'sendResetLink'])->middleware('throttle:3,1')->name('password.email');
     Route::get('/reinitialiser-mot-de-passe/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
     Route::post('/reinitialiser-mot-de-passe', [AuthController::class, 'resetPassword'])->name('password.update');
 });

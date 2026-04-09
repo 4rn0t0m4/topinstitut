@@ -24,6 +24,7 @@
                     <x-etablissement-card :etablissement="$etablissement" />
                 @endforeach
             </div>
+            <div class="mt-6">{{ $etablissements->links() }}</div>
         @else
             <p class="text-gray-500">Aucun institut trouvé à {{ $ville->nom_ville }}.</p>
         @endif

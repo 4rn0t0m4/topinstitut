@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Departement extends Model
 {
     protected $primaryKey = 'numero';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

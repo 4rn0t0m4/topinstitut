@@ -15,7 +15,7 @@ class ProfilController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'pseudo' => 'required|string|max:255|unique:users,pseudo,' . $request->user()->id,
+            'pseudo' => 'required|string|max:255|unique:users,pseudo,'.$request->user()->id,
             'nom' => 'nullable|string|max:255',
             'prenom' => 'nullable|string|max:255',
             'sexe' => 'nullable|in:male,female',

@@ -182,9 +182,14 @@
                     @endforeach
 
                     {{-- Review form --}}
-                    <div class="bg-white border rounded-lg p-6 mt-6">
+                    <div class="bg-white border rounded-lg p-6 mt-6" x-data="{ submitError: '' }">
                         <h3 class="text-lg font-semibold mb-4">Donner votre avis</h3>
-                        <form action="{{ route('avis.store') }}" method="POST">
+                        <form action="{{ route('avis.store') }}" method="POST" @submit="
+                            const notes = ['note_accueil','note_qualite','note_choix','note_prix','note_cadre','note_proprete'];
+                            const missing = notes.filter(n => !$el.querySelector('[name='+n+']').value || $el.querySelector('[name='+n+']').value === '0');
+                            if (missing.length) { submitError = 'Veuillez attribuer toutes les notes (étoiles).'; $event.preventDefault(); return; }
+                            submitError = '';
+                        ">
                             @csrf
                             <input type="hidden" name="etablissement_id" value="{{ $etablissement->id }}">
 
@@ -218,6 +223,7 @@
                                 @endforeach
                             </div>
 
+                            <p x-show="submitError" x-text="submitError" class="text-red-500 text-sm mb-3" x-cloak></p>
                             <button type="submit" class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700">Envoyer mon avis</button>
                         </form>
                     </div>

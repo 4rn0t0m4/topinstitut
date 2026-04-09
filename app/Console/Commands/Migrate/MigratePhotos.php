@@ -10,6 +10,7 @@ class MigratePhotos extends Command
 {
     protected $signature = 'migrate:legacy-photos
         {--source=/Users/arnaud/Sites/TopInstitut/upload/etablissement : Chemin vers les photos legacy}';
+
     protected $description = 'Migre les photos d\'établissements depuis la base legacy et copie les fichiers';
 
     public function handle(): int
@@ -50,16 +51,17 @@ class MigratePhotos extends Command
             $count++;
 
             // Copier le fichier physique
-            $srcFile = $sourcePath . '/' . $row->idEtablissement . '/' . $filename;
+            $srcFile = $sourcePath.'/'.$row->idEtablissement.'/'.$filename;
             if (File::exists($srcFile)) {
-                $etabDir = $destPath . '/' . $etab->id;
+                $etabDir = $destPath.'/'.$etab->id;
                 File::ensureDirectoryExists($etabDir);
-                File::copy($srcFile, $etabDir . '/' . $filename);
+                File::copy($srcFile, $etabDir.'/'.$filename);
                 $copied++;
             }
         }
 
         $this->info("$count photos migrées en DB, $copied fichiers copiés.");
+
         return self::SUCCESS;
     }
 }

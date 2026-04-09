@@ -2,14 +2,15 @@
 
 namespace App\Console\Commands\Migrate;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class MigrateUsers extends Command
 {
     protected $signature = 'migrate:legacy-users';
+
     protected $description = 'Migre les utilisateurs depuis la base legacy (table client)';
 
     public function handle(): int
@@ -29,19 +30,21 @@ class MigrateUsers extends Command
                 $email = trim($row->email);
                 if (! $email || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     $skipped++;
+
                     continue;
                 }
 
                 // Éviter les doublons email
                 if (DB::table('users')->where('email', $email)->exists()) {
                     $skipped++;
+
                     continue;
                 }
 
-                $pseudo = $this->convert(trim($row->pseudo)) ?: 'user_' . $row->id;
+                $pseudo = $this->convert(trim($row->pseudo)) ?: 'user_'.$row->id;
                 // Éviter les doublons pseudo
                 while (DB::table('users')->where('pseudo', $pseudo)->exists()) {
-                    $pseudo = trim($row->pseudo) . '_' . $row->id;
+                    $pseudo = trim($row->pseudo).'_'.$row->id;
                 }
 
                 $sexe = match (strtolower(trim($row->sexe))) {
@@ -53,7 +56,7 @@ class MigrateUsers extends Command
                 $anniversaire = null;
                 if ($row->anniversaire && $row->anniversaire !== '--' && $row->anniversaire !== '0000-00-00') {
                     try {
-                        $anniversaire = \Carbon\Carbon::parse($row->anniversaire)->format('Y-m-d');
+                        $anniversaire = Carbon::parse($row->anniversaire)->format('Y-m-d');
                     } catch (\Exception) {
                     }
                 }
@@ -61,8 +64,8 @@ class MigrateUsers extends Command
                 $createdAt = null;
                 if ($row->date_inscription) {
                     $createdAt = is_numeric($row->date_inscription)
-                        ? \Carbon\Carbon::createFromTimestamp((int) $row->date_inscription)
-                        : \Carbon\Carbon::parse($row->date_inscription);
+                        ? Carbon::createFromTimestamp((int) $row->date_inscription)
+                        : Carbon::parse($row->date_inscription);
                 }
 
                 DB::table('users')->insert([
@@ -96,12 +99,14 @@ class MigrateUsers extends Command
         $bar->finish();
         $this->newLine();
         $this->info("$count utilisateurs migrés, $skipped ignorés (email invalide ou doublon).");
+
         return self::SUCCESS;
     }
 
     private function convert(string $value): string
     {
         $result = mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
+
         return $result !== false ? $result : $value;
     }
 }

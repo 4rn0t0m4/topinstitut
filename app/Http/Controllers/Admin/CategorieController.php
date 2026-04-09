@@ -19,7 +19,7 @@ class CategorieController extends Controller
     {
         $parents = Categorie::whereNull('parent_id')->orderBy('nom')->get();
 
-        return view('admin.categories.edit', ['categorie' => new Categorie(), 'parents' => $parents]);
+        return view('admin.categories.edit', ['categorie' => new Categorie, 'parents' => $parents]);
     }
 
     public function store(Request $request)

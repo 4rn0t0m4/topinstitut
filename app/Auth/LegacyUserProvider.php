@@ -4,6 +4,7 @@ namespace App\Auth;
 
 use Illuminate\Auth\EloquentUserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class LegacyUserProvider extends EloquentUserProvider
@@ -21,9 +22,10 @@ class LegacyUserProvider extends EloquentUserProvider
         // 2. Essayer MD5 (format legacy)
         if ($stored === md5($plain)) {
             // Re-hash en bcrypt via DB pour éviter le double-hash du cast 'hashed'
-            \Illuminate\Support\Facades\DB::table('users')
+            DB::table('users')
                 ->where('id', $user->getAuthIdentifier())
                 ->update(['password' => Hash::make($plain)]);
+
             return true;
         }
 

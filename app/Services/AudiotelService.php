@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 class AudiotelService
 {
     private string $idClientCrypte;
+
     private string $idServiceCrypte;
 
     public function __construct()
@@ -89,7 +90,7 @@ class AudiotelService
 
         try {
             $destNumber = urlencode(base64_encode(serialize([$phone])));
-            $idCustomer = urlencode(base64_encode(serialize(['TI-' . $etablissementId])));
+            $idCustomer = urlencode(base64_encode(serialize(['TI-'.$etablissementId])));
             $ipEncoded = urlencode(base64_encode($ip));
             $pageEncoded = urlencode(base64_encode($pageUrl));
 
@@ -115,7 +116,7 @@ class AudiotelService
                 ];
             }
         } catch (\Exception $e) {
-            Log::warning('Audiotel API error: ' . $e->getMessage());
+            Log::warning('Audiotel API error: '.$e->getMessage());
         }
 
         return ['numero' => $phone, 'premium' => false];

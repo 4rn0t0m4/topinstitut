@@ -17,7 +17,7 @@ class RechercheController extends Controller
         $categorie = $request->input('categorie');
 
         if ($nom) {
-            $query->where('titre', 'like', '%' . $nom . '%');
+            $query->where('titre', 'like', '%'.$nom.'%');
         }
 
         if ($villeNom) {
