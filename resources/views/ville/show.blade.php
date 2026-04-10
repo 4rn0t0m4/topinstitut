@@ -21,7 +21,7 @@
         @if($etablissements->isNotEmpty())
             <div class="space-y-4">
                 @foreach($etablissements as $etablissement)
-                    <x-etablissement-card :etablissement="$etablissement" />
+                    <x-etablissement-card :etablissement="$etablissement" :rank="$etablissement->classement_ville ?: null" />
                 @endforeach
             </div>
             <div class="mt-6">{{ $etablissements->links() }}</div>

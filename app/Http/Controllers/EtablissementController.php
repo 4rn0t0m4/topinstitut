@@ -29,7 +29,12 @@ class EtablissementController extends Controller
             return redirect($etablissement->url, 301);
         }
 
-        $etablissement->load(['approvedAvis.user', 'photos', 'horairesRelation', 'categories', 'actualites']);
+        $etablissement->load(['approvedAvis.user', 'photos', 'horairesRelation', 'categories', 'actualites', 'villeRelation.departementRelation', 'administrateurs']);
+
+        // Classement dans la ville
+        $totalInVille = $etablissement->ville_id
+            ? Etablissement::valide()->where('ville_id', $etablissement->ville_id)->count()
+            : 0;
 
         $nearby = [];
         if ($etablissement->latitude && $etablissement->longitude) {
@@ -37,6 +42,6 @@ class EtablissementController extends Controller
                 ->where('id', '!=', $etablissement->id);
         }
 
-        return view('etablissement.show', compact('etablissement', 'nearby'));
+        return view('etablissement.show', compact('etablissement', 'nearby', 'totalInVille'));
     }
 }

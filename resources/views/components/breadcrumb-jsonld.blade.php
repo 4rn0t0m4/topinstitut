@@ -3,23 +3,24 @@
 @php
 $list = [];
 foreach ($items as $i => $item) {
-    $list[] = [
+    $entry = [
         '@type' => 'ListItem',
         'position' => $i + 1,
         'name' => $item['name'],
-        'item' => isset($item['url']) ? url($item['url']) : null,
     ];
+    if (isset($item['url'])) {
+        $entry['item'] = url($item['url']);
+    }
+    $list[] = $entry;
 }
-// Remove null item from last element (current page)
-if (isset($list[count($list) - 1])) {
-    unset($list[count($list) - 1]['item']);
-}
-@endphp
 
-<script type="application/ld+json">
-{!! json_encode([
+$schema = json_encode([
     '@context' => 'https://schema.org',
     '@type' => 'BreadcrumbList',
     'itemListElement' => $list,
-], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+@endphp
+
+<script type="application/ld+json">
+{!! $schema !!}
 </script>

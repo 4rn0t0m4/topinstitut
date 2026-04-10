@@ -22,8 +22,15 @@
             <p class="text-pink-100 mb-8">Instituts, spas, esthéticiennes à domicile et thalassos partout en France</p>
 
             <form action="{{ route('recherche') }}" method="GET" class="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
-                <input type="text" name="nom" placeholder="Nom de l'institut..." class="flex-1 px-4 py-3 rounded-lg text-gray-900 placeholder-gray-400">
-                <input type="text" name="ville" placeholder="Ville..." class="flex-1 px-4 py-3 rounded-lg text-gray-900 placeholder-gray-400">
+                <input type="text" name="nom" placeholder="Nom de l'institut..." class="flex-1 px-4 py-3 rounded-lg bg-white text-gray-900 placeholder-gray-400">
+                <div class="flex-1 relative" x-data="villeAutocomplete()" @click.outside="open = false">
+                    <input type="text" name="ville" placeholder="Ville..." x-model="query" @input="search()" @focus="open = results.length > 0" autocomplete="off" class="w-full px-4 py-3 rounded-lg bg-white text-gray-900 placeholder-gray-400">
+                    <ul x-show="open" x-cloak class="absolute z-50 left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        <template x-for="item in results" :key="item.label">
+                            <li @click="select(item)" class="px-4 py-2 cursor-pointer hover:bg-pink-50 text-gray-900 text-sm" x-text="item.label"></li>
+                        </template>
+                    </ul>
+                </div>
                 <button type="submit" class="bg-white text-pink-600 font-semibold px-6 py-3 rounded-lg hover:bg-pink-50 transition">Rechercher</button>
             </form>
         </div>

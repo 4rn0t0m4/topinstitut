@@ -29,6 +29,12 @@ Route::get('/les-instituts-de-beaute-a-{slug}.html', [VilleController::class, 's
 // Search
 Route::get('/recherche_institut.html', [RechercheController::class, 'index'])->name('recherche');
 
+// Revendication
+Route::post('/revendiquer/{etablissement}', [\App\Http\Controllers\RevendicationController::class, 'store'])->middleware(['auth', 'throttle:3,1'])->name('revendication.store');
+
+// Autocomplete
+Route::get('/ajax/villes', \App\Http\Controllers\VilleAutocompleteController::class)->name('villes.autocomplete');
+
 // Phone reveal (audiotel)
 Route::post('/ajax/phone', [PhoneController::class, 'reveal'])->name('phone.reveal');
 

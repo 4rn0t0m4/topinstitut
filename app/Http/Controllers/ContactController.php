@@ -54,6 +54,10 @@ class ContactController extends Controller
             });
         }
 
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
         return back()->with('success', 'Votre message a bien été envoyé.');
     }
 }

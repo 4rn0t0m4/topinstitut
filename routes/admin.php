@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AvisController;
 use App\Http\Controllers\Admin\CategorieController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EtablissementController;
+use App\Http\Controllers\Admin\RevendicationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -16,3 +17,6 @@ Route::get('avis/{avis}', [AvisController::class, 'show'])->name('avis.show');
 Route::post('avis/{avis}/moderer', [AvisController::class, 'moderer'])->name('avis.moderer');
 
 Route::resource('categories', CategorieController::class)->except(['show']);
+
+Route::get('revendications', [RevendicationController::class, 'index'])->name('revendications.index');
+Route::post('revendications/{revendication}/moderer', [RevendicationController::class, 'moderer'])->name('revendications.moderer');

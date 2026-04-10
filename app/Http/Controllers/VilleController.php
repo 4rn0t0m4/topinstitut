@@ -11,7 +11,8 @@ class VilleController extends Controller
     {
         $ville = Ville::where('url', $slug)->firstOrFail();
 
-        $query = Etablissement::valide()->where('ville_id', $ville->id)->orderByDesc('moyenne');
+        $query = Etablissement::valide()->where('ville_id', $ville->id)
+            ->orderByRaw('classement_ville = 0 ASC, classement_ville ASC, moyenne DESC');
 
         if ($query->count() === 0 && $ville->latitude && $ville->longitude) {
             $query = Etablissement::valide()->nearby($ville->latitude, $ville->longitude, 15);

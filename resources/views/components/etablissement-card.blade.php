@@ -1,8 +1,12 @@
-@props(['etablissement'])
+@props(['etablissement', 'rank' => null])
 
 <div class="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition">
     <div class="flex justify-between items-start">
-        <div>
+        <div class="flex items-start gap-3">
+            @if($rank)
+                <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-pink-100 text-pink-600 font-bold text-sm">{{ $rank }}</span>
+            @endif
+            <div>
             <a href="{{ $etablissement->url }}" class="text-lg font-semibold text-gray-900 hover:text-pink-600">
                 {{ $etablissement->titre }}
             </a>
@@ -10,6 +14,7 @@
             @if($etablissement->ville)
                 <p class="text-sm text-gray-500">{{ $etablissement->adresse }} {{ $etablissement->cp }} {{ $etablissement->ville }}</p>
             @endif
+            </div>
         </div>
         <div class="text-right">
             @if($etablissement->nb_avis > 0)
