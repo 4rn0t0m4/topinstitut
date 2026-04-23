@@ -13,8 +13,9 @@ use Illuminate\Support\Facades\Http;
 class ImportGooglePlaces extends Command
 {
     protected $signature = 'import:google-places
-        {--limit=10 : Nombre d\'établissements à importer par exécution}
-        {--departement= : Forcer un département spécifique}
+        {--cities=5 : Nombre de villes (par population) à interroger dans le département}
+        {--departement= : Forcer un département spécifique (bypass cursor)}
+        {--query= : Forcer un index de requête (0..N-1) — utilisé avec --departement}
         {--dry-run : Simuler sans insérer en base}';
 
     protected $description = 'Importe des instituts de beauté depuis Google Places API';
@@ -39,22 +40,23 @@ class ImportGooglePlaces extends Command
             return self::FAILURE;
         }
 
-        $limit = (int) $this->option('limit');
         $dryRun = $this->option('dry-run');
-        $imported = 0;
+        $citiesPerDept = (int) $this->option('cities');
 
-        $dept = $this->getNextDepartment();
+        [$dept, $queryIndex] = $this->advanceCursor();
         if (! $dept) {
-            $this->info('Tous les départements ont été traités. Reset des progressions.');
-            DB::table('google_import_progress')->update(['completed' => false]);
-            $dept = $this->getNextDepartment();
+            $this->error('Aucun département en base.');
+
+            return self::FAILURE;
         }
 
+        $searchType = self::SEARCH_TYPES[$queryIndex];
         $this->info("Département : {$dept->code} - {$dept->name}");
+        $this->info("Requête (#".($queryIndex + 1).'/'.count(self::SEARCH_TYPES)."): {$searchType}");
 
         $cities = City::where('department_code', $dept->code)
             ->orderByDesc('population')
-            ->limit(5)
+            ->limit($citiesPerDept)
             ->pluck('name')
             ->toArray();
 
@@ -62,106 +64,117 @@ class ImportGooglePlaces extends Command
             $cities = [$dept->name];
         }
 
-        foreach (self::SEARCH_TYPES as $searchType) {
-            if ($imported >= $limit) {
-                break;
-            }
+        $imported = 0;
+        foreach ($cities as $cityName) {
+            $query = "$searchType $cityName";
+            $this->line("  Recherche : $query");
+            $places = $this->searchPlaces($query);
 
-            foreach ($cities as $cityName) {
-                if ($imported >= $limit) {
-                    break;
+            foreach ($places as $place) {
+                $placeId = $place['id'] ?? '';
+                if (! $placeId) {
+                    continue;
                 }
 
-                $query = "$searchType $cityName";
-                $this->line("  Recherche : $query");
+                if (DB::table('google_imports')->where('place_id', $placeId)->exists()) {
+                    continue;
+                }
 
-                $places = $this->searchPlaces($query);
+                $name = $place['displayName']['text'] ?? '';
+                $postalCode = $this->extractComponent($place, 'postal_code');
+                $cityFound = $this->extractComponent($place, 'locality');
 
-                foreach ($places as $place) {
-                    if ($imported >= $limit) {
-                        break;
-                    }
+                if (Establishment::where('name', $name)->where('postal_code', $postalCode)->exists()) {
+                    DB::table('google_imports')->insert([
+                        'place_id' => $placeId,
+                        'status' => 'duplicate',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $this->line("    DOUBLON : $name ($postalCode)");
 
-                    $placeId = $place['id'] ?? '';
-                    if (! $placeId) {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    if (DB::table('google_imports')->where('place_id', $placeId)->exists()) {
-                        continue;
-                    }
+                if ($dryRun) {
+                    $this->info("    [DRY-RUN] $name - $cityFound ($postalCode)");
+                    $imported++;
 
-                    $name = $place['displayName']['text'] ?? '';
-                    $postalCode = $this->extractComponent($place, 'postal_code');
-                    $cityFound = $this->extractComponent($place, 'locality');
+                    continue;
+                }
 
-                    if (Establishment::where('name', $name)
-                        ->where('postal_code', $postalCode)
-                        ->exists()) {
-                        DB::table('google_imports')->insert([
-                            'place_id' => $placeId,
-                            'status' => 'duplicate',
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                        $this->line("    DOUBLON : $name ($postalCode)");
+                $establishmentId = $this->createEstablishment($place);
 
-                        continue;
-                    }
-
-                    if ($dryRun) {
-                        $this->info("    [DRY-RUN] $name - $cityFound ($postalCode)");
-                        $imported++;
-
-                        continue;
-                    }
-
-                    $establishmentId = $this->createEstablishment($place);
-
-                    if ($establishmentId) {
-                        DB::table('google_imports')->insert([
-                            'place_id' => $placeId,
-                            'establishment_id' => $establishmentId,
-                            'status' => 'imported',
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                        $imported++;
-                        $this->info("    IMPORTÉ : $name - $cityFound ($postalCode)");
-                    }
+                if ($establishmentId) {
+                    DB::table('google_imports')->insert([
+                        'place_id' => $placeId,
+                        'establishment_id' => $establishmentId,
+                        'status' => 'imported',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $imported++;
+                    $this->info("    IMPORTÉ : $name - $cityFound ($postalCode)");
                 }
             }
         }
-
-        DB::table('google_import_progress')->updateOrInsert(
-            ['department_code' => $dept->code],
-            [
-                'completed' => true,
-                'total_imported' => DB::raw("total_imported + $imported"),
-                'last_run_at' => now(),
-                'updated_at' => now(),
-            ]
-        );
 
         $this->info("$imported établissement(s) importé(s) dans le {$dept->code} - {$dept->name}.");
 
         return self::SUCCESS;
     }
 
-    private function getNextDepartment(): ?Department
+    /**
+     * Advance the cursor one step: next department for the current query.
+     * When all departments are done, advance to the next query and restart the department loop.
+     *
+     * @return array{0: ?Department, 1: int}  [department to process, query_index]
+     */
+    private function advanceCursor(): array
     {
-        $forcedDept = $this->option('departement');
-        if ($forcedDept) {
-            return Department::where('code', $forcedDept)->first();
+        // Override via CLI
+        if ($forced = $this->option('departement')) {
+            $dept = Department::where('code', $forced)->first();
+            $queryIndex = $this->option('query') !== null
+                ? (int) $this->option('query')
+                : (int) DB::table('google_import_cursor')->where('id', 1)->value('query_index');
+
+            return [$dept, $queryIndex];
         }
 
-        $processed = DB::table('google_import_progress')
-            ->where('completed', true)
-            ->pluck('department_code');
+        $cursor = DB::table('google_import_cursor')->where('id', 1)->first();
+        if (! $cursor) {
+            DB::table('google_import_cursor')->insert(['id' => 1, 'query_index' => 0, 'cycle_count' => 0, 'created_at' => now(), 'updated_at' => now()]);
+            $cursor = (object) ['query_index' => 0, 'last_department_code' => null, 'cycle_count' => 0];
+        }
 
-        return Department::whereNotIn('code', $processed)
+        $queryIndex = (int) $cursor->query_index;
+        $lastCode = $cursor->last_department_code;
+
+        $dept = Department::when($lastCode, fn ($q) => $q->where('code', '>', $lastCode))
             ->orderBy('code')
             ->first();
+
+        if (! $dept) {
+            // End of departments for this query → next query
+            $queryIndex = ($queryIndex + 1) % count(self::SEARCH_TYPES);
+            $dept = Department::orderBy('code')->first();
+
+            $cycleIncrement = $queryIndex === 0 ? 1 : 0;
+            DB::table('google_import_cursor')->where('id', 1)->update([
+                'query_index' => $queryIndex,
+                'last_department_code' => $dept?->code,
+                'cycle_count' => DB::raw('cycle_count + '.$cycleIncrement),
+                'updated_at' => now(),
+            ]);
+        } else {
+            DB::table('google_import_cursor')->where('id', 1)->update([
+                'last_department_code' => $dept->code,
+                'updated_at' => now(),
+            ]);
+        }
+
+        return [$dept, $queryIndex];
     }
 
     private function searchPlaces(string $query): array
