@@ -1,121 +1,135 @@
 <?php
 /**
  * Admin deploy endpoint for shared hosting without SSH.
- *
- * Usage:
- *   https://new.top-institut.fr/deploy.php?token=XXX&cmd=composer
- *   https://new.top-institut.fr/deploy.php?token=XXX&cmd=migrate
- *   https://new.top-institut.fr/deploy.php?token=XXX&cmd=cache
- *   https://new.top-institut.fr/deploy.php?token=XXX&cmd=geo-import
- *   https://new.top-institut.fr/deploy.php?token=XXX&cmd=storage-link
- *   https://new.top-institut.fr/deploy.php?token=XXX&cmd=artisan&arg=route:list
- *
- * Set DEPLOY_TOKEN in .env before use.
- * Requires composer.phar at the project root for the "composer" command.
+ * Kept PHP 7.4-compatible in case composer hasn't run yet and the host's CLI PHP is older.
  */
 
-set_time_limit(300);
-ini_set('memory_limit', '512M');
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+@set_time_limit(300);
+@ini_set('memory_limit', '512M');
 header('Content-Type: text/plain; charset=utf-8');
+
+echo "=== deploy.php — ".date('Y-m-d H:i:s')." ===\n";
+echo "PHP version: ".PHP_VERSION."\n";
+echo "Project root: ".dirname(__DIR__)."\n\n";
 
 $projectRoot = dirname(__DIR__);
 
 // Minimal .env parser (no Laravel bootstrap needed for token check)
 $envToken = null;
 $envFile = $projectRoot.'/.env';
-if (is_readable($envFile)) {
-    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        if (preg_match('/^\s*DEPLOY_TOKEN\s*=\s*(.*)$/', $line, $m)) {
-            $envToken = trim($m[1], " \t\"'");
-            break;
-        }
+if (! is_readable($envFile)) {
+    echo "ERROR: .env not readable at {$envFile}\n";
+    exit;
+}
+foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+    if (preg_match('/^\s*DEPLOY_TOKEN\s*=\s*(.*)$/', $line, $m)) {
+        $envToken = trim($m[1], " \t\"'");
+        break;
     }
 }
 
 if (! $envToken) {
-    http_response_code(500);
-    exit("ERROR: DEPLOY_TOKEN not set in .env\n");
+    echo "ERROR: DEPLOY_TOKEN not set in .env\n";
+    echo "Add this line to your .env file:\n";
+    echo "DEPLOY_TOKEN=yourSecretToken\n";
+    exit;
 }
 
-if (($_GET['token'] ?? '') !== $envToken) {
+$submittedToken = isset($_GET['token']) ? $_GET['token'] : '';
+if ($submittedToken !== $envToken) {
     http_response_code(403);
-    exit("Forbidden\n");
+    echo "Forbidden: token mismatch\n";
+    exit;
 }
 
-$cmd = $_GET['cmd'] ?? '';
-$arg = $_GET['arg'] ?? '';
+$cmd = isset($_GET['cmd']) ? $_GET['cmd'] : '';
+$arg = isset($_GET['arg']) ? $_GET['arg'] : '';
+echo "cmd: $cmd\n";
+echo "arg: $arg\n\n";
 
-echo "=== deploy.php — ".date('Y-m-d H:i:s')." ===\n";
-echo "cmd: $cmd\n\n";
+try {
+    switch ($cmd) {
+        case 'composer':
+            runComposer($projectRoot);
+            break;
 
-switch ($cmd) {
-    case 'composer':
-        runComposer($projectRoot);
-        break;
+        case 'migrate':
+            runArtisan($projectRoot, 'migrate', ['--force' => true]);
+            break;
 
-    case 'migrate':
-        runArtisan($projectRoot, 'migrate', ['--force' => true]);
-        break;
+        case 'cache':
+            runArtisan($projectRoot, 'config:cache');
+            runArtisan($projectRoot, 'route:cache');
+            runArtisan($projectRoot, 'view:cache');
+            break;
 
-    case 'cache':
-        runArtisan($projectRoot, 'config:cache');
-        runArtisan($projectRoot, 'route:cache');
-        runArtisan($projectRoot, 'view:cache');
-        break;
+        case 'clear-cache':
+            runArtisan($projectRoot, 'config:clear');
+            runArtisan($projectRoot, 'route:clear');
+            runArtisan($projectRoot, 'view:clear');
+            runArtisan($projectRoot, 'cache:clear');
+            break;
 
-    case 'clear-cache':
-        runArtisan($projectRoot, 'config:clear');
-        runArtisan($projectRoot, 'route:clear');
-        runArtisan($projectRoot, 'view:clear');
-        runArtisan($projectRoot, 'cache:clear');
-        break;
+        case 'geo-import':
+            runArtisan($projectRoot, 'geo:import');
+            break;
 
-    case 'geo-import':
-        runArtisan($projectRoot, 'geo:import');
-        break;
+        case 'storage-link':
+            runArtisan($projectRoot, 'storage:link');
+            break;
 
-    case 'storage-link':
-        runArtisan($projectRoot, 'storage:link');
-        break;
+        case 'artisan':
+            if (! $arg) {
+                echo "Missing ?arg=command\n";
+                exit;
+            }
+            $parts = explode(' ', $arg);
+            $command = array_shift($parts);
+            runArtisan($projectRoot, $command, parseArtisanArgs($parts));
+            break;
 
-    case 'artisan':
-        if (! $arg) exit("Missing ?arg=command\n");
-        $parts = explode(' ', $arg);
-        $command = array_shift($parts);
-        runArtisan($projectRoot, $command, parseArtisanArgs($parts));
-        break;
+        case 'info':
+            phpinfo();
+            break;
 
-    case 'info':
-        phpinfo();
-        break;
-
-    default:
-        echo "Available commands:\n";
-        echo "  ?cmd=composer       - run composer install --no-dev --optimize-autoloader\n";
-        echo "  ?cmd=migrate        - run php artisan migrate --force\n";
-        echo "  ?cmd=cache          - config + route + view cache\n";
-        echo "  ?cmd=clear-cache    - clear config + route + view + cache\n";
-        echo "  ?cmd=geo-import     - import departments + cities from geo.api.gouv.fr\n";
-        echo "  ?cmd=storage-link   - create public/storage symlink\n";
-        echo "  ?cmd=artisan&arg=<command> - run any artisan command\n";
-        echo "  ?cmd=info           - phpinfo()\n";
+        case '':
+        default:
+            echo "Available commands:\n";
+            echo "  ?cmd=composer       - run composer install --no-dev --optimize-autoloader\n";
+            echo "  ?cmd=migrate        - php artisan migrate --force\n";
+            echo "  ?cmd=cache          - config + route + view cache\n";
+            echo "  ?cmd=clear-cache    - clear all caches\n";
+            echo "  ?cmd=geo-import     - import departments + cities\n";
+            echo "  ?cmd=storage-link   - create public/storage symlink\n";
+            echo "  ?cmd=artisan&arg=<command>\n";
+            echo "  ?cmd=info           - phpinfo()\n";
+    }
+} catch (Throwable $e) {
+    echo "\nEXCEPTION: ".get_class($e)."\n";
+    echo $e->getMessage()."\n";
+    echo "at ".$e->getFile().':'.$e->getLine()."\n";
+    echo $e->getTraceAsString()."\n";
 }
 
 echo "\n=== done ".date('Y-m-d H:i:s')." ===\n";
 
 // ---
 
-function runComposer(string $root): void
+function runComposer($root)
 {
     $phar = $root.'/composer.phar';
     if (! is_file($phar)) {
-        exit("ERROR: composer.phar not found at {$phar}\nUpload it via FTP first.\n");
+        echo "ERROR: composer.phar not found at {$phar}\n";
+        echo "Upload it via FTP first (download from https://getcomposer.org/composer.phar).\n";
+
+        return;
     }
 
     putenv('COMPOSER_HOME='.$root.'/.composer');
     putenv('COMPOSER_ALLOW_SUPERUSER=1');
 
-    // Boot composer from the phar
     require_once 'phar://'.$phar.'/vendor/autoload.php';
 
     $input = new \Symfony\Component\Console\Input\ArrayInput([
@@ -136,10 +150,12 @@ function runComposer(string $root): void
     echo "\nexit code: $exit\n";
 }
 
-function runArtisan(string $root, string $command, array $params = []): void
+function runArtisan($root, $command, array $params = [])
 {
     if (! is_file($root.'/vendor/autoload.php')) {
-        exit("ERROR: vendor/autoload.php missing — run ?cmd=composer first\n");
+        echo "ERROR: vendor/autoload.php missing — run ?cmd=composer first\n";
+
+        return;
     }
 
     require_once $root.'/vendor/autoload.php';
@@ -151,12 +167,14 @@ function runArtisan(string $root, string $command, array $params = []): void
     echo "\nexit code: $exit\n";
 }
 
-function parseArtisanArgs(array $parts): array
+function parseArtisanArgs(array $parts)
 {
     $out = [];
     foreach ($parts as $p) {
-        if (str_starts_with($p, '--')) {
-            [$k, $v] = array_pad(explode('=', substr($p, 2), 2), 2, true);
+        if (substr($p, 0, 2) === '--') {
+            $pair = explode('=', substr($p, 2), 2);
+            $k = $pair[0];
+            $v = isset($pair[1]) ? $pair[1] : true;
             $out['--'.$k] = $v;
         } else {
             $out[] = $p;
