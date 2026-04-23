@@ -34,6 +34,14 @@ Route::prefix('etablissement/{etablissement}')->name('etablissement.')->group(fu
     Route::get('avis', [AvisController::class, 'index'])->name('avis');
     Route::get('avis/{avis}/repondre', [AvisController::class, 'repondre'])->name('avis.repondre');
     Route::post('avis/{avis}/repondre', [AvisController::class, 'storeReponse'])->name('avis.reponse');
+
+    Route::get('prestations', [\App\Http\Controllers\Client\ServicesController::class, 'edit'])->name('prestations');
+    Route::put('prestations', [\App\Http\Controllers\Client\ServicesController::class, 'update'])->name('prestations.update');
+
+    Route::get('faq', [\App\Http\Controllers\Client\FaqController::class, 'index'])->name('faq');
+    Route::post('faq', [\App\Http\Controllers\Client\FaqController::class, 'store'])->name('faq.store');
+    Route::put('faq/{faq}', [\App\Http\Controllers\Client\FaqController::class, 'update'])->name('faq.update');
+    Route::delete('faq/{faq}', [\App\Http\Controllers\Client\FaqController::class, 'destroy'])->name('faq.destroy');
 });
 
 Route::get('mes-avis', [AvisController::class, 'mesAvis'])->name('mes-avis');

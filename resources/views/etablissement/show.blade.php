@@ -131,9 +131,16 @@
 
                 {{-- Photos --}}
                 @if($establishment->photos->isNotEmpty())
+                    @php
+                        $photoUrls = $establishment->photos->pluck('url')->values()->all();
+                    @endphp
                     <div class="mt-6 grid grid-cols-2 md:grid-cols-3 gap-2">
-                        @foreach($establishment->photos as $photo)
-                            <img src="{{ $photo->url }}" alt="{{ $establishment->name }}" class="rounded-lg object-cover h-48 w-full">
+                        @foreach($establishment->photos as $i => $photo)
+                            <button type="button"
+                                    @click="$store.lightbox.show(@js($photoUrls), {{ $i }})"
+                                    class="block group relative overflow-hidden rounded-lg cursor-pointer">
+                                <img src="{{ $photo->url }}" alt="{{ $establishment->name }}" loading="lazy" class="object-cover h-48 w-full transition group-hover:scale-105">
+                            </button>
                         @endforeach
                     </div>
                 @endif
@@ -159,10 +166,14 @@
                                 <x-phone-reveal :phone="$establishment->mobile" :etablissement-id="$establishment->id" label="Portable" :portable="true" />
                             @endif
 
-                            <div class="pt-2">
-                                <button @click="$store.contactModal.open = true" type="button" class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 px-5 rounded-lg hover:bg-pink-700 transition cursor-pointer">
+                            <div class="pt-2 space-y-2">
+                                <button @click="$store.bookingModal.open = true" type="button" class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 px-5 rounded-lg hover:bg-pink-700 transition cursor-pointer">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0V10.5h18v8.25"/></svg>
+                                    Prendre RDV
+                                </button>
+                                <button @click="$store.contactModal.open = true" type="button" class="w-full flex items-center justify-center gap-2 bg-white border-2 border-pink-600 text-pink-600 font-semibold py-3 px-5 rounded-lg hover:bg-pink-50 transition cursor-pointer">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
-                                    Contacter cet établissement
+                                    Contacter
                                 </button>
                             </div>
                             @if(!$establishment->owners->contains(auth()->id()))
@@ -194,8 +205,30 @@
                     </div>
                 @endif
 
-                {{-- Tarifs --}}
-                @if($establishment->pricing)
+                {{-- Prestations & tarifs --}}
+                @if($establishment->services && count($establishment->services) > 0)
+                    <div class="mt-8">
+                        <h2 class="text-xl font-semibold mb-3">Prestations & tarifs</h2>
+                        <div class="bg-white border rounded-lg divide-y">
+                            @foreach($establishment->services as $service)
+                                <div class="flex items-center justify-between gap-4 px-4 py-3">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="font-medium text-gray-900">{{ $service['name'] ?? '' }}</div>
+                                        @if(! empty($service['description']))
+                                            <div class="text-sm text-gray-500 mt-0.5">{{ $service['description'] }}</div>
+                                        @endif
+                                        @if(! empty($service['duration']))
+                                            <div class="text-xs text-gray-400 mt-1">{{ $service['duration'] }}</div>
+                                        @endif
+                                    </div>
+                                    @if(isset($service['price']) && $service['price'] !== '')
+                                        <div class="flex-shrink-0 text-pink-600 font-semibold whitespace-nowrap">{{ $service['price'] }}</div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @elseif($establishment->pricing)
                     <div class="mt-8">
                         <h2 class="text-xl font-semibold mb-3">Tarifs</h2>
                         <div class="prose text-gray-700">{!! nl2br(e($establishment->pricing)) !!}</div>
@@ -227,6 +260,38 @@
                             @endforeach
                         </table>
                     </div>
+                @endif
+
+                {{-- FAQ --}}
+                @if($establishment->faqs->isNotEmpty())
+                    <div class="mt-8" x-data="{ open: null }">
+                        <h2 class="text-xl font-semibold mb-3">Questions fréquentes</h2>
+                        <div class="bg-white border rounded-lg divide-y">
+                            @foreach($establishment->faqs as $i => $faq)
+                                <div>
+                                    <button type="button" @click="open = open === {{ $i }} ? null : {{ $i }}" class="w-full flex items-center justify-between gap-4 px-4 py-3 text-left hover:bg-gray-50 transition">
+                                        <span class="font-medium text-gray-900">{{ $faq->question }}</span>
+                                        <svg class="w-5 h-5 text-gray-400 transition-transform flex-shrink-0" :class="open === {{ $i }} ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                                    </button>
+                                    <div x-show="open === {{ $i }}" x-cloak class="px-4 pb-3 text-sm text-gray-700">{!! nl2br(e($faq->answer)) !!}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    @push('jsonld')
+                    <script type="application/ld+json">
+                    {!! json_encode([
+                        '@context' => 'https://schema.org',
+                        '@type' => 'FAQPage',
+                        'mainEntity' => $establishment->faqs->map(fn ($f) => [
+                            '@type' => 'Question',
+                            'name' => $f->question,
+                            'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f->answer],
+                        ])->values()->all(),
+                    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+                    </script>
+                    @endpush
                 @endif
 
                 {{-- Actualités --}}
@@ -443,6 +508,123 @@
                     <span x-show="sending">Envoi en cours...</span>
                 </button>
             </form>
+        </div>
+    </div>
+
+    {{-- Booking Modal --}}
+    <div x-data="{ sent: false, sending: false, error: '' }"
+         x-show="$store.bookingModal.open"
+         @keydown.escape.window="$store.bookingModal.open = false"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/50" @click="$store.bookingModal.open = false"></div>
+        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg p-6 z-10 max-h-[90vh] overflow-y-auto" @click.stop>
+            <button @click="$store.bookingModal.open = false" type="button" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 cursor-pointer">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+
+            <h2 class="text-xl font-bold text-gray-900 mb-1">Prendre RDV</h2>
+            <p class="text-sm text-gray-500 mb-4">chez {{ $establishment->name }}</p>
+
+            <div x-show="sent" class="text-center py-8">
+                <svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-lg font-semibold text-gray-900">Demande envoyée !</p>
+                <p class="text-sm text-gray-500 mt-1">L'établissement vous contactera pour confirmer.</p>
+                <button @click="$store.bookingModal.open = false" type="button" class="mt-4 bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 cursor-pointer">Fermer</button>
+            </div>
+
+            <form x-show="!sent" @submit.prevent="
+                sending = true; error = '';
+                const fd = new FormData($el);
+                fetch($el.action, { method: 'POST', body: fd, headers: { 'Accept': 'application/json' } })
+                    .then(async r => { const d = await r.json().catch(() => ({})); if (r.ok) { sent = true; } else { error = d.message || (d.errors ? Object.values(d.errors).flat().join(' ') : 'Erreur'); } })
+                    .catch(() => { error = 'Erreur réseau.'; })
+                    .finally(() => { sending = false; });
+            " action="{{ route('booking.store', $establishment) }}">
+                @csrf
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nom <span class="text-red-500">*</span></label>
+                        <input type="text" name="name" required value="{{ auth()->user()?->username }}" class="w-full border rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Téléphone</label>
+                        <input type="tel" name="phone" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="06...">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium mb-1">Email <span class="text-red-500">*</span></label>
+                    <input type="email" name="email" required value="{{ auth()->user()?->email }}" class="w-full border rounded-lg px-3 py-2 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Date souhaitée <span class="text-red-500">*</span></label>
+                        <input type="date" name="requested_date" required min="{{ now()->format('Y-m-d') }}" class="w-full border rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Horaire <span class="text-red-500">*</span></label>
+                        <select name="requested_time" required class="w-full border rounded-lg px-3 py-2 text-sm">
+                            <option value="">Choisir...</option>
+                            <option value="matin">Matin</option>
+                            <option value="midi">Midi</option>
+                            <option value="apres-midi">Après-midi</option>
+                            <option value="soir">Soir</option>
+                        </select>
+                    </div>
+                </div>
+                @if($establishment->categories->isNotEmpty())
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium mb-1">Prestation</label>
+                        <select name="requested_service" class="w-full border rounded-lg px-3 py-2 text-sm">
+                            <option value="">À préciser</option>
+                            @foreach($establishment->categories as $cat)
+                                <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+                <div class="mb-3">
+                    <label class="block text-sm font-medium mb-1">Message (optionnel)</label>
+                    <textarea name="content" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Précisions..."></textarea>
+                </div>
+                <p x-show="error" x-text="error" class="text-red-500 text-sm mb-3" x-cloak></p>
+                <button type="submit" :disabled="sending" class="w-full bg-pink-600 text-white font-semibold py-3 rounded-lg hover:bg-pink-700 transition disabled:opacity-50 cursor-pointer">
+                    <span x-show="!sending">Envoyer la demande</span>
+                    <span x-show="sending">Envoi en cours...</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {{-- Lightbox --}}
+    <div x-show="$store.lightbox.open"
+         x-cloak
+         @keydown.escape.window="$store.lightbox.close()"
+         @keydown.arrow-left.window="$store.lightbox.prev()"
+         @keydown.arrow-right.window="$store.lightbox.next()"
+         x-data="{ startX: null, startY: null }"
+         class="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center"
+         @click.self="$store.lightbox.close()"
+         @touchstart="startX = $event.touches[0].clientX; startY = $event.touches[0].clientY"
+         @touchend="
+            const dx = $event.changedTouches[0].clientX - startX;
+            const dy = $event.changedTouches[0].clientY - startY;
+            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                dx > 0 ? $store.lightbox.prev() : $store.lightbox.next();
+            }
+         ">
+        <button @click="$store.lightbox.close()" class="absolute top-4 right-4 text-white hover:text-gray-300 z-10">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <button @click="$store.lightbox.prev()" x-show="$store.lightbox.photos.length > 1" class="absolute left-4 text-white hover:text-gray-300 z-10 p-2">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+        </button>
+        <img :src="$store.lightbox.photos[$store.lightbox.current]" :alt="'Photo ' + ($store.lightbox.current + 1)" class="max-h-[90vh] max-w-[90vw] object-contain select-none">
+        <button @click="$store.lightbox.next()" x-show="$store.lightbox.photos.length > 1" class="absolute right-4 text-white hover:text-gray-300 z-10 p-2">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+        </button>
+        <div x-show="$store.lightbox.photos.length > 1" class="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
+            <span x-text="$store.lightbox.current + 1"></span> / <span x-text="$store.lightbox.photos.length"></span>
         </div>
     </div>
 

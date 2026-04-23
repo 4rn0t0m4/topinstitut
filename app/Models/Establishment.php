@@ -28,7 +28,7 @@ class Establishment extends Model
         'type', 'name', 'slug', 'email', 'website', 'google_maps_url',
         'address', 'postal_code', 'city', 'department_code', 'city_id',
         'latitude', 'longitude', 'radius',
-        'description', 'pricing', 'phone', 'mobile',
+        'description', 'pricing', 'services', 'phone', 'mobile',
         'siret', 'photo', 'tagline', 'is_active', 'rating', 'review_count',
         'google_place_id', 'google_rating', 'google_review_count', 'google_reviews',
     ];
@@ -42,6 +42,7 @@ class Establishment extends Model
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'google_reviews' => 'array',
+            'services' => 'array',
         ];
     }
 
@@ -220,6 +221,11 @@ class Establishment extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+
+    public function faqs(): HasMany
+    {
+        return $this->hasMany(Faq::class)->orderBy('sort_order');
     }
 
     public function claims(): HasMany

@@ -82,7 +82,7 @@ class EtablissementController extends Controller
 
     private function render(Establishment $establishment, GeoSearchService $geoService)
     {
-        $establishment->load(['approvedReviews.user', 'photos', 'schedules', 'categories', 'news', 'cityRelation.department', 'owners']);
+        $establishment->load(['approvedReviews.user', 'photos', 'schedules', 'categories', 'news', 'faqs', 'cityRelation.department', 'owners']);
 
         $totalInCity = $establishment->city_id
             ? Establishment::active()->where('city_id', $establishment->city_id)->count()

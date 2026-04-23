@@ -4,6 +4,20 @@ window.Alpine = Alpine;
 
 Alpine.store('contactModal', { open: false });
 Alpine.store('claimModal', { open: false });
+Alpine.store('bookingModal', { open: false });
+Alpine.store('lightbox', {
+    open: false,
+    photos: [],
+    current: 0,
+    show(photos, index) {
+        this.photos = photos;
+        this.current = index;
+        this.open = true;
+    },
+    next() { this.current = (this.current + 1) % this.photos.length; },
+    prev() { this.current = (this.current - 1 + this.photos.length) % this.photos.length; },
+    close() { this.open = false; },
+});
 
 Alpine.data('phoneReveal', (encoded, etablissementId) => ({
     revealed: false,

@@ -7,10 +7,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Message extends Model
 {
-    protected $fillable = ['etablissement_id', 'email', 'nom', 'contenu'];
+    protected $fillable = [
+        'establishment_id', 'type', 'email', 'name', 'phone', 'content',
+        'requested_date', 'requested_time', 'requested_service',
+    ];
 
-    public function etablissement(): BelongsTo
+    protected function casts(): array
     {
-        return $this->belongsTo(Etablissement::class);
+        return [
+            'requested_date' => 'date',
+        ];
+    }
+
+    public function establishment(): BelongsTo
+    {
+        return $this->belongsTo(Establishment::class);
     }
 }

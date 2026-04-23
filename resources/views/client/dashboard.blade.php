@@ -6,9 +6,9 @@
             {{-- Profile card --}}
             <div class="bg-white rounded-lg shadow-sm border p-6">
                 <h2 class="font-semibold mb-3">Mon profil</h2>
-                <p class="text-sm text-gray-600">{{ $user->pseudo }}</p>
+                <p class="text-sm text-gray-600">{{ $user->username }}</p>
                 <p class="text-sm text-gray-500">{{ $user->email }}</p>
-                <p class="text-sm text-gray-500 mt-2">{{ $user->avis_nb }} avis publiés</p>
+                <p class="text-sm text-gray-500 mt-2">{{ $user->reviews_count ?? 0 }} avis publiés</p>
                 <a href="{{ route('client.profil.edit') }}" class="text-pink-600 text-sm hover:underline mt-3 inline-block">Modifier mon profil</a>
             </div>
 
@@ -22,16 +22,18 @@
                     <div class="bg-white rounded-lg shadow-sm border p-4 mb-3">
                         <div class="flex justify-between items-start">
                             <div>
-                                <a href="{{ $etab->url }}" class="font-medium hover:text-pink-600">{{ $etab->titre }}</a>
-                                <p class="text-sm text-gray-500">{{ $etab->type_label }} - {{ $etab->ville }}</p>
+                                <a href="{{ $etab->url }}" class="font-medium hover:text-pink-600">{{ $etab->name }}</a>
+                                <p class="text-sm text-gray-500">{{ $etab->type_label }} - {{ $etab->city }}</p>
                             </div>
-                            <span class="text-sm text-gray-400">{{ $etab->avis_count }} avis</span>
+                            <span class="text-sm text-gray-400">{{ $etab->review_count ?? 0 }} avis</span>
                         </div>
-                        <div class="flex gap-3 mt-3 text-sm">
+                        <div class="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-sm">
                             <a href="{{ route('client.etablissement.edit', $etab) }}" class="text-pink-600 hover:underline">Coordonnées</a>
                             <a href="{{ route('client.etablissement.presentation', $etab) }}" class="text-pink-600 hover:underline">Présentation</a>
+                            <a href="{{ route('client.etablissement.prestations', $etab) }}" class="text-pink-600 hover:underline">Prestations</a>
                             <a href="{{ route('client.etablissement.horaires', $etab) }}" class="text-pink-600 hover:underline">Horaires</a>
                             <a href="{{ route('client.etablissement.photos', $etab) }}" class="text-pink-600 hover:underline">Photos</a>
+                            <a href="{{ route('client.etablissement.faq', $etab) }}" class="text-pink-600 hover:underline">FAQ</a>
                             <a href="{{ route('client.etablissement.avis', $etab) }}" class="text-pink-600 hover:underline">Avis</a>
                         </div>
                     </div>

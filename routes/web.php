@@ -71,6 +71,9 @@ Route::get('/avis/confirmer/{token}', [AvisController::class, 'confirmEmail'])->
 // Claim ownership
 Route::post('/revendiquer/{establishment}', [RevendicationController::class, 'store'])->middleware(['auth', 'throttle:3,1'])->name('revendication.store');
 
+// Booking
+Route::post('/rdv/{establishment}', [\App\Http\Controllers\BookingController::class, 'store'])->middleware('throttle:5,1')->name('booking.store');
+
 // Legacy .html redirects — MUST be before the establishment detail routes
 // (otherwise /spa/xxx.html would match /spa/{slug} with slug="xxx.html")
 Route::get('/institut-de-beaute/{slug}.html', fn ($slug) => redirect("/institut-de-beaute/$slug", 301));
