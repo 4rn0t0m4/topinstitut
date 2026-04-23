@@ -8,16 +8,9 @@ use Illuminate\Http\Request;
 
 class ActualiteController extends Controller
 {
-    private function authorize(Request $request, Establishment $etablissement): void
+    public function edit(Establishment $etablissement)
     {
-        if (! $request->user()->establishments()->where('establishment_id', $etablissement->id)->exists()) {
-            abort(403);
-        }
-    }
-
-    public function edit(Request $request, Establishment $etablissement)
-    {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
         $actualite = $etablissement->news()->latest()->first();
 
         return view('client.actualites.edit', compact('etablissement', 'actualite'));
@@ -25,7 +18,7 @@ class ActualiteController extends Controller
 
     public function update(Request $request, Establishment $etablissement)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',

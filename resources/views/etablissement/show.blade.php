@@ -460,141 +460,79 @@
         </div>
     </div>
     {{-- Contact Modal --}}
-    <div x-data="{ sent: false, sending: false, error: '' }"
-         x-show="$store.contactModal.open"
-         @keydown.escape.window="$store.contactModal.open = false"
-         x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4">
-
-        <div class="fixed inset-0 bg-black/50" @click="$store.contactModal.open = false"></div>
-        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg p-6 z-10" @click.stop>
-            <button @click="$store.contactModal.open = false" type="button" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 cursor-pointer">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Contacter {{ $establishment->name }}</h2>
-
-            <div x-show="sent" class="text-center py-8">
-                <svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <p class="text-lg font-semibold text-gray-900">Message envoyé !</p>
-                <p class="text-sm text-gray-500 mt-1">L'établissement recevra votre message par email.</p>
-                <button @click="$store.contactModal.open = false" type="button" class="mt-4 bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 cursor-pointer">Fermer</button>
-            </div>
-
-            <form x-show="!sent" @submit.prevent="
-                sending = true; error = '';
-                const fd = new FormData($el);
-                fetch($el.action, { method: 'POST', body: fd, headers: { 'Accept': 'application/json' } })
-                    .then(r => { if (r.ok) { sent = true; } else { return r.json().then(d => { error = d.message || 'Erreur'; }); } })
-                    .catch(() => { error = 'Erreur réseau.'; })
-                    .finally(() => { sending = false; });
-            " action="{{ route('contact.etablissement.send', $establishment) }}">
-                @csrf
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Votre nom</label>
-                    <input type="text" name="name" value="{{ auth()->user()?->username }}" class="w-full border rounded-lg px-3 py-2">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Votre email <span class="text-red-500">*</span></label>
-                    <input type="email" name="email" value="{{ auth()->user()?->email }}" required class="w-full border rounded-lg px-3 py-2">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Message <span class="text-red-500">*</span></label>
-                    <textarea name="content" rows="5" required class="w-full border rounded-lg px-3 py-2" placeholder="Votre message..."></textarea>
-                </div>
-                <p x-show="error" x-text="error" class="text-red-500 text-sm mb-3" x-cloak></p>
-                <button type="submit" :disabled="sending" class="w-full bg-pink-600 text-white font-semibold py-3 rounded-lg hover:bg-pink-700 transition disabled:opacity-50 cursor-pointer">
-                    <span x-show="!sending">Envoyer le message</span>
-                    <span x-show="sending">Envoi en cours...</span>
-                </button>
-            </form>
+    <x-ajax-modal store="contactModal"
+                  :title="'Contacter ' . $establishment->name"
+                  :action="route('contact.etablissement.send', $establishment)"
+                  success-message="L'établissement recevra votre message par email."
+                  submit-label="Envoyer le message">
+        <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">Votre nom</label>
+            <input type="text" name="name" value="{{ auth()->user()?->username }}" class="w-full border rounded-lg px-3 py-2">
         </div>
-    </div>
+        <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">Votre email <span class="text-red-500">*</span></label>
+            <input type="email" name="email" value="{{ auth()->user()?->email }}" required class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">Message <span class="text-red-500">*</span></label>
+            <textarea name="content" rows="5" required class="w-full border rounded-lg px-3 py-2" placeholder="Votre message..."></textarea>
+        </div>
+    </x-ajax-modal>
 
     {{-- Booking Modal --}}
-    <div x-data="{ sent: false, sending: false, error: '' }"
-         x-show="$store.bookingModal.open"
-         @keydown.escape.window="$store.bookingModal.open = false"
-         x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/50" @click="$store.bookingModal.open = false"></div>
-        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg p-6 z-10 max-h-[90vh] overflow-y-auto" @click.stop>
-            <button @click="$store.bookingModal.open = false" type="button" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 cursor-pointer">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-
-            <h2 class="text-xl font-bold text-gray-900 mb-1">Prendre RDV</h2>
-            <p class="text-sm text-gray-500 mb-4">chez {{ $establishment->name }}</p>
-
-            <div x-show="sent" class="text-center py-8">
-                <svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <p class="text-lg font-semibold text-gray-900">Demande envoyée !</p>
-                <p class="text-sm text-gray-500 mt-1">L'établissement vous contactera pour confirmer.</p>
-                <button @click="$store.bookingModal.open = false" type="button" class="mt-4 bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 cursor-pointer">Fermer</button>
+    <x-ajax-modal store="bookingModal"
+                  title="Prendre RDV"
+                  :subtitle="'chez ' . $establishment->name"
+                  :action="route('booking.store', $establishment)"
+                  success-title="Demande envoyée !"
+                  success-message="L'établissement vous contactera pour confirmer."
+                  submit-label="Envoyer la demande">
+        <div class="grid grid-cols-2 gap-3 mb-3">
+            <div>
+                <label class="block text-sm font-medium mb-1">Nom <span class="text-red-500">*</span></label>
+                <input type="text" name="name" required value="{{ auth()->user()?->username }}" class="w-full border rounded-lg px-3 py-2 text-sm">
             </div>
-
-            <form x-show="!sent" @submit.prevent="
-                sending = true; error = '';
-                const fd = new FormData($el);
-                fetch($el.action, { method: 'POST', body: fd, headers: { 'Accept': 'application/json' } })
-                    .then(async r => { const d = await r.json().catch(() => ({})); if (r.ok) { sent = true; } else { error = d.message || (d.errors ? Object.values(d.errors).flat().join(' ') : 'Erreur'); } })
-                    .catch(() => { error = 'Erreur réseau.'; })
-                    .finally(() => { sending = false; });
-            " action="{{ route('booking.store', $establishment) }}">
-                @csrf
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Nom <span class="text-red-500">*</span></label>
-                        <input type="text" name="name" required value="{{ auth()->user()?->username }}" class="w-full border rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Téléphone</label>
-                        <input type="tel" name="phone" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="06...">
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium mb-1">Email <span class="text-red-500">*</span></label>
-                    <input type="email" name="email" required value="{{ auth()->user()?->email }}" class="w-full border rounded-lg px-3 py-2 text-sm">
-                </div>
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Date souhaitée <span class="text-red-500">*</span></label>
-                        <input type="date" name="requested_date" required min="{{ now()->format('Y-m-d') }}" class="w-full border rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Horaire <span class="text-red-500">*</span></label>
-                        <select name="requested_time" required class="w-full border rounded-lg px-3 py-2 text-sm">
-                            <option value="">Choisir...</option>
-                            <option value="matin">Matin</option>
-                            <option value="midi">Midi</option>
-                            <option value="apres-midi">Après-midi</option>
-                            <option value="soir">Soir</option>
-                        </select>
-                    </div>
-                </div>
-                @if($establishment->categories->isNotEmpty())
-                    <div class="mb-3">
-                        <label class="block text-sm font-medium mb-1">Prestation</label>
-                        <select name="requested_service" class="w-full border rounded-lg px-3 py-2 text-sm">
-                            <option value="">À préciser</option>
-                            @foreach($establishment->categories as $cat)
-                                <option value="{{ $cat->name }}">{{ $cat->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                @endif
-                <div class="mb-3">
-                    <label class="block text-sm font-medium mb-1">Message (optionnel)</label>
-                    <textarea name="content" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Précisions..."></textarea>
-                </div>
-                <p x-show="error" x-text="error" class="text-red-500 text-sm mb-3" x-cloak></p>
-                <button type="submit" :disabled="sending" class="w-full bg-pink-600 text-white font-semibold py-3 rounded-lg hover:bg-pink-700 transition disabled:opacity-50 cursor-pointer">
-                    <span x-show="!sending">Envoyer la demande</span>
-                    <span x-show="sending">Envoi en cours...</span>
-                </button>
-            </form>
+            <div>
+                <label class="block text-sm font-medium mb-1">Téléphone</label>
+                <input type="tel" name="phone" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="06...">
+            </div>
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="block text-sm font-medium mb-1">Email <span class="text-red-500">*</span></label>
+            <input type="email" name="email" required value="{{ auth()->user()?->email }}" class="w-full border rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+            <div>
+                <label class="block text-sm font-medium mb-1">Date souhaitée <span class="text-red-500">*</span></label>
+                <input type="date" name="requested_date" required min="{{ now()->format('Y-m-d') }}" class="w-full border rounded-lg px-3 py-2 text-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Horaire <span class="text-red-500">*</span></label>
+                <select name="requested_time" required class="w-full border rounded-lg px-3 py-2 text-sm">
+                    <option value="">Choisir...</option>
+                    <option value="matin">Matin</option>
+                    <option value="midi">Midi</option>
+                    <option value="apres-midi">Après-midi</option>
+                    <option value="soir">Soir</option>
+                </select>
+            </div>
+        </div>
+        @if($establishment->categories->isNotEmpty())
+            <div class="mb-3">
+                <label class="block text-sm font-medium mb-1">Prestation</label>
+                <select name="requested_service" class="w-full border rounded-lg px-3 py-2 text-sm">
+                    <option value="">À préciser</option>
+                    @foreach($establishment->categories as $cat)
+                        <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
+        <div class="mb-3">
+            <label class="block text-sm font-medium mb-1">Message (optionnel)</label>
+            <textarea name="content" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Précisions..."></textarea>
+        </div>
+    </x-ajax-modal>
 
     {{-- Lightbox --}}
     <div x-show="$store.lightbox.open"
@@ -630,58 +568,26 @@
 
     {{-- Claim Modal --}}
     @auth
-    <div x-data="{ sent: false, sending: false, error: '' }"
-         x-show="$store.claimModal.open"
-         @keydown.escape.window="$store.claimModal.open = false"
-         x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4">
-
-        <div class="fixed inset-0 bg-black/50" @click="$store.claimModal.open = false"></div>
-        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg p-6 z-10" @click.stop>
-            <button @click="$store.claimModal.open = false" type="button" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 cursor-pointer">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-
-            <h2 class="text-xl font-bold text-gray-900 mb-1">Revendiquer cet établissement</h2>
-            <p class="text-sm text-gray-500 mb-4">{{ $establishment->name }}</p>
-
-            <div x-show="sent" class="text-center py-8">
-                <svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <p class="text-lg font-semibold text-gray-900">Demande envoyée !</p>
-                <p class="text-sm text-gray-500 mt-1">Notre équipe vérifiera votre demande dans les plus brefs délais.</p>
-                <button @click="$store.claimModal.open = false" type="button" class="mt-4 bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 cursor-pointer">Fermer</button>
-            </div>
-
-            <form x-show="!sent" @submit.prevent="
-                sending = true; error = '';
-                const fd = new FormData($el);
-                fetch($el.action, { method: 'POST', body: fd, headers: { 'Accept': 'application/json' } })
-                    .then(r => { if (r.ok) { sent = true; } else { return r.json().then(d => { error = d.error || d.message || 'Erreur'; }); } })
-                    .catch(() => { error = 'Erreur réseau.'; })
-                    .finally(() => { sending = false; });
-            " action="{{ route('revendication.store', $establishment) }}">
-                @csrf
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Nom du gérant <span class="text-red-500">*</span></label>
-                    <input type="text" name="manager_name" required class="w-full border rounded-lg px-3 py-2" placeholder="Prénom et nom">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">N° SIRET</label>
-                    <input type="text" name="siret" maxlength="14" class="w-full border rounded-lg px-3 py-2" placeholder="14 chiffres (facultatif)">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Message complémentaire</label>
-                    <textarea name="message" rows="3" class="w-full border rounded-lg px-3 py-2" placeholder="Informations supplémentaires..."></textarea>
-                </div>
-                <p class="text-xs text-gray-400 mb-4">Les demandes de propriété sont systématiquement vérifiées par notre équipe de modérateurs.</p>
-                <p x-show="error" x-text="error" class="text-red-500 text-sm mb-3" x-cloak></p>
-                <button type="submit" :disabled="sending" class="w-full bg-pink-600 text-white font-semibold py-3 rounded-lg hover:bg-pink-700 transition disabled:opacity-50 cursor-pointer">
-                    <span x-show="!sending">Envoyer ma demande</span>
-                    <span x-show="sending">Envoi en cours...</span>
-                </button>
-            </form>
+    <x-ajax-modal store="claimModal"
+                  title="Revendiquer cet établissement"
+                  :subtitle="$establishment->name"
+                  :action="route('revendication.store', $establishment)"
+                  success-message="Notre équipe vérifiera votre demande dans les plus brefs délais."
+                  submit-label="Envoyer ma demande">
+        <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">Nom du gérant <span class="text-red-500">*</span></label>
+            <input type="text" name="manager_name" required class="w-full border rounded-lg px-3 py-2" placeholder="Prénom et nom">
         </div>
-    </div>
+        <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">N° SIRET</label>
+            <input type="text" name="siret" maxlength="14" class="w-full border rounded-lg px-3 py-2" placeholder="14 chiffres (facultatif)">
+        </div>
+        <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">Message complémentaire</label>
+            <textarea name="message" rows="3" class="w-full border rounded-lg px-3 py-2" placeholder="Informations supplémentaires..."></textarea>
+        </div>
+        <p class="text-xs text-gray-400 mb-4">Les demandes de propriété sont systématiquement vérifiées par notre équipe de modérateurs.</p>
+    </x-ajax-modal>
     @endauth
 
     @if($establishment->latitude && $establishment->longitude)

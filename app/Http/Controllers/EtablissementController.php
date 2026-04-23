@@ -10,23 +10,15 @@ use App\Services\GeoSearchService;
 
 class EtablissementController extends Controller
 {
-    private const TYPE_SLUGS = [
-        'institut-de-beaute' => 0,
-        'estheticienne-a-domicile' => 1,
-        'spa' => 2,
-        'thalasso' => 3,
-    ];
-
     /**
      * Hierarchical URL : /{dept}/{city}/{type}/{slug}
      */
     public function showHierarchical(string $dept, string $city, string $type, string $slug, GeoSearchService $geoService)
     {
-        if (! isset(self::TYPE_SLUGS[$type])) {
+        $typeId = Establishment::typeIdFromSlug($type);
+        if ($typeId === null) {
             abort(404);
         }
-
-        $typeId = self::TYPE_SLUGS[$type];
 
         $department = Department::where('slug', $dept)->firstOrFail();
         $cityModel = City::where('slug', $city)

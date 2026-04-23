@@ -3,13 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Notifications\Notifiable;
 
 class Establishment extends Model
 {
+    use HasFactory, Notifiable;
+
     const TYPE_SLUGS = [
         0 => 'institut-de-beaute',
         1 => 'estheticienne-a-domicile',
@@ -23,6 +27,46 @@ class Establishment extends Model
         2 => 'Spa',
         3 => 'Thalasso',
     ];
+
+    /**
+     * Resolve a type slug to its numeric ID (or null if unknown).
+     */
+    public static function typeIdFromSlug(string $slug): ?int
+    {
+        $id = array_search($slug, self::TYPE_SLUGS, true);
+
+        return $id === false ? null : $id;
+    }
+
+    /**
+     * Normalize a services array (from a form) into JSON-ready shape.
+     *
+     * @param  array<int, array<string, mixed>>  $input
+     * @return array<int, array{name:string,description:string,duration:string,price:string}>|null
+     */
+    public static function normalizeServices(array $input): ?array
+    {
+        $clean = collect($input)
+            ->filter(fn ($s) => ! empty($s['name']))
+            ->map(fn ($s) => [
+                'name' => trim($s['name']),
+                'description' => trim($s['description'] ?? ''),
+                'duration' => trim($s['duration'] ?? ''),
+                'price' => trim($s['price'] ?? ''),
+            ])
+            ->values()
+            ->all();
+
+        return $clean ?: null;
+    }
+
+    /**
+     * Route notifications to the establishment's contact email.
+     */
+    public function routeNotificationForMail(): ?string
+    {
+        return $this->email;
+    }
 
     protected $fillable = [
         'type', 'name', 'slug', 'email', 'website', 'google_maps_url',
@@ -133,12 +177,18 @@ class Establishment extends Model
 
     public function scopeNearby(Builder $query, float $lat, float $lng, float $radiusKm = 10): Builder
     {
-        return $query->selectRaw(
-            '*, (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance',
-            [$lat, $lng, $lat]
-        )
-            ->having('distance', '<', $radiusKm)
-            ->orderBy('distance');
+        // Bounding box + squared-distance ordering: portable across MySQL/SQLite,
+        // index-friendly, and close enough to a true great-circle for directory listings.
+        $deltaLat = $radiusKm / 111.0;
+        $deltaLng = $radiusKm / max(0.01, 111.0 * abs(cos(deg2rad($lat))));
+
+        return $query
+            ->whereBetween('latitude', [$lat - $deltaLat, $lat + $deltaLat])
+            ->whereBetween('longitude', [$lng - $deltaLng, $lng + $deltaLng])
+            ->orderByRaw(
+                '(latitude - ?) * (latitude - ?) + (longitude - ?) * (longitude - ?)',
+                [$lat, $lat, $lng, $lng]
+            );
     }
 
     public function scopeOpenNow(Builder $query): Builder

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Establishment;
-use App\Models\Message;
+use App\Notifications\NewContactNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -16,13 +16,13 @@ class ContactController extends Controller
 
     public function sendGeneral(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'email' => 'required|email',
             'content' => 'required|string|max:5000',
         ]);
 
-        Mail::raw($request->content, function ($message) use ($request) {
-            $message->from($request->email)
+        Mail::raw($validated['content'], function ($mail) use ($validated) {
+            $mail->from($validated['email'])
                 ->to(config('mail.from.address'))
                 ->subject('Contact TopInstitut');
         });
@@ -43,15 +43,13 @@ class ContactController extends Controller
             'content' => 'required|string|max:5000',
         ]);
 
-        $validated['establishment_id'] = $establishment->id;
-        Message::create($validated);
+        $message = $establishment->messages()->create([
+            ...$validated,
+            'type' => 'contact',
+        ]);
 
         if ($establishment->email) {
-            Mail::raw($request->content, function ($message) use ($request, $establishment) {
-                $message->from($request->email)
-                    ->to($establishment->email)
-                    ->subject('Message via TopInstitut - '.$establishment->name);
-            });
+            $establishment->notify(new NewContactNotification($message));
         }
 
         if ($request->expectsJson()) {

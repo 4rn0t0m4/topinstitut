@@ -5,63 +5,51 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Establishment;
 use App\Models\Photo;
+use App\Services\PhotoUploadService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class PhotoController extends Controller
 {
-    private function authorize(Request $request, Establishment $etablissement): void
-    {
-        if (! $request->user()->establishments()->where('establishment_id', $etablissement->id)->exists()) {
-            abort(403);
-        }
-    }
+    public function __construct(private PhotoUploadService $photos) {}
 
-    public function index(Request $request, Establishment $etablissement)
+    public function index(Establishment $etablissement)
     {
-        $this->authorize($request, $etablissement);
-        $photos = $etablissement->photos;
+        $this->authorize('manage', $etablissement);
 
-        return view('client.photos.index', compact('etablissement', 'photos'));
+        return view('client.photos.index', [
+            'etablissement' => $etablissement,
+            'photos' => $etablissement->photos,
+        ]);
     }
 
     public function store(Request $request, Establishment $etablissement)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
-        $request->validate([
-            'photo' => 'required|image|max:5120',
-        ]);
+        $request->validate(['photo' => 'required|image|max:5120']);
 
-        $path = $request->file('photo')->store("etablissements/{$etablissement->id}", 'public');
-
-        $etablissement->photos()->create([
-            'filename' => $path,
-            'sort_order' => $etablissement->photos()->count(),
-        ]);
+        $this->photos->upload($etablissement, $request->file('photo'));
 
         return back()->with('success', 'Photo ajoutée.');
     }
 
-    public function destroy(Request $request, Establishment $etablissement, Photo $photo)
+    public function destroy(Establishment $etablissement, Photo $photo)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
+        abort_unless($photo->establishment_id === $etablissement->id, 403);
 
-        Storage::disk('public')->delete($photo->filename);
-        $photo->delete();
+        $this->photos->delete($photo);
 
         return back()->with('success', 'Photo supprimée.');
     }
 
     public function reorder(Request $request, Establishment $etablissement)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
         $request->validate(['order' => 'required|array', 'order.*' => 'integer|exists:photos,id']);
 
-        foreach ($request->order as $index => $id) {
-            Photo::where('id', $id)->where('establishment_id', $etablissement->id)->update(['sort_order' => $index]);
-        }
+        $this->photos->reorder($etablissement, $request->order);
 
         return response()->json(['ok' => true]);
     }

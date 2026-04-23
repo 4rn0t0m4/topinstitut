@@ -9,31 +9,24 @@ use Illuminate\Http\Request;
 
 class AvisController extends Controller
 {
-    private function authorize(Request $request, Establishment $etablissement): void
+    public function index(Establishment $etablissement)
     {
-        if (! $request->user()->establishments()->where('establishment_id', $etablissement->id)->exists()) {
-            abort(403);
-        }
-    }
-
-    public function index(Request $request, Establishment $etablissement)
-    {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
         $avis = $etablissement->reviews()->with('user')->latest()->paginate(20);
 
         return view('client.avis.index', compact('etablissement', 'avis'));
     }
 
-    public function repondre(Request $request, Establishment $etablissement, Review $avis)
+    public function repondre(Establishment $etablissement, Review $avis)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
         return view('client.avis.repondre', compact('etablissement', 'avis'));
     }
 
     public function storeReponse(Request $request, Establishment $etablissement, Review $avis)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
         $request->validate(['reply' => 'required|string|max:5000']);
 

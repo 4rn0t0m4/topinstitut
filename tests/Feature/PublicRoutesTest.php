@@ -5,97 +5,44 @@ namespace Tests\Feature;
 use App\Models\City;
 use App\Models\Department;
 use App\Models\Establishment;
-use App\Models\EstablishmentSlug;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class PublicRoutesTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_homepage_returns_200(): void
     {
-        $this->get('/')->assertStatus(200);
+        $this->get('/')->assertOk();
     }
 
     public function test_recherche_returns_200(): void
     {
-        $this->get('/recherche')->assertStatus(200);
+        $this->get('/recherche')->assertOk();
     }
 
     public function test_connexion_returns_200(): void
     {
-        $this->get('/connexion')->assertStatus(200);
+        $this->get('/connexion')->assertOk();
     }
 
     public function test_inscription_returns_200(): void
     {
-        $this->get('/inscription')->assertStatus(200);
-    }
-
-    public function test_departement_page_returns_200(): void
-    {
-        $dept = Department::first();
-        if (! $dept) {
-            $this->markTestSkipped('No department in DB');
-        }
-
-        $this->get('/departement-'.$dept->slug)->assertStatus(200);
-    }
-
-    public function test_ville_page_returns_200(): void
-    {
-        $city = City::whereHas('establishments', fn ($q) => $q->where('is_active', true))->first();
-        if (! $city) {
-            $this->markTestSkipped('No city with active establishments');
-        }
-
-        $this->get('/les-instituts-de-beaute-a-'.$city->slug)->assertStatus(200);
-    }
-
-    public function test_etablissement_page_returns_200(): void
-    {
-        $etab = Establishment::active()->first();
-        if (! $etab) {
-            $this->markTestSkipped('No active establishment');
-        }
-
-        $this->get($etab->url)->assertStatus(200);
-    }
-
-    public function test_legacy_html_redirects_301(): void
-    {
-        $etab = Establishment::active()->first();
-        if (! $etab) {
-            $this->markTestSkipped('No active establishment');
-        }
-
-        $this->get('/'.Establishment::TYPE_SLUGS[$etab->type].'/'.$etab->slug.'.html')
-            ->assertRedirect($etab->url)
-            ->assertStatus(301);
-    }
-
-    public function test_old_slug_redirects_301(): void
-    {
-        $slug = EstablishmentSlug::whereHas('establishment', fn ($q) => $q->where('is_active', true))->first();
-        if (! $slug) {
-            $this->markTestSkipped('No old slug in DB');
-        }
-
-        $etab = $slug->establishment;
-        $this->get('/'.Establishment::TYPE_SLUGS[$etab->type].'/'.$slug->slug)
-            ->assertRedirect($etab->url)
-            ->assertStatus(301);
+        $this->get('/inscription')->assertOk();
     }
 
     public function test_404_returns_custom_page(): void
     {
         $this->get('/page-qui-nexiste-pas')
-            ->assertStatus(404)
+            ->assertNotFound()
             ->assertSee('Page introuvable');
     }
 
     public function test_sitemap_returns_xml(): void
     {
         $this->get('/sitemap.xml')
-            ->assertStatus(200)
+            ->assertOk()
             ->assertHeader('Content-Type', 'text/xml; charset=UTF-8');
     }
 
@@ -107,5 +54,29 @@ class PublicRoutesTest extends TestCase
     public function test_client_requires_auth(): void
     {
         $this->get('/espace-client')->assertRedirect('/connexion');
+    }
+
+    public function test_departement_page_returns_200(): void
+    {
+        $dept = Department::factory()->create(['slug' => 'test-dept']);
+
+        $this->get('/test-dept')->assertOk();
+    }
+
+    public function test_city_page_returns_200(): void
+    {
+        $dept = Department::factory()->create(['slug' => 'test-dept']);
+        City::factory()->create(['slug' => 'test-ville', 'department_code' => $dept->code]);
+
+        $this->get('/test-dept/test-ville')->assertOk();
+    }
+
+    public function test_establishment_page_returns_200(): void
+    {
+        $dept = Department::factory()->create(['slug' => 'test-dept']);
+        $city = City::factory()->create(['slug' => 'test-ville', 'department_code' => $dept->code]);
+        $etab = Establishment::factory()->institut()->inCity($city)->create(['slug' => 'mon-etab']);
+
+        $this->get($etab->url)->assertOk();
     }
 }

@@ -8,23 +8,16 @@ use Illuminate\Http\Request;
 
 class ServicesController extends Controller
 {
-    private function authorize(Request $request, Establishment $etablissement): void
+    public function edit(Establishment $etablissement)
     {
-        if (! $request->user()->establishments()->where('establishment_id', $etablissement->id)->exists()) {
-            abort(403);
-        }
-    }
-
-    public function edit(Request $request, Establishment $etablissement)
-    {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
         return view('client.etablissement.services', compact('etablissement'));
     }
 
     public function update(Request $request, Establishment $etablissement)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
         $request->validate([
             'services' => 'array|max:100',
@@ -34,18 +27,9 @@ class ServicesController extends Controller
             'services.*.price' => 'nullable|string|max:50',
         ]);
 
-        $services = collect($request->input('services', []))
-            ->filter(fn ($s) => ! empty($s['name']))
-            ->map(fn ($s) => [
-                'name' => trim($s['name']),
-                'description' => trim($s['description'] ?? ''),
-                'duration' => trim($s['duration'] ?? ''),
-                'price' => trim($s['price'] ?? ''),
-            ])
-            ->values()
-            ->all();
-
-        $etablissement->update(['services' => $services ?: null]);
+        $etablissement->update([
+            'services' => Establishment::normalizeServices($request->input('services', [])),
+        ]);
 
         return back()->with('success', 'Prestations mises à jour.');
     }

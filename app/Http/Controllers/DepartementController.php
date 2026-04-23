@@ -10,8 +10,8 @@ class DepartementController extends Controller
     {
         $department = Department::where('slug', $slug)->firstOrFail();
         $cities = $department->cities()
+            ->whereHas('establishments', fn ($q) => $q->where('is_active', true))
             ->withCount(['establishments' => fn ($q) => $q->where('is_active', true)])
-            ->having('establishments_count', '>', 0)
             ->orderBy('name')
             ->get();
 

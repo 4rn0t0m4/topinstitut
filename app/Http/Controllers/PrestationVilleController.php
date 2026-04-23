@@ -9,13 +9,6 @@ use App\Models\Establishment;
 
 class PrestationVilleController extends Controller
 {
-    private const TYPE_SLUGS = [
-        'institut-de-beaute' => 0,
-        'estheticienne-a-domicile' => 1,
-        'spa' => 2,
-        'thalasso' => 3,
-    ];
-
     public function __invoke(string $deptSlug, string $citySlug, string $prestationSlug)
     {
         $department = Department::where('slug', $deptSlug)->firstOrFail();
@@ -25,8 +18,8 @@ class PrestationVilleController extends Controller
 
         $query = Establishment::active()->where('city_id', $city->id);
 
-        if (isset(self::TYPE_SLUGS[$prestationSlug])) {
-            $typeId = self::TYPE_SLUGS[$prestationSlug];
+        $typeId = Establishment::typeIdFromSlug($prestationSlug);
+        if ($typeId !== null) {
             $query->where('type', $typeId);
             $prestationName = Establishment::TYPE_LABELS[$typeId];
         } else {

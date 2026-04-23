@@ -3,63 +3,53 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
 {
-    public function test_user_can_login(): void
-    {
-        $user = User::where('email_verified_at', '!=', null)->first();
-        if (! $user) {
-            $this->markTestSkipped('No verified user');
-        }
+    use RefreshDatabase;
 
-        // Can't test MD5 login without knowing the password, but we test the flow
+    public function test_login_rejects_invalid_credentials(): void
+    {
         $this->post('/connexion', [
             'email' => 'nonexistent@example.com',
             'password' => 'wrongpassword',
-        ])->assertRedirect()->assertSessionHasErrors('email');
+        ])->assertSessionHasErrors('email');
     }
 
     public function test_user_can_register(): void
     {
-        $email = 'test-register-'.time().'@example.com';
+        $email = 'test-register-'.uniqid().'@example.com';
 
         $this->post('/inscription', [
-            'pseudo' => 'test_'.time(),
+            'username' => 'test_'.uniqid(),
             'email' => $email,
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
-        ])->assertRedirect('/');
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('users', ['email' => $email]);
     }
 
     public function test_authenticated_user_can_logout(): void
     {
-        $user = User::first();
-        if (! $user) {
-            $this->markTestSkipped('No user');
-        }
+        $user = User::factory()->create();
 
         $this->actingAs($user)->get('/deconnexion')->assertRedirect('/');
     }
 
     public function test_admin_can_access_dashboard(): void
     {
-        $admin = User::where('is_admin', true)->first();
-        if (! $admin) {
-            $this->markTestSkipped('No admin user');
-        }
+        $admin = User::factory()->admin()->create();
 
-        $this->actingAs($admin)->get('/admin')->assertStatus(200);
+        $this->actingAs($admin)->get('/admin')->assertOk();
     }
 
-    public function test_non_admin_cannot_access_admin(): void
+    public function test_non_admin_is_forbidden_on_admin(): void
     {
-        $user = User::where('is_admin', false)->first();
-        if (! $user) {
-            $this->markTestSkipped('No non-admin user');
-        }
+        $user = User::factory()->create();
 
-        $this->actingAs($user)->get('/admin')->assertStatus(403);
+        $this->actingAs($user)->get('/admin')->assertForbidden();
     }
 }

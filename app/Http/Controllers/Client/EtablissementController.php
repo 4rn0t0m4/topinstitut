@@ -9,23 +9,16 @@ use Illuminate\Http\Request;
 
 class EtablissementController extends Controller
 {
-    private function authorize(Request $request, Establishment $etablissement): void
+    public function edit(Establishment $etablissement)
     {
-        if (! $request->user()->establishments()->where('establishment_id', $etablissement->id)->exists()) {
-            abort(403);
-        }
-    }
-
-    public function edit(Request $request, Establishment $etablissement)
-    {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
         return view('client.etablissement.edit', compact('etablissement'));
     }
 
     public function update(Request $request, Establishment $etablissement)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -42,16 +35,16 @@ class EtablissementController extends Controller
         return back()->with('success', 'Établissement mis à jour.');
     }
 
-    public function editPresentation(Request $request, Establishment $etablissement)
+    public function editPresentation(Establishment $etablissement)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
         return view('client.etablissement.presentation', compact('etablissement'));
     }
 
     public function updatePresentation(Request $request, Establishment $etablissement)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
         $validated = $request->validate([
             'description' => 'nullable|string|max:10000',
@@ -64,9 +57,9 @@ class EtablissementController extends Controller
         return back()->with('success', 'Présentation mise à jour.');
     }
 
-    public function editHoraires(Request $request, Establishment $etablissement)
+    public function editHoraires(Establishment $etablissement)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
         $horaires = $etablissement->schedules->keyBy('day_of_week');
 
         return view('client.etablissement.horaires', compact('etablissement', 'horaires'));
@@ -74,7 +67,7 @@ class EtablissementController extends Controller
 
     public function updateHoraires(Request $request, Establishment $etablissement)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
         $request->validate([
             'horaires' => 'required|array',
@@ -101,16 +94,16 @@ class EtablissementController extends Controller
         return back()->with('success', 'Horaires mis à jour.');
     }
 
-    public function editLocalisation(Request $request, Establishment $etablissement)
+    public function editLocalisation(Establishment $etablissement)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
         return view('client.etablissement.localisation', compact('etablissement'));
     }
 
     public function updateLocalisation(Request $request, Establishment $etablissement)
     {
-        $this->authorize($request, $etablissement);
+        $this->authorize('manage', $etablissement);
 
         $validated = $request->validate([
             'latitude' => 'required|numeric|between:-90,90',
