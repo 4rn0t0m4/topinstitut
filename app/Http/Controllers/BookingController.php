@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Establishment;
 use App\Models\Message;
+use App\Models\ReviewReminder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
@@ -24,7 +26,21 @@ class BookingController extends Controller
         $validated['establishment_id'] = $establishment->id;
         $validated['type'] = 'booking';
 
-        Message::create($validated);
+        $message = Message::create($validated);
+
+        // Schedule review reminder 7 days after the requested date
+        $scheduledAt = $validated['requested_date'] instanceof \DateTimeInterface
+            ? \Carbon\Carbon::parse($validated['requested_date'])->addDays(7)->setTime(10, 0)
+            : now()->addDays(10)->setTime(10, 0);
+
+        ReviewReminder::create([
+            'establishment_id' => $establishment->id,
+            'message_id' => $message->id,
+            'email' => $validated['email'],
+            'name' => $validated['name'],
+            'scheduled_at' => $scheduledAt,
+            'token' => Str::random(48),
+        ]);
 
         if ($establishment->email) {
             $body = "Demande de RDV via TopInstitut\n\n"

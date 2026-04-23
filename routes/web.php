@@ -74,6 +74,9 @@ Route::post('/revendiquer/{establishment}', [RevendicationController::class, 'st
 // Booking
 Route::post('/rdv/{establishment}', [\App\Http\Controllers\BookingController::class, 'store'])->middleware('throttle:5,1')->name('booking.store');
 
+// Favorites
+Route::post('/ajax/favorites/{establishment}', [\App\Http\Controllers\FavoriteController::class, 'toggle'])->name('favorites.toggle');
+
 // Legacy .html redirects — MUST be before the establishment detail routes
 // (otherwise /spa/xxx.html would match /spa/{slug} with slug="xxx.html")
 Route::get('/institut-de-beaute/{slug}.html', fn ($slug) => redirect("/institut-de-beaute/$slug", 301));

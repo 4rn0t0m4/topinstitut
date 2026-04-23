@@ -2,6 +2,16 @@
     <div class="max-w-7xl mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-6">Recherche</h1>
 
+        @if($geoloc)
+            <div class="mb-4 bg-pink-50 border border-pink-200 rounded-lg px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-sm text-pink-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                    Résultats autour de votre position (rayon {{ $radius }} km)
+                </div>
+                <a href="{{ route('recherche') }}" class="text-sm text-pink-600 hover:underline">Désactiver</a>
+            </div>
+        @endif
+
         <form action="{{ route('recherche') }}" method="GET" class="bg-white border rounded-lg p-6 mb-8"
               x-data="{ open: {{ $type !== null || $openNow || $withPhotos || $minRating || $category ? 'true' : 'false' }}, loading: false }"
               @submit="loading = true; $dispatch('search-loading')">

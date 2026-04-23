@@ -11,3 +11,4 @@ Artisan::command('inspire', function () {
 Schedule::command('import:google-places --limit=10')->hourly();
 Schedule::command('import:google-reviews --limit=10')->hourlyAt(20);
 Schedule::command('import:google-photos --limit=5 --max-photos=5')->hourlyAt(40);
+Schedule::command('reminders:send')->dailyAt('10:00');

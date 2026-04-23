@@ -21,12 +21,18 @@ class RechercheController extends Controller
         $withPhotos = $request->boolean('avec_photos');
         $minRating = $request->filled('note_min') ? (float) $request->input('note_min') : null;
         $sort = $request->input('tri', 'rating');
+        $lat = $request->filled('lat') ? (float) $request->input('lat') : null;
+        $lng = $request->filled('lng') ? (float) $request->input('lng') : null;
+        $radius = $request->filled('r') ? min(50, max(1, (int) $request->input('r'))) : 15;
+        $geoloc = $lat && $lng;
 
         if ($name) {
             $query->where('name', 'like', '%'.$name.'%');
         }
 
-        if ($cityName) {
+        if ($geoloc) {
+            $query->nearby($lat, $lng, $radius);
+        } elseif ($cityName) {
             $city = City::where('name', 'like', $cityName)->first();
             if ($city) {
                 if ($city->latitude && $city->longitude) {
@@ -69,7 +75,8 @@ class RechercheController extends Controller
 
         return view('recherche.index', compact(
             'establishments', 'categories',
-            'name', 'cityName', 'category', 'type', 'openNow', 'withPhotos', 'minRating', 'sort'
+            'name', 'cityName', 'category', 'type', 'openNow', 'withPhotos', 'minRating', 'sort',
+            'geoloc', 'lat', 'lng', 'radius'
         ));
     }
 }

@@ -27,6 +27,10 @@
     @if(isset($noindex))
         <meta name="robots" content="noindex, nofollow">
     @endif
+    @auth
+        <meta name="auth-user" content="{{ auth()->id() }}">
+        <meta name="auth-favorites" content="{{ auth()->user()->favorites()->pluck('establishment_id')->implode(',') }}">
+    @endauth
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
 </head>

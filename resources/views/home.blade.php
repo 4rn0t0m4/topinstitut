@@ -33,6 +33,26 @@
                 </div>
                 <button type="submit" class="bg-white text-pink-600 font-semibold px-6 py-3 rounded-lg hover:bg-pink-50 transition">Rechercher</button>
             </form>
+
+            <div x-data="{ locating: false, error: '' }" class="mt-4 text-center">
+                <button type="button"
+                        @click="
+                            if (!navigator.geolocation) { error = 'Géolocalisation non supportée.'; return; }
+                            locating = true; error = '';
+                            navigator.geolocation.getCurrentPosition(
+                                pos => { window.location.href = '{{ route('recherche') }}?lat=' + pos.coords.latitude + '&lng=' + pos.coords.longitude + '&r=10'; },
+                                err => { locating = false; error = 'Autorisation refusée ou position indisponible.'; },
+                                { timeout: 10000 }
+                            );
+                        "
+                        :disabled="locating"
+                        class="inline-flex items-center gap-2 text-sm text-pink-100 hover:text-white underline disabled:opacity-50">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                    <span x-show="!locating">Instituts près de chez moi</span>
+                    <span x-show="locating">Localisation...</span>
+                </button>
+                <p x-show="error" x-text="error" class="text-pink-100 text-xs mt-1" x-cloak></p>
+            </div>
         </div>
     </section>
 

@@ -49,6 +49,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Review::class);
     }
 
+    public function favorites(): BelongsToMany
+    {
+        return $this->belongsToMany(Establishment::class, 'favorites')->withTimestamps();
+    }
+
     public function tier(): ?UserTier
     {
         return UserTier::where('min_reviews', '<=', $this->review_count)

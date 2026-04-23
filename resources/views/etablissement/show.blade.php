@@ -685,6 +685,12 @@
     @endauth
 
     @if($establishment->latitude && $establishment->longitude)
+        @push('head')
+            <style>
+                .ti-marker { background: transparent; border: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,.25)); transition: transform .15s; }
+                .ti-marker:hover { transform: scale(1.15); z-index: 1000 !important; }
+            </style>
+        @endpush
         <script src="https://unpkg.com/leaflet@1.9/dist/leaflet.js"></script>
         <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
         <script src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_PLACES_API_KEY') }}"></script>
@@ -692,7 +698,19 @@
             document.addEventListener('DOMContentLoaded', function () {
                 var map = L.map('map', { scrollWheelZoom: false }).setView([{{ $establishment->latitude }}, {{ $establishment->longitude }}], 15);
                 L.gridLayer.googleMutant({ type: 'roadmap', maxZoom: 20 }).addTo(map);
-                L.marker([{{ $establishment->latitude }}, {{ $establishment->longitude }}])
+
+                var pinIcon = L.divIcon({
+                    className: 'ti-marker',
+                    html: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 44" width="32" height="44">'
+                        + '<path d="M16 0C7.2 0 0 7.2 0 16c0 11 16 28 16 28s16-17 16-28C32 7.2 24.8 0 16 0z" fill="#ec4899" stroke="#fff" stroke-width="2"/>'
+                        + '<circle cx="16" cy="16" r="6" fill="#fff"/>'
+                        + '</svg>',
+                    iconSize: [32, 44],
+                    iconAnchor: [16, 44],
+                    popupAnchor: [0, -40],
+                });
+
+                L.marker([{{ $establishment->latitude }}, {{ $establishment->longitude }}], { icon: pinIcon })
                     .addTo(map)
                     .bindPopup('<strong>{{ e($establishment->name) }}</strong>');
             });

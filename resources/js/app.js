@@ -5,6 +5,55 @@ window.Alpine = Alpine;
 Alpine.store('contactModal', { open: false });
 Alpine.store('claimModal', { open: false });
 Alpine.store('bookingModal', { open: false });
+
+Alpine.store('favorites', {
+    ids: (function () {
+        const auth = document.querySelector('meta[name="auth-favorites"]')?.content;
+        if (auth) {
+            return auth.split(',').filter(Boolean).map(Number);
+        }
+        return JSON.parse(localStorage.getItem('favorites') || '[]');
+    })(),
+    authenticated: !!document.querySelector('meta[name="auth-user"]'),
+
+    has(id) { return this.ids.includes(id); },
+
+    persist() { localStorage.setItem('favorites', JSON.stringify(this.ids)); },
+
+    async toggle(id) {
+        const token = document.querySelector('meta[name="csrf-token"]')?.content;
+        try {
+            const res = await fetch('/ajax/favorites/' + id, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+            });
+            const data = await res.json();
+            if (data.authenticated) {
+                if (data.favorite) {
+                    if (!this.ids.includes(id)) this.ids.push(id);
+                } else {
+                    this.ids = this.ids.filter(x => x !== id);
+                }
+            } else {
+                if (this.ids.includes(id)) {
+                    this.ids = this.ids.filter(x => x !== id);
+                } else {
+                    this.ids.push(id);
+                }
+                this.persist();
+            }
+        } catch (e) {
+            // Network error : fallback to localStorage toggle
+            if (this.ids.includes(id)) {
+                this.ids = this.ids.filter(x => x !== id);
+            } else {
+                this.ids.push(id);
+            }
+            this.persist();
+        }
+    },
+});
+
 Alpine.store('lightbox', {
     open: false,
     photos: [],

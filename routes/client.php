@@ -45,3 +45,5 @@ Route::prefix('etablissement/{etablissement}')->name('etablissement.')->group(fu
 });
 
 Route::get('mes-avis', [AvisController::class, 'mesAvis'])->name('mes-avis');
+
+Route::get('favoris', [\App\Http\Controllers\FavoriteController::class, 'index'])->name('favoris');

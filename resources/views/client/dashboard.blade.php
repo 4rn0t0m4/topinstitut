@@ -43,8 +43,9 @@
             </div>
         </div>
 
-        <div class="mt-6">
-            <a href="{{ route('client.mes-avis') }}" class="text-pink-600 hover:underline text-sm">Voir mes avis</a>
+        <div class="mt-6 flex gap-4 text-sm">
+            <a href="{{ route('client.mes-avis') }}" class="text-pink-600 hover:underline">Voir mes avis</a>
+            <a href="{{ route('client.favoris') }}" class="text-pink-600 hover:underline">Mes favoris</a>
         </div>
     </div>
 </x-layouts.app>
