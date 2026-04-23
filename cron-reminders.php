@@ -1,17 +1,16 @@
 <?php
 
 /**
- * Scheduled task entry point for OVH : import Google Places establishments.
- *   /usr/local/php8.3/bin/php /homez.xxx/www/new/cron.php
+ * Scheduled task entry point for OVH : send review reminder emails.
  */
 
-echo date('Y-m-d H:i:s')." - Cron import-places démarré\n";
+echo date('Y-m-d H:i:s')." - Cron reminders démarré\n";
 
 require __DIR__.'/vendor/autoload.php';
 $app = require_once __DIR__.'/bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 
-$kernel->call('import:google-places');
+$kernel->call('reminders:send');
 echo $kernel->output();
 
 echo date('Y-m-d H:i:s')." - Cron terminé\n";
