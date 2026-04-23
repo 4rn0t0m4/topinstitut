@@ -1,4 +1,4 @@
-<x-layouts.app title="Répondre à un avis - TopInstitut">
+<x-layouts.app :noindex="true" title="Répondre à un avis - TopInstitut">
     <div class="max-w-2xl mx-auto px-4 py-8">
         <h1 class="text-2xl font-bold mb-6">Répondre à l'avis de {{ $avis->user->pseudo }}</h1>
 

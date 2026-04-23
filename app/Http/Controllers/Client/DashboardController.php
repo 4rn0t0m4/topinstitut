@@ -10,7 +10,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $etablissements = $user->etablissements()->withCount('avis')->get();
+        $etablissements = $user->establishments()->withCount('reviews')->get();
 
         return view('client.dashboard', compact('user', 'etablissements'));
     }

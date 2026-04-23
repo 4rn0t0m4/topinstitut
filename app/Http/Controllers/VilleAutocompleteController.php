@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Ville;
+use App\Models\City;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,15 +15,14 @@ class VilleAutocompleteController extends Controller
             return response()->json([]);
         }
 
-        $villes = Ville::where('nom_ville', 'like', $q . '%')
-            ->whereHas('etablissements', fn ($query) => $query->where('valide', true))
-            ->orderByDesc('habitants')
+        $cities = City::where('name', 'like', $q.'%')
+            ->orderByDesc('population')
             ->limit(8)
-            ->get(['nom_ville', 'code_postal', 'url']);
+            ->get(['name', 'postal_code', 'slug']);
 
-        return response()->json($villes->map(fn ($v) => [
-            'label' => $v->nom_ville . ' (' . $v->code_postal . ')',
-            'value' => $v->nom_ville,
+        return response()->json($cities->map(fn ($c) => [
+            'label' => $c->name.' ('.$c->postal_code.')',
+            'value' => $c->name,
         ]));
     }
 }

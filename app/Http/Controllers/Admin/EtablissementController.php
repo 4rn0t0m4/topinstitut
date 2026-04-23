@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Etablissement;
+use App\Models\Establishment;
 use App\Services\SlugService;
 use Illuminate\Http\Request;
 
@@ -11,14 +11,14 @@ class EtablissementController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Etablissement::query();
+        $query = Establishment::query();
 
         if ($request->filled('search')) {
-            $query->where('titre', 'like', '%'.$request->search.'%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
 
         if ($request->filled('valide')) {
-            $query->where('valide', $request->boolean('valide'));
+            $query->where('is_active', $request->boolean('valide'));
         }
 
         $etablissements = $query->latest()->paginate(25);
@@ -26,22 +26,22 @@ class EtablissementController extends Controller
         return view('admin.etablissements.index', compact('etablissements'));
     }
 
-    public function show(Etablissement $etablissement)
+    public function show(Establishment $etablissement)
     {
-        $etablissement->load(['administrateurs', 'approvedAvis', 'photos']);
+        $etablissement->load(['owners', 'approvedReviews', 'photos']);
 
         return view('admin.etablissements.show', compact('etablissement'));
     }
 
-    public function edit(Etablissement $etablissement)
+    public function edit(Establishment $etablissement)
     {
         return view('admin.etablissements.edit', compact('etablissement'));
     }
 
-    public function update(Request $request, Etablissement $etablissement)
+    public function update(Request $request, Establishment $etablissement)
     {
         $validated = $request->validate([
-            'titre' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'type' => 'required|integer|in:0,1,2,3',
             'adresse' => 'nullable|string|max:255',
             'cp' => 'nullable|string|max:5',
@@ -49,7 +49,7 @@ class EtablissementController extends Controller
             'telephone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'description' => 'nullable|string',
-            'valide' => 'boolean',
+            'is_active' => 'boolean',
         ]);
 
         $etablissement->update($validated);
@@ -59,13 +59,13 @@ class EtablissementController extends Controller
 
     public function create()
     {
-        return view('admin.etablissements.edit', ['etablissement' => new Etablissement]);
+        return view('admin.etablissements.edit', ['etablissement' => new Establishment]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'titre' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'type' => 'required|integer|in:0,1,2,3',
             'adresse' => 'nullable|string|max:255',
             'cp' => 'nullable|string|max:5',
@@ -75,24 +75,24 @@ class EtablissementController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $validated['slug'] = SlugService::generate($validated['titre']);
-        $validated['valide'] = true;
+        $validated['slug'] = SlugService::generate($validated['name']);
+        $validated['is_active'] = true;
 
-        Etablissement::create($validated);
+        Establishment::create($validated);
 
         return redirect()->route('admin.etablissements.index')->with('success', 'Établissement créé.');
     }
 
-    public function destroy(Etablissement $etablissement)
+    public function destroy(Establishment $etablissement)
     {
         $etablissement->delete();
 
         return redirect()->route('admin.etablissements.index')->with('success', 'Établissement supprimé.');
     }
 
-    public function valider(Etablissement $etablissement)
+    public function valider(Establishment $etablissement)
     {
-        $etablissement->update(['valide' => true]);
+        $etablissement->update(['is_active' => true]);
 
         return back()->with('success', 'Établissement validé.');
     }

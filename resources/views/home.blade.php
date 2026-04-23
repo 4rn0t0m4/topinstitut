@@ -9,7 +9,7 @@
         'description' => 'Annuaire des instituts de beauté, spas et thalassos en France',
         'potentialAction' => [
             '@type' => 'SearchAction',
-            'target' => url('/recherche_institut.html') . '?nom={search_term_string}',
+            'target' => url('/recherche') . '?nom={search_term_string}',
             'query-input' => 'required name=search_term_string',
         ],
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
@@ -38,21 +38,21 @@
 
     <div class="max-w-7xl mx-auto px-4 py-12">
         {{-- Latest reviews --}}
-        @if($derniersAvis->isNotEmpty())
+        @if($latestReviews->isNotEmpty())
             <section class="mb-12">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">Derniers avis</h2>
                 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    @foreach($derniersAvis as $avis)
+                    @foreach($latestReviews as $review)
                         <div class="bg-white rounded-lg shadow-sm border p-4">
                             <div class="flex items-center gap-2 mb-2">
-                                <x-star-rating :rating="$avis->moyenne" size="w-4 h-4" />
-                                <span class="text-sm text-gray-500">{{ number_format($avis->moyenne, 1, ',', '') }}/5</span>
+                                <x-star-rating :rating="$review->average_rating" size="w-4 h-4" />
+                                <span class="text-sm text-gray-500">{{ number_format($review->average_rating, 1, ',', '') }}/5</span>
                             </div>
-                            <h3 class="font-semibold text-gray-900">{{ $avis->titre }}</h3>
-                            <p class="text-sm text-gray-600 mt-1">{{ Str::limit($avis->contenu, 100) }}</p>
+                            <h3 class="font-semibold text-gray-900">{{ $review->title }}</h3>
+                            <p class="text-sm text-gray-600 mt-1">{{ Str::limit($review->content, 100) }}</p>
                             <div class="mt-3 flex justify-between items-center text-xs text-gray-400">
-                                <span>par {{ $avis->auteur_name }}</span>
-                                <a href="{{ $avis->etablissement->url }}" class="text-pink-600 hover:underline">{{ $avis->etablissement->titre }}</a>
+                                <span>par {{ $review->reviewer_name }}</span>
+                                <a href="{{ $review->establishment->url }}" class="text-pink-600 hover:underline">{{ $review->establishment->title }}</a>
                             </div>
                         </div>
                     @endforeach
@@ -61,25 +61,31 @@
         @endif
 
         {{-- Latest establishments --}}
-        @if($derniersEtablissements->isNotEmpty())
+        @if($latestEstablishments->isNotEmpty())
             <section class="mb-12">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">Nouveaux établissements</h2>
                 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    @foreach($derniersEtablissements as $etablissement)
-                        <x-etablissement-card :etablissement="$etablissement" />
+                    @foreach($latestEstablishments as $establishment)
+                        <x-etablissement-card :etablissement="$establishment" />
                     @endforeach
                 </div>
             </section>
         @endif
 
-        {{-- Departments --}}
+        {{-- France Map --}}
         <section>
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">Recherche par département</h2>
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Trouvez un institut par département</h2>
+            <x-france-map :departments="$departments" />
+        </section>
+
+        {{-- Departments list --}}
+        <section class="mt-12">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Tous les départements</h3>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                @foreach($departements as $dept)
-                    <a href="{{ route('departement.show', $dept->departement_url) }}"
+                @foreach($departments as $dept)
+                    <a href="{{ route('departement.show', $dept->slug) }}"
                        class="text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 px-3 py-2 rounded-lg transition">
-                        {{ $dept->numero }} - {{ $dept->departement }}
+                        {{ $dept->code }} - {{ $dept->name }}
                     </a>
                 @endforeach
             </div>

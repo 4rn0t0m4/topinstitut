@@ -10,7 +10,10 @@
         "intervention/image-laravel": "^4.0",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
-        "spatie/laravel-sitemap": "^8.1"
+        "league/flysystem-aws-s3-v3": "^3.32",
+        "spatie/laravel-sitemap": "^8.1",
+        "symfony/css-selector": "^8.0",
+        "symfony/dom-crawler": "^8.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

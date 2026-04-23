@@ -35,6 +35,10 @@ return [
         ],
     ],
 
+    'google_places' => [
+        'api_key' => env('GOOGLE_PLACES_API_KEY'),
+    ],
+
     'audiotel' => [
         'enabled' => env('AUDIOTEL_ENABLED', false),
         'id_client' => env('AUDIOTEL_ID_CLIENT', 'BWIAPVJkBWEDYQBuB3MENlZiUzJWMAc7'),

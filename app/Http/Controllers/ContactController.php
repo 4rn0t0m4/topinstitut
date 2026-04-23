@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Etablissement;
+use App\Models\Establishment;
 use App\Models\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -18,10 +18,10 @@ class ContactController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'contenu' => 'required|string|max:5000',
+            'content' => 'required|string|max:5000',
         ]);
 
-        Mail::raw($request->contenu, function ($message) use ($request) {
+        Mail::raw($request->content, function ($message) use ($request) {
             $message->from($request->email)
                 ->to(config('mail.from.address'))
                 ->subject('Contact TopInstitut');
@@ -30,27 +30,27 @@ class ContactController extends Controller
         return back()->with('success', 'Votre message a bien été envoyé.');
     }
 
-    public function showEtablissement(Etablissement $etablissement)
+    public function showEstablishment(Establishment $establishment)
     {
-        return view('contact-etablissement', compact('etablissement'));
+        return view('contact-etablissement', compact('establishment'));
     }
 
-    public function sendEtablissement(Request $request, Etablissement $etablissement)
+    public function sendEstablishment(Request $request, Establishment $establishment)
     {
         $validated = $request->validate([
             'email' => 'required|email',
-            'nom' => 'nullable|string|max:255',
-            'contenu' => 'required|string|max:5000',
+            'name' => 'nullable|string|max:255',
+            'content' => 'required|string|max:5000',
         ]);
 
-        $validated['etablissement_id'] = $etablissement->id;
+        $validated['establishment_id'] = $establishment->id;
         Message::create($validated);
 
-        if ($etablissement->email) {
-            Mail::raw($request->contenu, function ($message) use ($request, $etablissement) {
+        if ($establishment->email) {
+            Mail::raw($request->content, function ($message) use ($request, $establishment) {
                 $message->from($request->email)
-                    ->to($etablissement->email)
-                    ->subject('Message via TopInstitut - '.$etablissement->titre);
+                    ->to($establishment->email)
+                    ->subject('Message via TopInstitut - '.$establishment->name);
             });
         }
 

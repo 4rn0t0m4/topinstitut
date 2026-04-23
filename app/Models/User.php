@@ -15,10 +15,10 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'email', 'password', 'pseudo', 'nom', 'prenom', 'sexe',
-        'adresse', 'cp', 'ville', 'dept', 'ville_id',
-        'longitude', 'latitude', 'tel_fixe', 'tel_port',
-        'anniversaire', 'photo', 'is_admin',
+        'email', 'password', 'username', 'last_name', 'first_name', 'gender',
+        'address', 'postal_code', 'city', 'department_code', 'city_id',
+        'longitude', 'latitude', 'phone', 'mobile',
+        'date_of_birth', 'photo', 'is_admin',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -29,30 +29,30 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
-            'anniversaire' => 'date',
-            'avis_nb' => 'integer',
+            'date_of_birth' => 'date',
+            'review_count' => 'integer',
         ];
     }
 
-    public function villeRelation(): BelongsTo
+    public function cityRelation(): BelongsTo
     {
-        return $this->belongsTo(Ville::class, 'ville_id');
+        return $this->belongsTo(City::class, 'city_id');
     }
 
-    public function etablissements(): BelongsToMany
+    public function establishments(): BelongsToMany
     {
-        return $this->belongsToMany(Etablissement::class)->withTimestamps();
+        return $this->belongsToMany(Establishment::class)->withTimestamps();
     }
 
-    public function avis(): HasMany
+    public function reviews(): HasMany
     {
-        return $this->hasMany(Avis::class);
+        return $this->hasMany(Review::class);
     }
 
     public function tier(): ?UserTier
     {
-        return UserTier::where('min_avis', '<=', $this->avis_nb)
-            ->where('max_avis', '>=', $this->avis_nb)
+        return UserTier::where('min_reviews', '<=', $this->review_count)
+            ->where('max_reviews', '>=', $this->review_count)
             ->first();
     }
 }

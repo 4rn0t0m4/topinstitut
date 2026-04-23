@@ -2,24 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Etablissement;
-use App\Models\Ville;
+use App\Models\City;
+use App\Models\Department;
+use App\Models\Establishment;
 
 class VilleController extends Controller
 {
-    public function show(string $slug)
+    public function show(string $deptSlug, string $citySlug)
     {
-        $ville = Ville::where('url', $slug)->firstOrFail();
+        $department = Department::where('slug', $deptSlug)->firstOrFail();
+        $city = City::where('slug', $citySlug)
+            ->where('department_code', $department->code)
+            ->firstOrFail();
 
-        $query = Etablissement::valide()->where('ville_id', $ville->id)
-            ->orderByRaw('classement_ville = 0 ASC, classement_ville ASC, moyenne DESC');
+        $query = Establishment::active()->where('city_id', $city->id)
+            ->orderByRaw('city_rank = 0 ASC, city_rank ASC, rating DESC');
 
-        if ($query->count() === 0 && $ville->latitude && $ville->longitude) {
-            $query = Etablissement::valide()->nearby($ville->latitude, $ville->longitude, 15);
+        if ($query->count() === 0 && $city->latitude && $city->longitude) {
+            $query = Establishment::active()->nearby($city->latitude, $city->longitude, 15);
         }
 
-        $etablissements = $query->paginate(20);
+        $establishments = $query->with(['schedules', 'photos'])->paginate(20);
 
-        return view('ville.show', compact('ville', 'etablissements'));
+        return view('ville.show', compact('city', 'department', 'establishments'));
     }
 }

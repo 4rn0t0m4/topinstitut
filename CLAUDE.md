@@ -17,6 +17,11 @@ php artisan migrate            # Lancer les migrations
 php artisan migrate:fresh      # Reset + re-migrate
 php artisan tinker             # REPL interactif
 
+# Import données géographiques (geo.api.gouv.fr)
+php artisan geo:import         # Import départements + villes (~35k communes)
+php artisan geo:import --departments-only
+php artisan geo:import --cities-only
+
 # Tests
 php artisan test               # Tous les tests
 
@@ -25,95 +30,126 @@ php artisan cache:clear && php artisan view:clear && php artisan route:clear
 
 # Code formatting
 ./vendor/bin/pint
-
-# Migration données legacy (dans l'ordre)
-php artisan migrate:legacy-departements
-php artisan migrate:legacy-villes
-php artisan migrate:legacy-users
-php artisan migrate:legacy-categories
-php artisan migrate:legacy-etablissements   # inclut slugs, catégories, admins
-php artisan migrate:legacy-photos
-php artisan migrate:legacy-avis             # inclut avis_utile
-php artisan migrate:legacy-actualites
-php artisan migrate:legacy-horaires
-php artisan migrate:recalculate-ratings
 ```
 
 ## Architecture
 
 **Stack** : Laravel 11 / PHP 8.2+ / MySQL / Tailwind CSS v4 / Alpine.js / Vite
 
-**Auth** : Custom `AuthController` (pas Breeze/Fortify). Session-based. Admin via `is_admin` boolean sur User + `AdminMiddleware`. `LegacyUserProvider` gère la compatibilité MD5 (tente bcrypt puis MD5, re-hash en bcrypt automatiquement).
+**Auth** : Custom `AuthController` (pas Breeze/Fortify). Session-based. Admin via `is_admin` boolean sur User + `AdminMiddleware`.
+
+### Naming convention
+
+**Tables et colonnes en anglais.** URLs et texte UI en français pour le SEO.
+
+| Table | Model | Anciennes (FR) |
+|-------|-------|----------------|
+| departments | Department | departements |
+| cities | City | villes |
+| establishments | Establishment | etablissements |
+| establishment_slugs | EstablishmentSlug | — |
+| categories | Category | — |
+| category_establishment | — | categorie_etablissement |
+| photos | Photo | — |
+| reviews | Review | avis |
+| review_votes | ReviewVote | avis_utiles |
+| news | News | actualites |
+| messages | Message | — |
+| schedules | Schedule | horaires |
+| establishment_user | — | etablissement_user |
+| user_tiers | UserTier | — |
+| claims | Claim | revendications |
+
+### Colonnes clés
+
+| EN | FR (ancien) | Table |
+|----|-------------|-------|
+| name | titre | establishments |
+| is_active | valide | establishments |
+| rating | moyenne | establishments |
+| review_count | nb_avis | establishments |
+| tagline | accroche | establishments |
+| pricing | tarifs | establishments |
+| city_rank | classement_ville | establishments |
+| title / content | titre / contenu | reviews, news |
+| is_approved / is_rejected | valide / refus | reviews |
+| rating_welcome/quality/variety/price/ambiance/cleanliness | note_accueil/qualite/choix/prix/cadre/proprete | reviews |
+| reply / replied_at | reponse / reponse_date | reviews |
+| username | pseudo | users |
+| last_name / first_name | nom / prenom | users |
+| day_of_week | jour | schedules |
+| open_am / close_am / open_pm / close_pm | matin_ouverture/fermeture, aprem_* | schedules |
+| is_closed | ferme | schedules |
+| sort_order | ordre | photos |
+| manager_name | nom_gerant | claims |
 
 ### Groupes de routes
 
-| Groupe | Fichier | Préfixe | Middleware | Usage |
-|--------|---------|---------|------------|-------|
-| Web | `routes/web.php` | `/` | `web` | Pages publiques, auth |
-| Admin | `routes/admin.php` | `/admin` | `web, auth, admin` | Back-office CRUD |
-| Client | `routes/client.php` | `/espace-client` | `web, auth` | Espace propriétaire |
+| Groupe | Fichier | Préfixe | Middleware |
+|--------|---------|---------|------------|
+| Web | `routes/web.php` | `/` | `web` |
+| Admin | `routes/admin.php` | `/admin` | `web, auth, admin` |
+| Client | `routes/client.php` | `/espace-client` | `web, auth` |
 
 ### Répertoires clés
 
-- `app/Http/Controllers/` — Controllers publics (Home, Etablissement, Departement, Ville, Recherche, Avis, Contact)
-- `app/Http/Controllers/Admin/` — Controllers admin (Dashboard, Etablissement, Avis, Categorie)
-- `app/Http/Controllers/Client/` — Controllers espace client (Dashboard, Profil, Etablissement, Photo, Actualite, Avis)
-- `app/Models/` — Eloquent models : User, Etablissement, Avis, Ville, Departement, Categorie, Photo, Horaire, Actualite, Message, EtablissementSlug, AvisUtile, UserTier
-- `app/Services/` — GeoSearchService (Haversine), RatingService, SlugService
-- `app/Http/Middleware/AdminMiddleware.php` — Vérifie `$user->is_admin`
-
-### Vite entry points
-
-```
-resources/css/app.css    → Frontend styles
-resources/js/app.js      → Frontend JS (Alpine)
-resources/css/admin.css  → Admin styles
-resources/js/admin.js    → Admin JS (Alpine)
-```
-
-### Connexions DB
-
-- **mysql** (défaut) : `topinstitut_laravel`
-- **legacy** : `einstitutdb` (charset `latin1` pour migration données)
+- `app/Models/` — User, Establishment, Review, City, Department, Category, Photo, Schedule, News, Message, EstablishmentSlug, ReviewVote, UserTier, Claim
+- `app/Services/` — GeoSearchService, RatingService, SlugService
+- `app/Console/Commands/ImportGeoData.php` — Import geo.api.gouv.fr
 
 ### Types d'établissement
 
 ```
-0 = Institut de beauté    → /institut-de-beaute/{slug}.html
-1 = Esthéticienne à domicile → /estheticienne-a-domicile/{slug}.html
-2 = Spa                   → /spa/{slug}.html
-3 = Thalasso              → /thalasso/{slug}.html
+0 = Institut de beauté    → institut-de-beaute
+1 = Esthéticienne         → estheticienne-a-domicile
+2 = Spa                   → spa
+3 = Thalasso              → thalasso
+```
+
+### URL hiérarchiques (SEO longue traîne)
+
+```
+/{dept}                                   Page département (ex: /calvados)
+/{dept}/{ville}                           Page ville (ex: /calvados/caen)
+/{dept}/{ville}/{prestation}              Prestation × ville (ex: /calvados/caen/spa, /calvados/caen/epilation)
+/{dept}/{ville}/{type}/{slug}             Fiche établissement (ex: /calvados/caen/spa/kokomo-beauty)
+```
+
+- `{prestation}` : soit un slug de type (`spa`, `institut-de-beaute`, `estheticienne-a-domicile`, `thalasso`) soit un slug de catégorie (`epilation`, `massage-bien-etre`, etc.)
+- `{type}` : uniquement un slug de type (les 4 valeurs ci-dessus) — contraint par regex sur la route `etablissement.show`
+- Slug établissement unique par `(city_id, type)` pour permettre des doublons entre villes/types
+- Anciennes URLs `/institut-de-beaute/{slug}` etc. redirigent 301 vers la nouvelle URL hiérarchique
+- Routes définies à la fin de `routes/web.php` (catch-all placé après les routes spécifiques)
+
+### Commandes de maintenance
+
+```bash
+php artisan slugs:regenerate [--dry-run]   # Régénère slugs courts + sauvegarde anciens pour 301
+php artisan seed:category-establishment    # Mapping catégories selon le type
 ```
 
 ### Modèles clés
 
-**Etablissement** : `TYPE_SLUGS` et `TYPE_LABELS` constantes, scope `valide()`, scope `nearby($lat, $lng, $km)` (Haversine SQL), accesseurs `type_label`, `type_slug`, `url`.
+**Establishment** : scope `active()`, scope `nearby()`, accesseurs `type_label`, `type_slug`, `url`, `opening_status`, `next_opening`.
 
-**Avis** : 6 critères de notation (accueil, qualite, choix, prix, cadre, proprete) de 1 à 5. Accesseur `moyenne`. Scope `approved()`. Les notes `avis` + `avis_note` du legacy sont fusionnées dans une seule table.
+**Review** : 6 ratings (welcome, quality, variety, price, ambiance, cleanliness). Accesseur `average_rating`. Scope `approved()`. Soumission sans compte possible (author_name + author_email + verification_token).
 
-**User** : Cast `password => hashed` (ne jamais utiliser `bcrypt()` manuellement). Relation `etablissements()` belongsToMany via pivot `etablissement_user`.
+**User** : Cast `password => hashed`. Relation `establishments()` belongsToMany.
 
-### Services
+**City** : Peuplée via `php artisan geo:import`. Champ `insee_code` unique.
 
-**GeoSearchService** : Recherche par proximité avec formule Haversine en SQL brut.
+### SEO
 
-**RatingService** : Recalcule `moyenne` et `nb_avis` d'un établissement à partir de ses avis approuvés.
-
-**SlugService** : Génère des slugs URL-safe depuis du texte français (accents, caractères spéciaux).
+- Canonical URLs, Open Graph, Twitter Cards sur toutes les pages
+- Schema.org : LocalBusiness + AggregateRating + Review + OpeningHoursSpecification + BreadcrumbList + WebSite+SearchAction
+- `noindex` sur pages admin, client, auth
+- Sitemap XML, robots.txt configuré
+- Table `establishment_slugs` pour redirections 301
 
 ## Conventions
 
-- Tout le texte UI est en **français**
-- Routes avec slugs français : `/connexion`, `/inscription`, `/espace-client`, `/recherche_institut.html`
-- URLs SEO avec suffixe `.html` pour compatibilité legacy
-- Table `etablissement_slugs` pour 301 redirects d'anciens slugs
-- Prix affichés avec `number_format($prix, 2, ',', ' ') €`
-- Layouts frontend : `<x-layouts.app>` (composant), admin : `@extends('admin.layouts.app')` avec `@section('content')`
-- Composants Blade réutilisables : `<x-star-rating>`, `<x-etablissement-card>`
-- Les établissements ont un flag `valide` — seuls les validés sont visibles publiquement
-- Les avis nécessitent modération admin (valide=false par défaut)
-- Vérification propriété établissement dans les controllers client via pivot `etablissement_user`
-
-## Origine
-
-Refonte d'un site PHP legacy (`/Users/arnaud/Sites/TopInstitut`) — annuaire d'instituts de beauté avec avis, géolocalisation, et modération. Le legacy utilise des fonctions `mysql_*`, MD5 pour les mots de passe, encodage windows-1252.
+- Texte UI en **français**, code en anglais
+- Routes avec slugs français : `/connexion`, `/inscription`, `/espace-client`
+- URLs SEO sans suffixe (redirects 301 depuis les anciennes URLs `.html`)
+- Layouts : `<x-layouts.app>` (frontend), `@extends('admin.layouts.app')` (admin)
+- `is_active` filtre les établissements publics, `is_approved` filtre les avis

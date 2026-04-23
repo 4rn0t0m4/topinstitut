@@ -15,16 +15,16 @@ class ProfilController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'pseudo' => 'required|string|max:255|unique:users,pseudo,'.$request->user()->id,
-            'nom' => 'nullable|string|max:255',
-            'prenom' => 'nullable|string|max:255',
-            'sexe' => 'nullable|in:male,female',
-            'adresse' => 'nullable|string|max:255',
-            'cp' => 'nullable|string|max:5',
-            'ville' => 'nullable|string|max:255',
-            'tel_fixe' => 'nullable|string|max:20',
-            'tel_port' => 'nullable|string|max:20',
-            'anniversaire' => 'nullable|date',
+            'username' => 'required|string|max:255|unique:users,username,'.$request->user()->id,
+            'last_name' => 'nullable|string|max:255',
+            'first_name' => 'nullable|string|max:255',
+            'gender' => 'nullable|in:male,female',
+            'address' => 'nullable|string|max:255',
+            'postal_code' => 'nullable|string|max:5',
+            'city' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'mobile' => 'nullable|string|max:20',
+            'date_of_birth' => 'nullable|date',
         ]);
 
         $request->user()->update($validated);

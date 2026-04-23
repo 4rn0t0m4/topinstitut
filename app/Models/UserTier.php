@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserTier extends Model
 {
-    protected $fillable = ['nom', 'min_avis', 'max_avis'];
+    protected $fillable = ['name', 'min_reviews', 'max_reviews'];
 }

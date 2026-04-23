@@ -1,4 +1,4 @@
-<x-layouts.app title="Mon espace - TopInstitut">
+<x-layouts.app :noindex="true" title="Mon espace - TopInstitut">
     <div class="max-w-5xl mx-auto px-4 py-8">
         <h1 class="text-2xl font-bold mb-6">Mon espace</h1>
 

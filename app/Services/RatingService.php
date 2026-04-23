@@ -2,26 +2,26 @@
 
 namespace App\Services;
 
-use App\Models\Etablissement;
+use App\Models\Establishment;
 
 class RatingService
 {
-    public function recalculate(Etablissement $etablissement): void
+    public function recalculate(Establishment $establishment): void
     {
-        $avis = $etablissement->approvedAvis;
+        $reviews = $establishment->approvedReviews;
 
-        if ($avis->isEmpty()) {
-            $etablissement->update(['moyenne' => 0, 'nb_avis' => 0]);
+        if ($reviews->isEmpty()) {
+            $establishment->update(['rating' => 0, 'review_count' => 0]);
 
             return;
         }
 
-        $total = $avis->sum(fn ($a) => $a->moyenne);
-        $moyenne = round($total / $avis->count(), 1);
+        $total = $reviews->sum(fn ($r) => $r->average_rating);
+        $rating = round($total / $reviews->count(), 1);
 
-        $etablissement->update([
-            'moyenne' => $moyenne,
-            'nb_avis' => $avis->count(),
+        $establishment->update([
+            'rating' => $rating,
+            'review_count' => $reviews->count(),
         ]);
     }
 }

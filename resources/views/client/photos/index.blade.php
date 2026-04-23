@@ -1,4 +1,4 @@
-<x-layouts.app :title="'Photos - ' . $etablissement->titre">
+<x-layouts.app :noindex="true" :title="'Photos - ' . $etablissement->titre">
     <div class="max-w-3xl mx-auto px-4 py-8">
         <h1 class="text-2xl font-bold mb-6">Photos - {{ $etablissement->titre }}</h1>
 

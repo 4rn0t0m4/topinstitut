@@ -13,7 +13,7 @@
                 <div>
                     <label class="block text-sm font-medium mb-1">Type</label>
                     <select name="type" required class="w-full border rounded-lg px-3 py-2">
-                        @foreach(\App\Models\Etablissement::TYPE_LABELS as $key => $label)
+                        @foreach(\App\Models\Establishment::TYPE_LABELS as $key => $label)
                             <option value="{{ $key }}" {{ old('type') == $key ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>

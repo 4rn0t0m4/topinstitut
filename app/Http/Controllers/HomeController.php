@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Avis;
-use App\Models\Departement;
-use App\Models\Etablissement;
+use App\Models\Department;
+use App\Models\Establishment;
+use App\Models\Review;
+
 class HomeController extends Controller
 {
     public function index()
     {
-        $departements = Departement::orderBy('departement')->get();
-        $derniersAvis = Avis::approved()->with(['etablissement', 'user'])->latest()->limit(6)->get();
-        $derniersEtablissements = Etablissement::valide()->latest()->limit(6)->get();
+        $departments = Department::orderBy('name')->get();
+        $latestReviews = Review::approved()->with(['establishment', 'user'])->latest()->limit(6)->get();
+        $latestEstablishments = Establishment::active()->with(['schedules', 'photos'])->latest()->limit(6)->get();
 
-        return view('home', compact('departements', 'derniersAvis', 'derniersEtablissements'));
+        return view('home', compact('departments', 'latestReviews', 'latestEstablishments'));
     }
 }

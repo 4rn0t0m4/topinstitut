@@ -20,3 +20,10 @@ Route::resource('categories', CategorieController::class)->except(['show']);
 
 Route::get('revendications', [RevendicationController::class, 'index'])->name('revendications.index');
 Route::post('revendications/{revendication}/moderer', [RevendicationController::class, 'moderer'])->name('revendications.moderer');
+
+// Recherche Google Places
+Route::view('recherche-entreprises', 'admin.recherche-entreprises')->name('recherche-entreprises');
+Route::prefix('pj')->name('pj.')->group(function () {
+    Route::get('google', [\App\Http\Controllers\PagesJaunesController::class, 'googleSearch'])->name('google');
+    Route::get('google/detail', [\App\Http\Controllers\PagesJaunesController::class, 'googleDetail'])->name('google.detail');
+});

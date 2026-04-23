@@ -1,4 +1,4 @@
-<x-layouts.app title="Mes avis - TopInstitut">
+<x-layouts.app :noindex="true" title="Mes avis - TopInstitut">
     <div class="max-w-3xl mx-auto px-4 py-8">
         <h1 class="text-2xl font-bold mb-6">Mes avis</h1>
 

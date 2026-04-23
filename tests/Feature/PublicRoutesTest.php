@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Departement;
-use App\Models\Etablissement;
-use App\Models\EtablissementSlug;
-use App\Models\Ville;
+use App\Models\City;
+use App\Models\Department;
+use App\Models\Establishment;
+use App\Models\EstablishmentSlug;
 use Tests\TestCase;
 
 class PublicRoutesTest extends TestCase
@@ -17,7 +17,7 @@ class PublicRoutesTest extends TestCase
 
     public function test_recherche_returns_200(): void
     {
-        $this->get('/recherche_institut.html')->assertStatus(200);
+        $this->get('/recherche')->assertStatus(200);
     }
 
     public function test_connexion_returns_200(): void
@@ -32,55 +32,55 @@ class PublicRoutesTest extends TestCase
 
     public function test_departement_page_returns_200(): void
     {
-        $dept = Departement::first();
+        $dept = Department::first();
         if (! $dept) {
-            $this->markTestSkipped('No departement in DB');
+            $this->markTestSkipped('No department in DB');
         }
 
-        $this->get('/departement-'.$dept->departement_url.'.html')->assertStatus(200);
+        $this->get('/departement-'.$dept->slug)->assertStatus(200);
     }
 
     public function test_ville_page_returns_200(): void
     {
-        $ville = Ville::whereHas('etablissements', fn ($q) => $q->where('valide', true))->first();
-        if (! $ville) {
-            $this->markTestSkipped('No ville with valid etablissements');
+        $city = City::whereHas('establishments', fn ($q) => $q->where('is_active', true))->first();
+        if (! $city) {
+            $this->markTestSkipped('No city with active establishments');
         }
 
-        $this->get('/les-instituts-de-beaute-a-'.$ville->url.'.html')->assertStatus(200);
+        $this->get('/les-instituts-de-beaute-a-'.$city->slug)->assertStatus(200);
     }
 
     public function test_etablissement_page_returns_200(): void
     {
-        $etab = Etablissement::valide()->first();
+        $etab = Establishment::active()->first();
         if (! $etab) {
-            $this->markTestSkipped('No valid etablissement');
+            $this->markTestSkipped('No active establishment');
         }
 
         $this->get($etab->url)->assertStatus(200);
     }
 
-    public function test_old_slug_redirects_301(): void
+    public function test_legacy_html_redirects_301(): void
     {
-        $slug = EtablissementSlug::whereHas('etablissement', fn ($q) => $q->where('valide', true))->first();
-        if (! $slug) {
-            $this->markTestSkipped('No old slug in DB');
+        $etab = Establishment::active()->first();
+        if (! $etab) {
+            $this->markTestSkipped('No active establishment');
         }
 
-        $etab = $slug->etablissement;
-        $this->get('/'.Etablissement::TYPE_SLUGS[$etab->type].'/'.$slug->slug.'.html')
+        $this->get('/'.Establishment::TYPE_SLUGS[$etab->type].'/'.$etab->slug.'.html')
             ->assertRedirect($etab->url)
             ->assertStatus(301);
     }
 
-    public function test_wrong_type_redirects_301(): void
+    public function test_old_slug_redirects_301(): void
     {
-        $etab = Etablissement::valide()->where('type', 0)->first();
-        if (! $etab) {
-            $this->markTestSkipped('No type 0 etablissement');
+        $slug = EstablishmentSlug::whereHas('establishment', fn ($q) => $q->where('is_active', true))->first();
+        if (! $slug) {
+            $this->markTestSkipped('No old slug in DB');
         }
 
-        $this->get('/spa/'.$etab->slug.'.html')
+        $etab = $slug->establishment;
+        $this->get('/'.Establishment::TYPE_SLUGS[$etab->type].'/'.$slug->slug)
             ->assertRedirect($etab->url)
             ->assertStatus(301);
     }

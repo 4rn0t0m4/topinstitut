@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\Etablissement;
+use App\Models\Establishment;
 use Illuminate\Database\Eloquent\Collection;
 
 class GeoSearchService
 {
     public function nearby(float $lat, float $lng, float $radiusKm = 10, int $limit = 20): Collection
     {
-        return Etablissement::valide()
+        return Establishment::active()
             ->nearby($lat, $lng, $radiusKm)
             ->limit($limit)
             ->get();

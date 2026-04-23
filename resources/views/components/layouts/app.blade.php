@@ -6,6 +6,27 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'TopInstitut - Annuaire des instituts de beauté' }}</title>
     <meta name="description" content="{{ $description ?? 'Trouvez les meilleurs instituts de beauté, spas, esthéticiennes et thalassos près de chez vous.' }}">
+    <link rel="canonical" href="{{ $canonical ?? url()->current() }}">
+    {{-- Open Graph --}}
+    <meta property="og:title" content="{{ $title ?? 'TopInstitut - Annuaire des instituts de beauté' }}">
+    <meta property="og:description" content="{{ $description ?? 'Trouvez les meilleurs instituts de beauté, spas, esthéticiennes et thalassos près de chez vous.' }}">
+    <meta property="og:url" content="{{ $canonical ?? url()->current() }}">
+    <meta property="og:type" content="{{ $ogType ?? 'website' }}">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:site_name" content="TopInstitut">
+    @if(isset($ogImage))
+        <meta property="og:image" content="{{ $ogImage }}">
+    @endif
+    {{-- Twitter Card --}}
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{{ $title ?? 'TopInstitut - Annuaire des instituts de beauté' }}">
+    <meta name="twitter:description" content="{{ $description ?? 'Trouvez les meilleurs instituts de beauté, spas, esthéticiennes et thalassos près de chez vous.' }}">
+    @if(isset($ogImage))
+        <meta name="twitter:image" content="{{ $ogImage }}">
+    @endif
+    @if(isset($noindex))
+        <meta name="robots" content="noindex, nofollow">
+    @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
 </head>
@@ -13,8 +34,10 @@
     {{-- Header --}}
     <header class="bg-white shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <a href="{{ route('home') }}" class="text-xl font-bold text-pink-600">TopInstitut</a>
+            <div class="flex justify-between items-center h-20 gap-6">
+                <a href="{{ route('home') }}" class="flex items-center flex-shrink-0">
+                    <img src="{{ asset('storage/logo-top-institut-rect.jpg') }}" alt="TopInstitut" class="h-12 w-auto max-h-12">
+                </a>
 
                 <nav class="hidden md:flex items-center gap-6 text-sm">
                     <a href="{{ route('home') }}" class="text-gray-700 hover:text-pink-600">Accueil</a>
@@ -95,5 +118,6 @@
         </div>
     </footer>
     @stack('jsonld')
+    @stack('scripts')
 </body>
 </html>

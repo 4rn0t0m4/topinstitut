@@ -1,13 +1,13 @@
 <x-layouts.app
-    :title="$etablissement->titre . ' - ' . $etablissement->type_label . ' à ' . $etablissement->ville . ' - TopInstitut'"
-    :description="$etablissement->titre . ', ' . strtolower($etablissement->type_label) . ' à ' . $etablissement->ville . ($etablissement->nb_avis > 0 ? '. Note : ' . number_format($etablissement->moyenne, 1, ',', '') . '/5 (' . $etablissement->nb_avis . ' avis)' : '') . '. Adresse, horaires, avis et coordonnées.'"
+    :title="$establishment->name . ' - ' . $establishment->type_label . ' à ' . $establishment->city . ' - TopInstitut'"
+    :description="$establishment->name . ', ' . strtolower($establishment->type_label) . ' à ' . $establishment->city . ($establishment->review_count > 0 ? '. Note : ' . number_format($establishment->rating, 1, ',', '') . '/5 (' . $establishment->review_count . ' avis)' : '') . '. Adresse, horaires, avis et coordonnées.'"
 >
     @php
-        $villeRel = $etablissement->villeRelation;
-        $deptRel = $villeRel?->departementRelation;
+        $cityRel = $establishment->cityRelation;
+        $deptRel = $cityRel?->department;
     @endphp
 
-    @if($etablissement->latitude && $etablissement->longitude)
+    @if($establishment->latitude && $establishment->longitude)
         @push('head')
             <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css" />
         @endpush
@@ -16,9 +16,10 @@
     @push('jsonld')
     <x-breadcrumb-jsonld :items="array_filter([
         ['name' => 'Accueil', 'url' => '/'],
-        $deptRel ? ['name' => $deptRel->departement, 'url' => '/departement-' . $deptRel->departement_url . '.html'] : null,
-        $villeRel ? ['name' => $villeRel->nom_ville, 'url' => '/les-instituts-de-beaute-a-' . $villeRel->url . '.html'] : null,
-        ['name' => $etablissement->titre],
+        $deptRel ? ['name' => $deptRel->name, 'url' => '/' . $deptRel->slug] : null,
+        $cityRel && $deptRel ? ['name' => $cityRel->name, 'url' => '/' . $deptRel->slug . '/' . $cityRel->slug] : null,
+        $cityRel && $deptRel ? ['name' => $establishment->type_label, 'url' => '/' . $deptRel->slug . '/' . $cityRel->slug . '/' . $establishment->type_slug] : null,
+        ['name' => $establishment->name],
     ])" />
     @endpush
 
@@ -27,26 +28,55 @@
         $schemaLocal = [
             '@context' => 'https://schema.org',
             '@type' => 'BeautySalon',
-            'name' => $etablissement->titre,
-            'description' => $etablissement->accroche ?: Str::limit(strip_tags($etablissement->description ?? ''), 200),
-            'url' => url($etablissement->url),
-            'telephone' => $etablissement->telephone,
+            'name' => $establishment->name,
+            'description' => $establishment->tagline ?: Str::limit(strip_tags($establishment->description ?? ''), 200),
+            'url' => url($establishment->url),
+            'telephone' => $establishment->phone,
             'address' => [
                 '@type' => 'PostalAddress',
-                'streetAddress' => $etablissement->adresse,
-                'postalCode' => $etablissement->cp,
-                'addressLocality' => $etablissement->ville,
+                'streetAddress' => $establishment->address,
+                'postalCode' => $establishment->postal_code,
+                'addressLocality' => $establishment->city,
                 'addressCountry' => 'FR',
             ],
         ];
-        if ($etablissement->latitude) {
-            $schemaLocal['geo'] = ['@type' => 'GeoCoordinates', 'latitude' => $etablissement->latitude, 'longitude' => $etablissement->longitude];
+        if ($establishment->latitude) {
+            $schemaLocal['geo'] = ['@type' => 'GeoCoordinates', 'latitude' => $establishment->latitude, 'longitude' => $establishment->longitude];
         }
-        if ($etablissement->nb_avis > 0) {
-            $schemaLocal['aggregateRating'] = ['@type' => 'AggregateRating', 'ratingValue' => number_format($etablissement->moyenne, 1, '.', ''), 'bestRating' => '5', 'worstRating' => '1', 'ratingCount' => $etablissement->nb_avis];
+        if ($establishment->review_count > 0) {
+            $schemaLocal['aggregateRating'] = ['@type' => 'AggregateRating', 'ratingValue' => number_format($establishment->rating, 1, '.', ''), 'bestRating' => '5', 'worstRating' => '1', 'ratingCount' => $establishment->review_count];
         }
-        if ($etablissement->photos->isNotEmpty()) {
-            $schemaLocal['image'] = asset('storage/etablissements/' . $etablissement->id . '/' . $etablissement->photos->first()->filename);
+
+        // OpeningHoursSpecification
+        $dayMap = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
+        $openingHours = [];
+        foreach ($establishment->schedules as $s) {
+            if ($s->is_closed || !isset($dayMap[$s->day_of_week])) continue;
+            $spec = ['@type' => 'OpeningHoursSpecification', 'dayOfWeek' => $dayMap[$s->day_of_week]];
+            if ($s->open_am && $s->close_am) {
+                $spec['opens'] = substr($s->open_am, 0, 5);
+                $spec['closes'] = substr($s->close_pm ?? $s->close_am, 0, 5);
+            }
+            $openingHours[] = $spec;
+        }
+        if (!empty($openingHours)) {
+            $schemaLocal['openingHoursSpecification'] = $openingHours;
+        }
+
+        // Individual Review schemas
+        $reviews = [];
+        foreach ($establishment->approvedReviews->take(10) as $review) {
+            $reviews[] = [
+                '@type' => 'Review',
+                'author' => ['@type' => 'Person', 'name' => $review->reviewer_name],
+                'datePublished' => $review->created_at->toIso8601String(),
+                'name' => $review->title,
+                'reviewBody' => Str::limit($review->content, 300),
+                'reviewRating' => ['@type' => 'Rating', 'ratingValue' => number_format($review->average_rating, 1, '.', ''), 'bestRating' => '5', 'worstRating' => '1'],
+            ];
+        }
+        if (!empty($reviews)) {
+            $schemaLocal['review'] = $reviews;
         }
     @endphp
     @push('jsonld')
@@ -63,42 +93,47 @@
                 <span class="mx-1">/</span>
                 <span>{{ $deptRel->region }}</span>
                 <span class="mx-1">/</span>
-                <a href="{{ route('departement.show', $deptRel->departement_url) }}" class="hover:text-pink-600">{{ $deptRel->departement }}</a>
+                <a href="{{ route('departement.show', $deptRel->slug) }}" class="hover:text-pink-600">{{ $deptRel->name }}</a>
             @endif
-            @if($villeRel)
+            @if($cityRel && $deptRel)
                 <span class="mx-1">/</span>
-                <a href="{{ route('ville.show', $villeRel->url) }}" class="hover:text-pink-600">{{ $villeRel->nom_ville }}</a>
+                <a href="{{ route('ville.show', [$deptRel->slug, $cityRel->slug]) }}" class="hover:text-pink-600">{{ $cityRel->name }}</a>
+                <span class="mx-1">/</span>
+                <a href="/{{ $deptRel->slug }}/{{ $cityRel->slug }}/{{ $establishment->type_slug }}" class="hover:text-pink-600">{{ $establishment->type_label }}</a>
             @endif
             <span class="mx-1">/</span>
-            <span class="text-gray-900">{{ $etablissement->titre }}</span>
+            <span class="text-gray-900">{{ $establishment->name }}</span>
         </nav>
 
         <div class="grid lg:grid-cols-3 gap-8">
             {{-- Main content --}}
             <div class="lg:col-span-2">
-                <h1 class="text-3xl font-bold text-gray-900">{{ $etablissement->titre }}</h1>
-                <p class="text-pink-600 mt-1">{{ $etablissement->type_label }}</p>
+                <h1 class="text-3xl font-bold text-gray-900">{{ $establishment->name }}</h1>
+                <div class="flex items-center gap-3 mt-1">
+                    <span class="text-pink-600">{{ $establishment->type_label }}</span>
+                    <x-statut-ouverture :etablissement="$establishment" />
+                </div>
 
-                @if($etablissement->nb_avis > 0)
+                @if($establishment->review_count > 0)
                     <div class="flex items-center gap-2 mt-3">
-                        <x-star-rating :rating="$etablissement->moyenne" />
-                        <span class="font-semibold">{{ number_format($etablissement->moyenne, 1, ',', '') }}/5</span>
-                        <span class="text-gray-500">({{ $etablissement->nb_avis }} avis)</span>
+                        <x-star-rating :rating="$establishment->rating" />
+                        <span class="font-semibold">{{ number_format($establishment->rating, 1, ',', '') }}/5</span>
+                        <span class="text-gray-500">({{ $establishment->review_count }} avis)</span>
                     </div>
                 @endif
 
-                @if($etablissement->classement_ville > 0 && $totalInVille > 1)
+                @if($establishment->city_rank > 0 && $totalInCity > 1)
                     <p class="text-sm text-gray-600 mt-2">
-                        Classé <span class="font-semibold text-pink-600">n°{{ $etablissement->classement_ville }}</span>
-                        sur {{ $totalInVille }} instituts de beauté à {{ $etablissement->ville }}
+                        Classé <span class="font-semibold text-pink-600">n°{{ $establishment->city_rank }}</span>
+                        sur {{ $totalInCity }} instituts de beauté à {{ $establishment->city }}
                     </p>
                 @endif
 
                 {{-- Photos --}}
-                @if($etablissement->photos->isNotEmpty())
+                @if($establishment->photos->isNotEmpty())
                     <div class="mt-6 grid grid-cols-2 md:grid-cols-3 gap-2">
-                        @foreach($etablissement->photos as $photo)
-                            <img src="{{ asset('storage/etablissements/' . $etablissement->id . '/' . $photo->filename) }}" alt="{{ $etablissement->titre }}" class="rounded-lg object-cover h-48 w-full">
+                        @foreach($establishment->photos as $photo)
+                            <img src="{{ $photo->url }}" alt="{{ $establishment->name }}" class="rounded-lg object-cover h-48 w-full">
                         @endforeach
                     </div>
                 @endif
@@ -109,19 +144,19 @@
 
                     <div class="grid sm:grid-cols-2 gap-6">
                         <div class="space-y-3">
-                            @if($etablissement->adresse)
+                            @if($establishment->address)
                                 <div>
                                     <p class="text-sm text-gray-500">Adresse</p>
-                                    <p class="text-sm font-medium">{{ $etablissement->adresse }}<br>{{ $etablissement->cp }} {{ $etablissement->ville }}</p>
+                                    <p class="text-sm font-medium">{{ $establishment->address }}<br>{{ $establishment->postal_code }} {{ $establishment->city }}</p>
                                 </div>
                             @endif
 
-                            @if($etablissement->telephone)
-                                <x-phone-reveal :phone="$etablissement->telephone" :etablissement-id="$etablissement->id" label="Téléphone" />
+                            @if($establishment->phone)
+                                <x-phone-reveal :phone="$establishment->phone" :etablissement-id="$establishment->id" label="Téléphone" />
                             @endif
 
-                            @if($etablissement->portable)
-                                <x-phone-reveal :phone="$etablissement->portable" :etablissement-id="$etablissement->id" label="Portable" :portable="true" />
+                            @if($establishment->mobile)
+                                <x-phone-reveal :phone="$establishment->mobile" :etablissement-id="$establishment->id" label="Portable" :portable="true" />
                             @endif
 
                             <div class="pt-2">
@@ -130,7 +165,7 @@
                                     Contacter cet établissement
                                 </button>
                             </div>
-                            @if(!$etablissement->administrateurs->contains(auth()->id()))
+                            @if(!$establishment->owners->contains(auth()->id()))
                                 <div class="pt-1">
                                     @auth
                                         <button @click="$store.claimModal.open = true" type="button" class="w-full text-center text-sm text-gray-500 hover:text-pink-600 transition cursor-pointer underline">
@@ -145,43 +180,46 @@
                             @endif
                         </div>
 
-                        @if($etablissement->latitude && $etablissement->longitude)
+                        @if($establishment->latitude && $establishment->longitude)
                             <div class="rounded-lg overflow-hidden border" id="map" style="min-height: 220px;"></div>
                         @endif
                     </div>
                 </div>
 
                 {{-- Description --}}
-                @if($etablissement->description)
+                @if($establishment->description)
                     <div class="mt-8">
                         <h2 class="text-xl font-semibold mb-3">Présentation</h2>
-                        <div class="prose text-gray-700">{!! nl2br(e($etablissement->description)) !!}</div>
+                        <div class="prose text-gray-700">{!! nl2br(e($establishment->description)) !!}</div>
                     </div>
                 @endif
 
                 {{-- Tarifs --}}
-                @if($etablissement->tarifs)
+                @if($establishment->pricing)
                     <div class="mt-8">
                         <h2 class="text-xl font-semibold mb-3">Tarifs</h2>
-                        <div class="prose text-gray-700">{!! nl2br(e($etablissement->tarifs)) !!}</div>
+                        <div class="prose text-gray-700">{!! nl2br(e($establishment->pricing)) !!}</div>
                     </div>
                 @endif
 
                 {{-- Horaires --}}
-                @if($etablissement->horairesRelation->isNotEmpty())
+                @if($establishment->schedules->isNotEmpty())
+                    @php
+                        $dayLabels = [1 => 'Lundi', 2 => 'Mardi', 3 => 'Mercredi', 4 => 'Jeudi', 5 => 'Vendredi', 6 => 'Samedi', 7 => 'Dimanche'];
+                    @endphp
                     <div class="mt-8">
                         <h2 class="text-xl font-semibold mb-3">Horaires</h2>
                         <table class="w-full text-sm">
-                            @foreach($etablissement->horairesRelation as $h)
+                            @foreach($establishment->schedules as $s)
                                 <tr class="border-b">
-                                    <td class="py-2 font-medium">{{ $h->jour_label }}</td>
+                                    <td class="py-2 font-medium">{{ $dayLabels[$s->day_of_week] ?? '' }}</td>
                                     <td class="py-2 text-gray-600">
-                                        @if($h->ferme)
+                                        @if($s->is_closed)
                                             <span class="text-red-500">Fermé</span>
                                         @else
-                                            {{ $h->matin_ouverture ? substr($h->matin_ouverture, 0, 5) . ' - ' . substr($h->matin_fermeture, 0, 5) : '' }}
-                                            @if($h->aprem_ouverture)
-                                                / {{ substr($h->aprem_ouverture, 0, 5) }} - {{ substr($h->aprem_fermeture, 0, 5) }}
+                                            {{ $s->open_am ? substr($s->open_am, 0, 5) . ' - ' . substr($s->close_am, 0, 5) : '' }}
+                                            @if($s->open_pm)
+                                                / {{ substr($s->open_pm, 0, 5) }} - {{ substr($s->close_pm, 0, 5) }}
                                             @endif
                                         @endif
                                     </td>
@@ -192,53 +230,88 @@
                 @endif
 
                 {{-- Actualités --}}
-                @if($etablissement->actualites->isNotEmpty())
+                @if($establishment->news->isNotEmpty())
                     <div class="mt-8">
                         <h2 class="text-xl font-semibold mb-3">Actualités</h2>
-                        @foreach($etablissement->actualites as $actu)
+                        @foreach($establishment->news as $item)
                             <div class="bg-pink-50 border border-pink-100 rounded-lg p-4 mb-3">
-                                <h3 class="font-semibold text-pink-700">{{ $actu->titre }}</h3>
-                                @if($actu->contenu)
-                                    <p class="text-sm text-gray-700 mt-1">{{ $actu->contenu }}</p>
+                                <h3 class="font-semibold text-pink-700">{{ $item->title }}</h3>
+                                @if($item->content)
+                                    <p class="text-sm text-gray-700 mt-1">{{ $item->content }}</p>
                                 @endif
                             </div>
                         @endforeach
                     </div>
                 @endif
 
+                {{-- Google Reviews --}}
+                @if(!empty($establishment->google_reviews))
+                    <div class="mt-8">
+                        <h2 class="text-xl font-semibold mb-3 flex items-center gap-2">
+                            Avis Google
+                            <span class="inline-flex items-center gap-1 text-sm font-normal bg-white border rounded-full px-3 py-0.5">
+                                <svg class="w-4 h-4" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+                                <span class="font-semibold">{{ number_format($establishment->google_rating, 1, ',', '') }}/5</span>
+                                <span class="text-gray-500">({{ $establishment->google_review_count }})</span>
+                            </span>
+                        </h2>
+                        <div class="space-y-3">
+                            @foreach($establishment->google_reviews as $gr)
+                                <div class="bg-white border rounded-lg p-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex items-center gap-2">
+                                            @if(!empty($gr['photo']))
+                                                <img src="{{ $gr['photo'] }}" alt="" class="w-8 h-8 rounded-full" referrerpolicy="no-referrer">
+                                            @endif
+                                            <span class="font-semibold text-sm">{{ $gr['author'] }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <x-star-rating :rating="$gr['rating']" size="w-4 h-4" />
+                                            @if(!empty($gr['date']))
+                                                <span class="text-xs text-gray-400 ml-2">{{ \Carbon\Carbon::parse($gr['date'])->format('d/m/Y') }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-700">{{ $gr['text'] }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Reviews --}}
                 <div class="mt-8">
-                    <h2 class="text-xl font-semibold mb-3">Avis ({{ $etablissement->approvedAvis->count() }})</h2>
+                    <h2 class="text-xl font-semibold mb-3">Avis des utilisateurs ({{ $establishment->approvedReviews->count() }})</h2>
 
-                    @foreach($etablissement->approvedAvis as $avis)
-                        <div class="bg-white border rounded-lg p-4 mb-4" id="avis-{{ $avis->id }}">
+                    @foreach($establishment->approvedReviews as $review)
+                        <div class="bg-white border rounded-lg p-4 mb-4" id="avis-{{ $review->id }}">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <span class="font-semibold">{{ $avis->auteur_name }}</span>
-                                    <span class="text-sm text-gray-400 ml-2">{{ $avis->created_at->format('d/m/Y') }}</span>
+                                    <span class="font-semibold">{{ $review->reviewer_name }}</span>
+                                    <span class="text-sm text-gray-400 ml-2">{{ $review->created_at->format('d/m/Y') }}</span>
                                 </div>
                                 <div class="flex items-center gap-1">
-                                    <x-star-rating :rating="$avis->moyenne" size="w-4 h-4" />
-                                    <span class="text-sm font-semibold">{{ number_format($avis->moyenne, 1, ',', '') }}</span>
+                                    <x-star-rating :rating="$review->average_rating" size="w-4 h-4" />
+                                    <span class="text-sm font-semibold">{{ number_format($review->average_rating, 1, ',', '') }}</span>
                                 </div>
                             </div>
 
-                            <h3 class="font-medium mt-2">{{ $avis->titre }}</h3>
-                            <p class="text-sm text-gray-700 mt-1">{{ $avis->contenu }}</p>
+                            <h3 class="font-medium mt-2">{{ $review->title }}</h3>
+                            <p class="text-sm text-gray-700 mt-1">{{ $review->content }}</p>
 
                             <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3 text-xs text-gray-500">
-                                <div>Accueil: {{ $avis->note_accueil }}/5</div>
-                                <div>Qualité: {{ $avis->note_qualite }}/5</div>
-                                <div>Choix: {{ $avis->note_choix }}/5</div>
-                                <div>Prix: {{ $avis->note_prix }}/5</div>
-                                <div>Cadre: {{ $avis->note_cadre }}/5</div>
-                                <div>Propreté: {{ $avis->note_proprete }}/5</div>
+                                <div>Accueil: {{ $review->rating_welcome }}/5</div>
+                                <div>Qualité: {{ $review->rating_quality }}/5</div>
+                                <div>Choix: {{ $review->rating_variety }}/5</div>
+                                <div>Prix: {{ $review->rating_price }}/5</div>
+                                <div>Ambiance: {{ $review->rating_ambiance }}/5</div>
+                                <div>Propreté: {{ $review->rating_cleanliness }}/5</div>
                             </div>
 
-                            @if($avis->reponse)
+                            @if($review->reply)
                                 <div class="bg-gray-50 rounded-lg p-3 mt-3 text-sm">
                                     <span class="font-medium text-pink-600">Réponse de l'établissement :</span>
-                                    <p class="text-gray-700 mt-1">{{ $avis->reponse }}</p>
+                                    <p class="text-gray-700 mt-1">{{ $review->reply }}</p>
                                 </div>
                             @endif
                         </div>
@@ -248,23 +321,23 @@
                     <div class="bg-white border rounded-lg p-6 mt-6" x-data="{ submitError: '' }">
                         <h3 class="text-lg font-semibold mb-4">Donner votre avis</h3>
                         <form action="{{ route('avis.store') }}" method="POST" @submit="
-                            const notes = ['note_accueil','note_qualite','note_choix','note_prix','note_cadre','note_proprete'];
-                            const missing = notes.filter(n => !$el.querySelector('[name='+n+']').value || $el.querySelector('[name='+n+']').value === '0');
+                            const ratings = ['rating_welcome','rating_quality','rating_variety','rating_price','rating_ambiance','rating_cleanliness'];
+                            const missing = ratings.filter(n => !$el.querySelector('[name='+n+']').value || $el.querySelector('[name='+n+']').value === '0');
                             if (missing.length) { submitError = 'Veuillez attribuer toutes les notes (étoiles).'; $event.preventDefault(); return; }
                             submitError = '';
                         ">
                             @csrf
-                            <input type="hidden" name="etablissement_id" value="{{ $etablissement->id }}">
+                            <input type="hidden" name="establishment_id" value="{{ $establishment->id }}">
 
                             @guest
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                                     <div>
                                         <label class="block text-sm font-medium mb-1">Votre pseudo <span class="text-red-500">*</span></label>
-                                        <input type="text" name="pseudo_auteur" required class="w-full border rounded-lg px-3 py-2" value="{{ old('pseudo_auteur') }}" placeholder="Ex: Marie75">
+                                        <input type="text" name="author_name" required class="w-full border rounded-lg px-3 py-2" value="{{ old('author_name') }}" placeholder="Ex: Marie75">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium mb-1">Votre email <span class="text-red-500">*</span></label>
-                                        <input type="email" name="email_auteur" required class="w-full border rounded-lg px-3 py-2" value="{{ old('email_auteur') }}" placeholder="Pour confirmer votre avis">
+                                        <input type="email" name="author_email" required class="w-full border rounded-lg px-3 py-2" value="{{ old('author_email') }}" placeholder="Pour confirmer votre avis">
                                         <p class="text-xs text-gray-400 mt-1">Un email de confirmation vous sera envoyé. Votre adresse ne sera pas publiée.</p>
                                     </div>
                                 </div>
@@ -272,17 +345,17 @@
 
                             <div class="mb-4">
                                 <label class="block text-sm font-medium mb-1">Titre <span class="text-red-500">*</span></label>
-                                <input type="text" name="titre" required class="w-full border rounded-lg px-3 py-2" value="{{ old('titre') }}">
+                                <input type="text" name="title" required class="w-full border rounded-lg px-3 py-2" value="{{ old('title') }}">
                             </div>
 
                             <div class="mb-4">
                                 <label class="block text-sm font-medium mb-1">Votre avis <span class="text-red-500">*</span></label>
-                                <textarea name="contenu" rows="4" required class="w-full border rounded-lg px-3 py-2">{{ old('contenu') }}</textarea>
+                                <textarea name="content" rows="4" required class="w-full border rounded-lg px-3 py-2">{{ old('content') }}</textarea>
                             </div>
 
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
-                                @foreach(['accueil' => 'Accueil', 'qualite' => 'Qualité', 'choix' => 'Choix', 'prix' => 'Prix', 'cadre' => 'Cadre', 'proprete' => 'Propreté'] as $key => $label)
-                                    <x-star-rating-input name="note_{{ $key }}" :label="$label" :value="old('note_' . $key, 0)" />
+                                @foreach(['welcome' => 'Accueil', 'quality' => 'Qualité', 'variety' => 'Choix', 'price' => 'Prix', 'ambiance' => 'Ambiance', 'cleanliness' => 'Propreté'] as $key => $label)
+                                    <x-star-rating-input name="rating_{{ $key }}" :label="$label" :value="old('rating_' . $key, 0)" />
                                 @endforeach
                             </div>
 
@@ -296,12 +369,12 @@
             {{-- Sidebar --}}
             <div>
                 {{-- Categories --}}
-                @if($etablissement->categories->isNotEmpty())
+                @if($establishment->categories->isNotEmpty())
                     <div class="bg-white rounded-lg shadow-sm border p-6 sticky top-4">
                         <h2 class="font-semibold text-lg mb-3">Prestations</h2>
                         <div class="flex flex-wrap gap-1.5">
-                            @foreach($etablissement->categories as $cat)
-                                <span class="text-xs bg-pink-50 text-pink-700 px-2 py-1 rounded">{{ $cat->nom }}</span>
+                            @foreach($establishment->categories as $cat)
+                                <span class="text-xs bg-pink-50 text-pink-700 px-2 py-1 rounded">{{ $cat->name }}</span>
                             @endforeach
                         </div>
                     </div>
@@ -312,8 +385,8 @@
                     <div class="mt-6">
                         <h3 class="font-semibold text-gray-900 mb-3">À proximité</h3>
                         <div class="space-y-3">
-                            @foreach($nearby as $proche)
-                                <x-etablissement-card :etablissement="$proche" />
+                            @foreach($nearby as $close)
+                                <x-etablissement-card :etablissement="$close" />
                             @endforeach
                         </div>
                     </div>
@@ -334,7 +407,7 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
 
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Contacter {{ $etablissement->titre }}</h2>
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Contacter {{ $establishment->name }}</h2>
 
             <div x-show="sent" class="text-center py-8">
                 <svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -350,11 +423,11 @@
                     .then(r => { if (r.ok) { sent = true; } else { return r.json().then(d => { error = d.message || 'Erreur'; }); } })
                     .catch(() => { error = 'Erreur réseau.'; })
                     .finally(() => { sending = false; });
-            " action="{{ route('contact.etablissement.send', $etablissement) }}">
+            " action="{{ route('contact.etablissement.send', $establishment) }}">
                 @csrf
                 <div class="mb-4">
                     <label class="block text-sm font-medium mb-1">Votre nom</label>
-                    <input type="text" name="nom" value="{{ auth()->user()?->pseudo }}" class="w-full border rounded-lg px-3 py-2">
+                    <input type="text" name="name" value="{{ auth()->user()?->username }}" class="w-full border rounded-lg px-3 py-2">
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium mb-1">Votre email <span class="text-red-500">*</span></label>
@@ -362,7 +435,7 @@
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium mb-1">Message <span class="text-red-500">*</span></label>
-                    <textarea name="contenu" rows="5" required class="w-full border rounded-lg px-3 py-2" placeholder="Votre message..."></textarea>
+                    <textarea name="content" rows="5" required class="w-full border rounded-lg px-3 py-2" placeholder="Votre message..."></textarea>
                 </div>
                 <p x-show="error" x-text="error" class="text-red-500 text-sm mb-3" x-cloak></p>
                 <button type="submit" :disabled="sending" class="w-full bg-pink-600 text-white font-semibold py-3 rounded-lg hover:bg-pink-700 transition disabled:opacity-50 cursor-pointer">
@@ -388,7 +461,7 @@
             </button>
 
             <h2 class="text-xl font-bold text-gray-900 mb-1">Revendiquer cet établissement</h2>
-            <p class="text-sm text-gray-500 mb-4">{{ $etablissement->titre }}</p>
+            <p class="text-sm text-gray-500 mb-4">{{ $establishment->name }}</p>
 
             <div x-show="sent" class="text-center py-8">
                 <svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -404,11 +477,11 @@
                     .then(r => { if (r.ok) { sent = true; } else { return r.json().then(d => { error = d.error || d.message || 'Erreur'; }); } })
                     .catch(() => { error = 'Erreur réseau.'; })
                     .finally(() => { sending = false; });
-            " action="{{ route('revendication.store', $etablissement) }}">
+            " action="{{ route('revendication.store', $establishment) }}">
                 @csrf
                 <div class="mb-4">
                     <label class="block text-sm font-medium mb-1">Nom du gérant <span class="text-red-500">*</span></label>
-                    <input type="text" name="nom_gerant" required class="w-full border rounded-lg px-3 py-2" placeholder="Prénom et nom">
+                    <input type="text" name="manager_name" required class="w-full border rounded-lg px-3 py-2" placeholder="Prénom et nom">
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium mb-1">N° SIRET</label>
@@ -429,17 +502,17 @@
     </div>
     @endauth
 
-    @if($etablissement->latitude && $etablissement->longitude)
+    @if($establishment->latitude && $establishment->longitude)
         <script src="https://unpkg.com/leaflet@1.9/dist/leaflet.js"></script>
+        <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_PLACES_API_KEY') }}"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                var map = L.map('map', { scrollWheelZoom: false }).setView([{{ $etablissement->latitude }}, {{ $etablissement->longitude }}], 15);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap'
-                }).addTo(map);
-                L.marker([{{ $etablissement->latitude }}, {{ $etablissement->longitude }}])
+                var map = L.map('map', { scrollWheelZoom: false }).setView([{{ $establishment->latitude }}, {{ $establishment->longitude }}], 15);
+                L.gridLayer.googleMutant({ type: 'roadmap', maxZoom: 20 }).addTo(map);
+                L.marker([{{ $establishment->latitude }}, {{ $establishment->longitude }}])
                     .addTo(map)
-                    .bindPopup('<strong>{{ e($etablissement->titre) }}</strong>');
+                    .bindPopup('<strong>{{ e($establishment->name) }}</strong>');
             });
         </script>
     @endif

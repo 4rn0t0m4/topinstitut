@@ -77,4 +77,34 @@ Alpine.data('villeAutocomplete', () => ({
     },
 }));
 
+Alpine.data('prestationAutocomplete', () => ({
+    query: '',
+    selectedId: '',
+    results: [],
+    open: false,
+    debounceTimer: null,
+
+    search() {
+        clearTimeout(this.debounceTimer);
+        if (this.query.length < 2) {
+            this.results = [];
+            this.open = false;
+            this.selectedId = '';
+            return;
+        }
+        this.debounceTimer = setTimeout(async () => {
+            const res = await fetch('/ajax/categories?q=' + encodeURIComponent(this.query));
+            this.results = await res.json();
+            this.open = this.results.length > 0;
+        }, 200);
+    },
+
+    select(item) {
+        this.query = item.name;
+        this.selectedId = item.id;
+        this.open = false;
+        this.results = [];
+    },
+}));
+
 Alpine.start();

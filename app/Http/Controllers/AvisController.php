@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Avis;
-use App\Models\AvisUtile;
+use App\Models\Review;
+use App\Models\ReviewVote;
 use App\Services\RatingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -14,87 +14,84 @@ class AvisController extends Controller
     public function store(Request $request, RatingService $ratingService)
     {
         $rules = [
-            'etablissement_id' => 'required|exists:etablissements,id',
-            'titre' => 'required|string|max:255',
-            'contenu' => 'required|string|max:5000',
-            'note_accueil' => 'required|integer|min:1|max:5',
-            'note_qualite' => 'required|integer|min:1|max:5',
-            'note_choix' => 'required|integer|min:1|max:5',
-            'note_prix' => 'required|integer|min:1|max:5',
-            'note_cadre' => 'required|integer|min:1|max:5',
-            'note_proprete' => 'required|integer|min:1|max:5',
+            'establishment_id' => 'required|exists:establishments,id',
+            'title' => 'required|string|max:255',
+            'content' => 'required|string|max:5000',
+            'rating_welcome' => 'required|integer|min:1|max:5',
+            'rating_quality' => 'required|integer|min:1|max:5',
+            'rating_variety' => 'required|integer|min:1|max:5',
+            'rating_price' => 'required|integer|min:1|max:5',
+            'rating_ambiance' => 'required|integer|min:1|max:5',
+            'rating_cleanliness' => 'required|integer|min:1|max:5',
         ];
 
-        // Si non connecté, exiger pseudo et email
         if (! $request->user()) {
-            $rules['pseudo_auteur'] = 'required|string|max:255';
-            $rules['email_auteur'] = 'required|email|max:255';
+            $rules['author_name'] = 'required|string|max:255';
+            $rules['author_email'] = 'required|email|max:255';
         }
 
         $validated = $request->validate($rules);
-
         $validated['ip'] = $request->ip();
 
         if ($request->user()) {
             $validated['user_id'] = $request->user()->id;
             $validated['email_verified_at'] = now();
         } else {
-            $validated['token_validation'] = Str::random(64);
+            $validated['verification_token'] = Str::random(64);
         }
 
-        $avis = Avis::create($validated);
+        $review = Review::create($validated);
 
-        // Si non connecté, envoyer l'email de confirmation
         if (! $request->user()) {
-            $this->sendConfirmationEmail($avis);
+            $this->sendConfirmationEmail($review);
 
-            return back()->with('success', 'Merci ! Un email de confirmation vous a été envoyé à '.$avis->email_auteur.'. Veuillez cliquer sur le lien pour valider votre avis.');
+            return back()->with('success', 'Merci ! Un email de confirmation vous a été envoyé à '.$review->author_email.'. Veuillez cliquer sur le lien pour valider votre avis.');
         }
 
         return back()->with('success', 'Votre avis a été soumis et sera publié après modération.');
     }
 
-    public function confirmerEmail(string $token)
+    public function confirmEmail(string $token)
     {
-        $avis = Avis::where('token_validation', $token)
+        $review = Review::where('verification_token', $token)
             ->whereNull('email_verified_at')
             ->firstOrFail();
 
-        $avis->update([
+        $review->update([
             'email_verified_at' => now(),
-            'token_validation' => null,
+            'verification_token' => null,
         ]);
 
-        return redirect($avis->etablissement->url)
+        return redirect($review->establishment->url)
             ->with('success', 'Votre email a été confirmé. Votre avis sera publié après modération par notre équipe.');
     }
 
-    public function toggleUtile(Request $request)
+    public function toggleHelpful(Request $request)
     {
         $request->validate([
-            'avis_id' => 'required|exists:avis,id',
-            'utile' => 'required|boolean',
+            'review_id' => 'required|exists:reviews,id',
+            'is_helpful' => 'required|boolean',
         ]);
 
-        AvisUtile::updateOrCreate(
-            ['avis_id' => $request->avis_id, 'user_id' => $request->user()->id],
-            ['utile' => $request->boolean('utile')]
+        ReviewVote::updateOrCreate(
+            ['review_id' => $request->review_id, 'user_id' => $request->user()->id],
+            ['is_helpful' => $request->boolean('is_helpful')]
         );
 
         return response()->json(['ok' => true]);
     }
 
-    private function sendConfirmationEmail(Avis $avis): void
+    private function sendConfirmationEmail(Review $review): void
     {
-        $url = route('avis.confirmer', $avis->token_validation);
-        $etablissement = $avis->etablissement->titre;
+        $url = route('review.confirm', $review->verification_token);
+        $establishment = $review->establishment->name;
 
-        Mail::send('emails.avis-confirmation', [
-            'pseudo' => $avis->pseudo_auteur,
-            'etablissement' => $etablissement,
+        Mail::send('emails.review-confirmation', [
+            'name' => $review->author_name,
+            'establishment' => $establishment,
             'url' => $url,
-        ], function ($message) use ($avis) {
-            $message->to($avis->email_auteur)
+        ], function ($message) use ($review) {
+            $message->to($review->author_email)
                 ->subject('Confirmez votre avis sur Top Institut');
         });
     }
