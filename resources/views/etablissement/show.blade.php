@@ -120,6 +120,10 @@
                         <span class="font-semibold">{{ number_format($establishment->rating, 1, ',', '') }}/5</span>
                         <span class="text-gray-500">({{ $establishment->review_count }} avis)</span>
                     </div>
+                @elseif($establishment->google_rating)
+                    <div class="flex items-center gap-2 mt-3">
+                        <x-star-rating :rating="$establishment->google_rating" />
+                    </div>
                 @endif
 
                 @if($establishment->city_rank > 0 && $totalInCity > 1)

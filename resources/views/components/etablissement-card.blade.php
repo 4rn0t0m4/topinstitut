@@ -46,8 +46,6 @@
             @elseif($etablissement->google_rating)
                 <div class="flex items-center gap-1 mt-1">
                     <x-star-rating :rating="$etablissement->google_rating" size="w-4 h-4" />
-                    <span class="text-sm text-gray-500">{{ number_format($etablissement->google_rating, 1, ',', '') }}</span>
-                    <span class="text-xs text-gray-400 ml-1">· {{ $etablissement->google_review_count }} avis Google</span>
                 </div>
             @endif
 
