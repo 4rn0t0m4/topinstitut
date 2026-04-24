@@ -96,7 +96,7 @@
         </form>
 
         <div x-data="{ view: 'list', loading: false }" @search-loading.window="loading = true">
-            <div x-show="loading" x-cloak class="space-y-4">
+            <div x-show="loading" x-cloak class="grid gap-4 lg:grid-cols-2">
                 @for($i = 0; $i < 5; $i++)
                     <x-etablissement-card-skeleton />
                 @endfor
@@ -118,7 +118,7 @@
                     </div>
                 </div>
 
-                <div x-show="view === 'list'" class="space-y-4">
+                <div x-show="view === 'list'" class="grid gap-4 lg:grid-cols-2">
                     @foreach($establishments as $establishment)
                         <x-etablissement-card :etablissement="$establishment" />
                     @endforeach

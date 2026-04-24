@@ -62,7 +62,7 @@
         </p>
 
         @if($establishments->isNotEmpty())
-            <div class="space-y-4">
+            <div class="grid gap-4 lg:grid-cols-2">
                 @foreach($establishments as $establishment)
                     <x-etablissement-card :etablissement="$establishment" />
                 @endforeach

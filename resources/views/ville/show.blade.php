@@ -19,7 +19,7 @@
         <h1 class="text-3xl font-bold text-gray-900 mb-6">Instituts de beauté à {{ $city->name }}</h1>
 
         @if($establishments->isNotEmpty())
-            <div class="space-y-4">
+            <div class="grid gap-4 lg:grid-cols-2">
                 @foreach($establishments as $establishment)
                     <x-etablissement-card :etablissement="$establishment" :rank="$establishment->city_rank ?: null" />
                 @endforeach
