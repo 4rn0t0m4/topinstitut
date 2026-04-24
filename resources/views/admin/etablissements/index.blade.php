@@ -20,7 +20,7 @@
         <table class="w-full text-sm">
             <thead class="bg-gray-50 border-b">
                 <tr>
-                    <th class="text-left px-4 py-3">Titre</th>
+                    <th class="text-left px-4 py-3">Nom</th>
                     <th class="text-left px-4 py-3">Type</th>
                     <th class="text-left px-4 py-3">Ville</th>
                     <th class="text-center px-4 py-3">Statut</th>
@@ -29,22 +29,22 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($etablissements as $etab)
+                @forelse($etablissements as $etab)
                     <tr class="border-b hover:bg-gray-50">
-                        <td class="px-4 py-3 font-medium">{{ $etab->titre }}</td>
+                        <td class="px-4 py-3 font-medium">{{ $etab->name }}</td>
                         <td class="px-4 py-3 text-gray-500">{{ $etab->type_label }}</td>
-                        <td class="px-4 py-3 text-gray-500">{{ $etab->ville }}</td>
+                        <td class="px-4 py-3 text-gray-500">{{ $etab->city }}</td>
                         <td class="px-4 py-3 text-center">
-                            @if($etab->valide)
+                            @if($etab->is_active)
                                 <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Validé</span>
                             @else
                                 <span class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded-full">En attente</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-center text-gray-500">{{ $etab->nb_avis }}</td>
+                        <td class="px-4 py-3 text-center text-gray-500">{{ $etab->review_count }}</td>
                         <td class="px-4 py-3 text-right">
                             <a href="{{ route('admin.etablissements.edit', $etab) }}" class="text-pink-600 hover:underline">Modifier</a>
-                            @unless($etab->valide)
+                            @unless($etab->is_active)
                                 <form action="{{ route('admin.etablissements.valider', $etab) }}" method="POST" class="inline ml-2">
                                     @csrf
                                     <button type="submit" class="text-green-600 hover:underline">Valider</button>
@@ -52,7 +52,9 @@
                             @endunless
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Aucun établissement.</td></tr>
+                @endforelse
             </tbody>
         </table>
     </div>

@@ -9,14 +9,14 @@
 
         <div class="grid gap-4">
             <div>
-                <label class="block text-sm font-medium mb-1">Titre</label>
-                <input type="text" name="titre" value="{{ old('titre', $etablissement->titre) }}" required class="w-full border rounded-lg px-3 py-2">
+                <label class="block text-sm font-medium mb-1">Nom</label>
+                <input type="text" name="name" value="{{ old('name', $etablissement->name) }}" required class="w-full border rounded-lg px-3 py-2">
             </div>
 
             <div>
                 <label class="block text-sm font-medium mb-1">Type</label>
                 <select name="type" required class="w-full border rounded-lg px-3 py-2">
-                    @foreach(\App\Models\Etablissement::TYPE_LABELS as $key => $label)
+                    @foreach(\App\Models\Establishment::TYPE_LABELS as $key => $label)
                         <option value="{{ $key }}" {{ old('type', $etablissement->type) == $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
@@ -25,22 +25,22 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium mb-1">Adresse</label>
-                    <input type="text" name="adresse" value="{{ old('adresse', $etablissement->adresse) }}" class="w-full border rounded-lg px-3 py-2">
+                    <input type="text" name="address" value="{{ old('address', $etablissement->address) }}" class="w-full border rounded-lg px-3 py-2">
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Code postal</label>
-                    <input type="text" name="cp" value="{{ old('cp', $etablissement->cp) }}" maxlength="5" class="w-full border rounded-lg px-3 py-2">
+                    <input type="text" name="postal_code" value="{{ old('postal_code', $etablissement->postal_code) }}" maxlength="5" class="w-full border rounded-lg px-3 py-2">
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium mb-1">Ville</label>
-                    <input type="text" name="ville" value="{{ old('ville', $etablissement->ville) }}" class="w-full border rounded-lg px-3 py-2">
+                    <input type="text" name="city" value="{{ old('city', $etablissement->city) }}" class="w-full border rounded-lg px-3 py-2">
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Téléphone</label>
-                    <input type="text" name="telephone" value="{{ old('telephone', $etablissement->telephone) }}" class="w-full border rounded-lg px-3 py-2">
+                    <input type="text" name="phone" value="{{ old('phone', $etablissement->phone) }}" class="w-full border rounded-lg px-3 py-2">
                 </div>
             </div>
 
@@ -57,8 +57,8 @@
             @if($etablissement->exists)
                 <div>
                     <label class="flex items-center gap-2">
-                        <input type="hidden" name="valide" value="0">
-                        <input type="checkbox" name="valide" value="1" {{ old('valide', $etablissement->valide) ? 'checked' : '' }} class="rounded">
+                        <input type="hidden" name="is_active" value="0">
+                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', $etablissement->is_active) ? 'checked' : '' }} class="rounded">
                         <span class="text-sm font-medium">Validé</span>
                     </label>
                 </div>

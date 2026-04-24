@@ -22,10 +22,10 @@
                     @foreach($revendications as $rev)
                         <tr class="border-t">
                             <td class="px-4 py-3">
-                                <a href="{{ $rev->etablissement->url }}" target="_blank" class="text-pink-600 hover:underline">{{ $rev->etablissement->titre }}</a>
+                                <a href="{{ $rev->establishment->url }}" target="_blank" class="text-pink-600 hover:underline">{{ $rev->establishment->name }}</a>
                             </td>
                             <td class="px-4 py-3">{{ $rev->user->email }}</td>
-                            <td class="px-4 py-3">{{ $rev->nom_gerant }}</td>
+                            <td class="px-4 py-3">{{ $rev->manager_name }}</td>
                             <td class="px-4 py-3">{{ $rev->siret ?: '-' }}</td>
                             <td class="px-4 py-3">{{ $rev->created_at->format('d/m/Y') }}</td>
                             <td class="px-4 py-3">

@@ -35,7 +35,7 @@ class AvisController extends Controller
 
         if ($request->action === 'valider') {
             $avis->update(['is_approved' => true, 'is_rejected' => false]);
-            $avis->user->increment('avis_nb');
+            $avis->user?->increment('review_count');
         } else {
             $avis->update(['is_approved' => false, 'is_rejected' => true]);
         }

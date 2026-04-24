@@ -8,17 +8,17 @@
             <div class="bg-white rounded-lg shadow-sm border p-4">
                 <div class="flex justify-between items-start">
                     <div>
-                        <span class="font-semibold">{{ $a->user->pseudo }}</span>
+                        <span class="font-semibold">{{ $a->user?->username ?? $a->author_name }}</span>
                         <span class="text-gray-400 text-sm ml-2">{{ $a->created_at->format('d/m/Y H:i') }}</span>
-                        <span class="text-gray-400 text-sm ml-2">sur <a href="{{ route('admin.etablissements.show', $a->etablissement) }}" class="text-pink-600 hover:underline">{{ $a->etablissement->titre }}</a></span>
+                        <span class="text-gray-400 text-sm ml-2">sur <a href="{{ route('admin.etablissements.show', $a->establishment) }}" class="text-pink-600 hover:underline">{{ $a->establishment->name }}</a></span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <x-star-rating :rating="$a->moyenne" size="w-4 h-4" />
-                        <span class="text-sm">{{ number_format($a->moyenne, 1, ',', '') }}</span>
+                        <x-star-rating :rating="$a->average_rating" size="w-4 h-4" />
+                        <span class="text-sm">{{ number_format($a->average_rating, 1, ',', '') }}</span>
                     </div>
                 </div>
-                <h3 class="font-medium mt-2">{{ $a->titre }}</h3>
-                <p class="text-sm text-gray-700 mt-1">{{ $a->contenu }}</p>
+                <h3 class="font-medium mt-2">{{ $a->title }}</h3>
+                <p class="text-sm text-gray-700 mt-1">{{ $a->content }}</p>
                 <div class="flex gap-2 mt-4">
                     <form action="{{ route('admin.avis.moderer', $a) }}" method="POST">
                         @csrf
