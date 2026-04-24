@@ -15,7 +15,7 @@
     <a href="{{ $etablissement->url }}" class="block">
     <div class="flex gap-4 items-stretch">
         {{-- Photo --}}
-        <div class="flex-shrink-0 w-32 sm:w-40 h-32 sm:h-40 bg-gray-100 relative">
+        <div class="flex-shrink-0 w-32 sm:w-40 min-h-32 sm:min-h-40 bg-gray-100 relative">
             @if($photoUrl)
                 <img src="{{ $photoUrl }}" alt="{{ $etablissement->name }}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">
             @else
