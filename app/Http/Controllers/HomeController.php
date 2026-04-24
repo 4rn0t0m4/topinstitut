@@ -12,7 +12,7 @@ class HomeController extends Controller
     {
         $departments = Department::orderBy('name')->get();
         $latestReviews = Review::approved()->with(['establishment', 'user'])->latest()->limit(6)->get();
-        $latestEstablishments = Establishment::active()->with(['schedules', 'photos'])->latest()->limit(6)->get();
+        $latestEstablishments = Establishment::active()->has('photos')->with(['schedules', 'photos'])->latest()->limit(6)->get();
 
         return view('home', compact('departments', 'latestReviews', 'latestEstablishments'));
     }
