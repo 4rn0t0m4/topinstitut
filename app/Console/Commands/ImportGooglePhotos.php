@@ -13,7 +13,7 @@ class ImportGooglePhotos extends Command
     protected $signature = 'import:google-photos
         {--limit=10 : Nombre d\'établissements à traiter par exécution}
         {--max-photos=5 : Nombre max de photos par établissement}
-        {--width=1200 : Largeur max des photos en pixels}';
+        {--width=800 : Largeur max des photos en pixels}';
 
     protected $description = 'Importe les photos Google pour les établissements existants';
 
@@ -98,6 +98,7 @@ class ImportGooglePhotos extends Command
 
                     Storage::disk('r2')->put($path, $imageResponse->body(), [
                         'ContentType' => 'image/jpeg',
+                        'CacheControl' => 'public, max-age=15552000, immutable',
                     ]);
 
                     Photo::create([
