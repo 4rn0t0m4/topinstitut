@@ -120,20 +120,22 @@ class Establishment extends Model
                 continue;
             }
 
-            $openTime = $schedule->open_am;
-            if (! $openTime) {
-                continue;
-            }
+            foreach ([$schedule->open_am, $schedule->open_pm] as $openTime) {
+                if (! $openTime) {
+                    continue;
+                }
 
-            $parts = explode(':', $openTime);
-            $openMinutes = ((int) $parts[0]) * 60 + ((int) ($parts[1] ?? 0));
-            $formatted = substr($openTime, 0, 5);
+                $parts = explode(':', $openTime);
+                $openMinutes = ((int) $parts[0]) * 60 + ((int) ($parts[1] ?? 0));
+                $formatted = substr($openTime, 0, 5);
 
-            if ($i === 0 && $openMinutes > $minutes) {
-                return "Ouvre à $formatted";
-            }
+                if ($i === 0) {
+                    if ($openMinutes > $minutes) {
+                        return "Ouvre à $formatted";
+                    }
+                    continue;
+                }
 
-            if ($i > 0) {
                 return 'Ouvre '.Schedule::DAYS[$day]." à $formatted";
             }
         }
