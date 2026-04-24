@@ -40,7 +40,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20 gap-6">
                 <a href="{{ route('home') }}" class="flex items-center flex-shrink-0">
-                    <img src="{{ asset('storage/logo-top-institut-rect.jpg') }}" alt="TopInstitut" class="h-12 w-auto max-h-12">
+                    <img src="{{ asset('logo-top-institut-rect.jpg') }}" alt="TopInstitut" class="h-12 w-auto max-h-12">
                 </a>
 
                 <nav class="hidden md:flex items-center gap-6 text-sm">
