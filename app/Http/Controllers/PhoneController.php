@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Etablissement;
+use App\Models\Establishment;
 use App\Services\AudiotelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,30 +17,28 @@ class PhoneController extends Controller
         ]);
 
         $phone = AudiotelService::decode($request->input('phone'));
-        $etablissement = Etablissement::findOrFail($request->input('etablissement_id'));
+        $establishment = Establishment::findOrFail($request->input('etablissement_id'));
 
         $isMobile = preg_match('/Mobile|Android|iPhone|iPad/i', $request->userAgent() ?? '');
 
-        // Crawlers : retourner le numéro directement
         if (AudiotelService::isCrawler($request->userAgent())) {
             return response()->json([
                 'phone' => AudiotelService::format($phone),
+                'tel' => preg_replace('/[^0-9+]/', '', $phone),
                 'premium' => false,
+                'mobile' => (bool) $isMobile,
             ]);
         }
 
-        // Appel API Audiotel
         $result = $audiotel->getEphemeralNumber(
             $phone,
-            $etablissement->legacy_id ?? $etablissement->id,
-            $etablissement->url,
+            $establishment->id,
+            url($establishment->url),
             $request->ip()
         );
 
-        $formatted = AudiotelService::format($result['numero']);
-
         return response()->json([
-            'phone' => $formatted,
+            'phone' => AudiotelService::format($result['numero']),
             'tel' => preg_replace('/[^0-9+]/', '', $result['numero']),
             'code' => $result['code'] ?? null,
             'premium' => $result['premium'],
