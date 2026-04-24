@@ -84,7 +84,7 @@ class ImportGooglePhotos extends Command
                 }
 
                 $photoUrl = "https://places.googleapis.com/v1/{$photoName}/media?key={$this->apiKey}&maxWidthPx={$width}";
-                $filename = 'google_' . ($index + 1) . '.jpg';
+                $filename = 'google_' . ($index + 1) . '.webp';
                 $path = "etablissements/{$establishment->id}/{$filename}";
 
                 try {
@@ -96,8 +96,14 @@ class ImportGooglePhotos extends Command
                         continue;
                     }
 
-                    Storage::disk('r2')->put($path, $imageResponse->body(), [
-                        'ContentType' => 'image/jpeg',
+                    $webpBytes = $this->encodeWebp($imageResponse->body());
+                    if (! $webpBytes) {
+                        $this->warn("    Photo $index : échec conversion WebP");
+                        continue;
+                    }
+
+                    Storage::disk('r2')->put($path, $webpBytes, [
+                        'ContentType' => 'image/webp',
                         'CacheControl' => 'public, max-age=15552000, immutable',
                     ]);
 
@@ -121,5 +127,24 @@ class ImportGooglePhotos extends Command
         $this->info("Total : {$totalImported} photo(s) importée(s).");
 
         return self::SUCCESS;
+    }
+
+    private function encodeWebp(string $jpegBytes, int $quality = 80): ?string
+    {
+        if (! function_exists('imagewebp')) {
+            return null;
+        }
+
+        $image = @imagecreatefromstring($jpegBytes);
+        if (! $image) {
+            return null;
+        }
+
+        ob_start();
+        imagewebp($image, null, $quality);
+        $bytes = ob_get_clean();
+        imagedestroy($image);
+
+        return $bytes ?: null;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Photo;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 
@@ -10,15 +11,15 @@ class ResizeR2Photos extends Command
     protected $signature = 'r2:resize-photos
         {--limit=50 : Nombre de photos à traiter par exécution}
         {--width=800 : Largeur max en pixels}
-        {--quality=82 : Qualité JPEG (0-100)}
+        {--quality=80 : Qualité WebP (0-100)}
         {--prefix=etablissements/ : Préfixe R2 à scanner}';
 
-    protected $description = 'Redimensionne en place les photos R2 qui dépassent --width (et fixe Cache-Control).';
+    protected $description = 'Redimensionne + convertit en WebP les photos R2 existantes. Met à jour la DB et supprime les anciens fichiers.';
 
     public function handle(): int
     {
-        if (! extension_loaded('gd')) {
-            $this->error('Extension GD non disponible.');
+        if (! function_exists('imagewebp')) {
+            $this->error('GD sans support WebP.');
 
             return self::FAILURE;
         }
@@ -42,6 +43,7 @@ class ResizeR2Photos extends Command
             }
 
             if (! preg_match('/\.(jpe?g|png)$/i', $key)) {
+                $skipped++;
                 continue;
             }
 
@@ -59,39 +61,71 @@ class ResizeR2Photos extends Command
             $srcW = imagesx($image);
             $srcH = imagesy($image);
 
-            if ($srcW <= $maxWidth) {
+            if ($srcW > $maxWidth) {
+                $dstW = $maxWidth;
+                $dstH = (int) round($srcH * ($maxWidth / $srcW));
+                $resized = imagecreatetruecolor($dstW, $dstH);
+                imagecopyresampled($resized, $image, 0, 0, 0, 0, $dstW, $dstH, $srcW, $srcH);
                 imagedestroy($image);
-                $skipped++;
+                $image = $resized;
+            } else {
+                $dstW = $srcW;
+                $dstH = $srcH;
+            }
+
+            ob_start();
+            imagewebp($image, null, $quality);
+            $newBytes = ob_get_clean();
+            imagedestroy($image);
+
+            if (! $newBytes) {
+                $this->warn("  Skip (encode): $key");
                 continue;
             }
 
-            $dstW = $maxWidth;
-            $dstH = (int) round($srcH * ($maxWidth / $srcW));
-            $resized = imagecreatetruecolor($dstW, $dstH);
-            imagecopyresampled($resized, $image, 0, 0, 0, 0, $dstW, $dstH, $srcW, $srcH);
-            imagedestroy($image);
+            // Nouveau key avec extension .webp
+            $newKey = preg_replace('/\.(jpe?g|png)$/i', '.webp', $key);
 
-            ob_start();
-            imagejpeg($resized, null, $quality);
-            $newBytes = ob_get_clean();
-            imagedestroy($resized);
-
-            $disk->put($key, $newBytes, [
-                'ContentType' => 'image/jpeg',
+            $disk->put($newKey, $newBytes, [
+                'ContentType' => 'image/webp',
                 'CacheControl' => 'public, max-age=15552000, immutable',
             ]);
+
+            // Mettre à jour l'enregistrement Photo (filename = basename du nouveau key)
+            $this->updatePhotoRecord($key, $newKey);
+
+            // Supprimer l'ancien fichier (si différent du nouveau)
+            if ($newKey !== $key) {
+                $disk->delete($key);
+            }
 
             $saved = strlen($originalBytes) - strlen($newBytes);
             $savedBytes += $saved;
             $processed++;
-            $this->line(sprintf('  OK : %s  (%dx%d → %dx%d, -%s)',
-                $key, $srcW, $srcH, $dstW, $dstH, $this->humanSize($saved)));
+            $this->line(sprintf('  OK : %s → %s  (%dx%d → %dx%d, -%s)',
+                basename($key), basename($newKey), $srcW, $srcH, $dstW, $dstH, $this->humanSize($saved)));
         }
 
-        $this->info(sprintf('Terminé. Redimensionnés : %d, déjà OK : %d, économisé : %s.',
+        $this->info(sprintf('Terminé. Convertis : %d, skippés : %d, économisé : %s.',
             $processed, $skipped, $this->humanSize($savedBytes)));
 
         return self::SUCCESS;
+    }
+
+    private function updatePhotoRecord(string $oldKey, string $newKey): void
+    {
+        $parts = explode('/', $oldKey);
+        if (count($parts) < 3) {
+            return;
+        }
+
+        $establishmentId = (int) $parts[1];
+        $oldFilename = end($parts);
+        $newFilename = basename($newKey);
+
+        Photo::where('establishment_id', $establishmentId)
+            ->where('filename', $oldFilename)
+            ->update(['filename' => $newFilename]);
     }
 
     private function humanSize(int $bytes): string
