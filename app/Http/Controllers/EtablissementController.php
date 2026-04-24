@@ -48,9 +48,11 @@ class EtablissementController extends Controller
     }
 
     /**
-     * Legacy flat URL : /{type}/{slug} → 301 redirect to hierarchical URL.
+     * Flat URL : /{type}/{slug}
+     * - Établissement avec ville résolvable → 301 vers l'URL hiérarchique canonique.
+     * - Établissement sans ville (import Google non-matché) → render directement, l'URL plate EST canonique.
      */
-    public function show(string $slug, int $type)
+    public function show(string $slug, int $type, GeoSearchService $geoService)
     {
         $establishment = Establishment::where('slug', $slug)->where('type', $type)->active()->first();
 
@@ -69,7 +71,12 @@ class EtablissementController extends Controller
             abort(404);
         }
 
-        return redirect($establishment->url, 301);
+        // Evite la boucle 301 → 301 → … quand l'URL canonique == l'URL courante.
+        if ($establishment->url !== '/'.request()->path()) {
+            return redirect($establishment->url, 301);
+        }
+
+        return $this->render($establishment, $geoService);
     }
 
     private function render(Establishment $establishment, GeoSearchService $geoService)

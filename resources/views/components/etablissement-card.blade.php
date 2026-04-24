@@ -29,34 +29,32 @@
         </div>
 
         {{-- Content --}}
-        <div class="flex-1 p-4 min-w-0">
-            <div class="flex justify-between items-start gap-3">
-                <div class="min-w-0">
-                    <h3 class="text-lg font-semibold text-gray-900 hover:text-pink-600 truncate">{{ $etablissement->name }}</h3>
-                    <div class="flex items-center gap-2 mt-1 flex-wrap">
-                        <span class="text-sm text-gray-500">{{ $etablissement->type_label }}</span>
-                        <x-statut-ouverture :etablissement="$etablissement" />
-                    </div>
-                    @if($etablissement->city)
-                        <p class="text-sm text-gray-500 mt-1 truncate">{{ $etablissement->address }} {{ $etablissement->postal_code }} {{ $etablissement->city }}</p>
-                    @endif
-                </div>
-                <div class="text-right flex-shrink-0">
-                    @if($etablissement->review_count > 0)
-                        <div class="flex items-center gap-1">
-                            <x-star-rating :rating="$etablissement->rating" />
-                            <span class="text-sm text-gray-500">{{ number_format($etablissement->rating, 1, ',', '') }}</span>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">{{ $etablissement->review_count }} avis</p>
-                    @elseif($etablissement->google_rating)
-                        <div class="flex items-center gap-1">
-                            <x-star-rating :rating="$etablissement->google_rating" />
-                            <span class="text-sm text-gray-500">{{ number_format($etablissement->google_rating, 1, ',', '') }}</span>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">{{ $etablissement->google_review_count }} avis Google</p>
-                    @endif
-                </div>
+        <div class="flex-1 min-w-0 p-4 pr-12">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 hover:text-pink-600 line-clamp-2 break-words">{{ $etablissement->name }}</h3>
+
+            <div class="flex items-center gap-2 mt-1 flex-wrap">
+                <span class="text-sm text-gray-500">{{ $etablissement->type_label }}</span>
+                <x-statut-ouverture :etablissement="$etablissement" />
             </div>
+
+            @if($etablissement->review_count > 0)
+                <div class="flex items-center gap-1 mt-1">
+                    <x-star-rating :rating="$etablissement->rating" size="w-4 h-4" />
+                    <span class="text-sm text-gray-500">{{ number_format($etablissement->rating, 1, ',', '') }}</span>
+                    <span class="text-xs text-gray-400 ml-1">· {{ $etablissement->review_count }} avis</span>
+                </div>
+            @elseif($etablissement->google_rating)
+                <div class="flex items-center gap-1 mt-1">
+                    <x-star-rating :rating="$etablissement->google_rating" size="w-4 h-4" />
+                    <span class="text-sm text-gray-500">{{ number_format($etablissement->google_rating, 1, ',', '') }}</span>
+                    <span class="text-xs text-gray-400 ml-1">· {{ $etablissement->google_review_count }} avis Google</span>
+                </div>
+            @endif
+
+            @if($etablissement->city)
+                <p class="text-sm text-gray-500 mt-1 line-clamp-2 break-words">{{ $etablissement->address }} {{ $etablissement->postal_code }} {{ $etablissement->city }}</p>
+            @endif
+
             @if($etablissement->tagline)
                 <p class="text-sm text-gray-600 mt-2 line-clamp-2">{{ Str::limit($etablissement->tagline, 120) }}</p>
             @endif
