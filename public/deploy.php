@@ -94,6 +94,11 @@ try {
             phpinfo();
             break;
 
+        case 'log':
+            $lines = isset($_GET['lines']) ? max(1, min(500, (int) $_GET['lines'])) : 100;
+            tailLog($projectRoot.'/storage/logs/cron.log', $lines);
+            break;
+
         case '':
         default:
             echo "Available commands:\n";
@@ -104,6 +109,7 @@ try {
             echo "  ?cmd=geo-import     - import departments + cities\n";
             echo "  ?cmd=storage-link   - create public/storage symlink\n";
             echo "  ?cmd=artisan&arg=<command>\n";
+            echo "  ?cmd=log[&lines=N]  - tail storage/logs/cron.log (default 100 lines)\n";
             echo "  ?cmd=info           - phpinfo()\n";
     }
 } catch (Throwable $e) {
@@ -171,6 +177,31 @@ function runArtisan($root, $command, array $params = [])
     $exit = $kernel->call($command, $params);
     echo $kernel->output();
     echo "\nexit code: $exit\n";
+}
+
+function tailLog($path, $lines)
+{
+    if (! is_file($path)) {
+        echo "Log file not found: {$path}\n";
+
+        return;
+    }
+    echo "=== tail -n {$lines} {$path} ===\n\n";
+    $handle = fopen($path, 'r');
+    if (! $handle) {
+        echo "Cannot open log\n";
+
+        return;
+    }
+    $buffer = [];
+    while (($line = fgets($handle)) !== false) {
+        $buffer[] = $line;
+        if (count($buffer) > $lines) {
+            array_shift($buffer);
+        }
+    }
+    fclose($handle);
+    echo implode('', $buffer);
 }
 
 function parseArtisanArgs(array $parts)

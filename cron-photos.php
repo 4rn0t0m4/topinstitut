@@ -2,15 +2,29 @@
 
 /**
  * Scheduled task entry point for OVH : import Google photos.
+ *   /usr/local/php8.4/bin/php /homez.xxx/www/new/cron-photos.php
+ *
+ * Output is logged to storage/logs/cron.log so we can verify execution
+ * even when stdout is not captured by OVH.
  */
 
-echo date('Y-m-d H:i:s')." - Cron import-photos démarré\n";
+$logFile = __DIR__.'/storage/logs/cron.log';
+$log = function ($msg) use ($logFile) {
+    @file_put_contents($logFile, '['.date('Y-m-d H:i:s')."] $msg\n", FILE_APPEND);
+    echo $msg."\n";
+};
 
-require __DIR__.'/vendor/autoload.php';
-$app = require_once __DIR__.'/bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$log('=== cron-photos.php lancé ===');
 
-$kernel->call('import:google-photos', ['--limit' => 5, '--max-photos' => 5]);
-echo $kernel->output();
+try {
+    require __DIR__.'/vendor/autoload.php';
+    $app = require_once __DIR__.'/bootstrap/app.php';
+    $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 
-echo date('Y-m-d H:i:s')." - Cron terminé\n";
+    $kernel->call('import:google-photos', ['--limit' => 5, '--max-photos' => 5]);
+    $log('Sortie : '.trim($kernel->output()));
+} catch (\Throwable $e) {
+    $log('EXCEPTION '.get_class($e).': '.$e->getMessage().' @ '.$e->getFile().':'.$e->getLine());
+}
+
+$log('=== cron-photos.php terminé ===');
