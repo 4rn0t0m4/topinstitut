@@ -137,7 +137,7 @@ Route::get('/{slug}', function ($slug) {
 // Placed last so literal routes match first.
 
 // Reserved slugs that must not match {dept} (handled by admin.php, client.php, or other)
-Route::pattern('dept', '(?!admin$|espace-client$|up$)[a-z][a-z0-9-]*');
+Route::pattern('dept', '(?!(?:admin|espace-client|up|deploy|test\.php|api)(?:$|/))[a-z][a-z0-9-]*');
 
 Route::get('/{dept}/{city}/{type}/{slug}', [EtablissementController::class, 'showHierarchical'])
     ->where('type', 'institut-de-beaute|estheticienne-a-domicile|spa|thalasso')
