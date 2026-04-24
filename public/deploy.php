@@ -152,15 +152,21 @@ function runComposer($root)
 
 function runArtisan($root, $command, array $params = [])
 {
-    if (! is_file($root.'/vendor/autoload.php')) {
-        echo "ERROR: vendor/autoload.php missing — run ?cmd=composer first\n";
+    static $kernel = null;
 
-        return;
+    if ($kernel === null) {
+        if (! is_file($root.'/vendor/autoload.php')) {
+            echo "ERROR: vendor/autoload.php missing — run ?cmd=composer first\n";
+
+            return;
+        }
+
+        require_once $root.'/vendor/autoload.php';
+        // require (not require_once) : bootstrap/app.php returns $app and we need that return value ;
+        // require_once returns true on subsequent calls, but static $kernel guards against re-entry anyway.
+        $app = require $root.'/bootstrap/app.php';
+        $kernel = $app->make(\Illuminate\Contracts\Console\Kernel::class);
     }
-
-    require_once $root.'/vendor/autoload.php';
-    $app = require_once $root.'/bootstrap/app.php';
-    $kernel = $app->make(\Illuminate\Contracts\Console\Kernel::class);
 
     $exit = $kernel->call($command, $params);
     echo $kernel->output();
