@@ -64,7 +64,7 @@ class ImportGoogleReviews extends Command
                 'google_review_count' => $data['userRatingCount'] ?? $establishment->google_review_count,
             ]);
 
-            $count = $reviews ? count($reviews) : 0;
+            $count = count($reviews);
             $this->info("    {$count} avis importés.");
             $updated++;
 
@@ -76,20 +76,18 @@ class ImportGoogleReviews extends Command
         return self::SUCCESS;
     }
 
-    private function formatReviews(array $reviews): ?array
+    private function formatReviews(array $reviews): array
     {
         if (empty($reviews)) {
-            return null;
+            return [];
         }
 
-        $formatted = collect($reviews)->map(fn ($r) => [
+        return collect($reviews)->map(fn ($r) => [
             'author' => $r['authorAttribution']['displayName'] ?? 'Anonyme',
             'rating' => $r['rating'] ?? 0,
             'text' => $r['text']['text'] ?? '',
             'date' => $r['publishTime'] ?? null,
             'photo' => $r['authorAttribution']['photoUri'] ?? null,
         ])->filter(fn ($r) => ! empty($r['text']))->values()->all();
-
-        return ! empty($formatted) ? $formatted : null;
     }
 }
