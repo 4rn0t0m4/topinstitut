@@ -1,0 +1,18 @@
+#!/bin/sh
+# Rebuild Vite assets when frontend files are staged, then stage the build output.
+# Rationale: OVH mutualisé n'a pas Node — on commit public/build/ pour que le serveur serve le CSS/JS à jour.
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+
+if ! echo "$STAGED" | grep -qE '^(resources/(views|css|js)|vite\.config|package\.json|package-lock\.json|tailwind\.config)'; then
+    exit 0
+fi
+
+echo "pre-commit: frontend files changed, running npm run build..."
+if ! npm run build --silent > /tmp/vite-build.log 2>&1; then
+    echo "pre-commit: npm run build FAILED. See /tmp/vite-build.log"
+    exit 1
+fi
+
+git add public/build/
+echo "pre-commit: public/build/ staged with this commit."
