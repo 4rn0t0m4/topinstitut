@@ -32,8 +32,9 @@ class ImportGooglePhotos extends Command
         $maxPhotos = (int) $this->option('max-photos');
         $width = (int) $this->option('width');
 
-        // Établissements avec place_id et sans photo en base
+        // Établissements avec place_id, jamais vérifiés, et sans photo en base
         $establishments = Establishment::whereNotNull('google_place_id')
+            ->whereNull('google_photos_checked_at')
             ->whereDoesntHave('photos')
             ->limit($limit)
             ->get();
@@ -62,6 +63,10 @@ class ImportGooglePhotos extends Command
 
                 continue;
             }
+
+            // API OK : marque comme vérifié, indépendamment du nombre de photos
+            // (sinon un etab sans photos serait re-traité à chaque cron à l'infini)
+            $establishment->update(['google_photos_checked_at' => now()]);
 
             $photos = array_slice($response->json('photos', []), 0, $maxPhotos);
 
