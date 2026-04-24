@@ -105,9 +105,9 @@
             <span class="text-gray-900">{{ $establishment->name }}</span>
         </nav>
 
-        <div class="grid lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {{-- Main content --}}
-            <div class="lg:col-span-2">
+            <div class="lg:col-span-2 min-w-0">
                 <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{{ $establishment->name }}</h1>
                 <div class="flex items-center gap-3 mt-1">
                     <span class="text-pink-600">{{ $establishment->type_label }}</span>
@@ -149,7 +149,7 @@
                 <div class="mt-8 bg-white border rounded-lg p-6">
                     <h2 class="text-xl font-semibold mb-4">Coordonnées</h2>
 
-                    <div class="grid sm:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div class="space-y-3">
                             @if($establishment->address)
                                 <div>

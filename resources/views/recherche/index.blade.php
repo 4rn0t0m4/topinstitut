@@ -15,7 +15,7 @@
         <form action="{{ route('recherche') }}" method="GET" class="bg-white border rounded-lg p-6 mb-8"
               x-data="{ open: {{ $type !== null || $openNow || $withPhotos || $minRating || $category ? 'true' : 'false' }}, loading: false }"
               @submit="loading = true; $dispatch('search-loading')">
-            <div class="grid sm:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-sm font-medium mb-1">Nom</label>
                     <input type="text" name="nom" value="{{ $name ?? '' }}" class="w-full border rounded-lg px-3 py-2" placeholder="Institut...">
@@ -54,7 +54,7 @@
                     <svg class="w-4 h-4 transition" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
 
-                <div x-show="open" x-cloak class="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
+                <div x-show="open" x-cloak class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
                     <div>
                         <label class="block text-sm font-medium mb-1">Type</label>
                         <select name="type" class="w-full border rounded-lg px-3 py-2 text-sm">
