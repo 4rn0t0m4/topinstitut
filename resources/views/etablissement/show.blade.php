@@ -9,7 +9,16 @@
 
     @if($establishment->latitude && $establishment->longitude)
         @push('head')
-            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css" />
+            {{-- Leaflet CSS : chargé en non-bloquant (carte en bas de page) --}}
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css" media="print" onload="this.media='all'">
+            <noscript><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css"></noscript>
+        @endpush
+    @endif
+
+    @if($establishment->photos->isNotEmpty())
+        @push('head')
+            {{-- Préload de la photo LCP (première de la galerie) --}}
+            <link rel="preload" as="image" href="{{ $establishment->photos->first()->url }}" fetchpriority="high">
         @endpush
     @endif
 
@@ -143,7 +152,11 @@
                             <button type="button"
                                     @click="$store.lightbox.show(@js($photoUrls), {{ $i }})"
                                     class="block group relative w-full min-w-0 overflow-hidden rounded-lg cursor-pointer">
-                                <img src="{{ $photo->url }}" alt="{{ $establishment->name }}" loading="lazy" class="object-cover h-40 sm:h-48 w-full max-w-full transition group-hover:scale-105">
+                                <img src="{{ $photo->url }}"
+                                     alt="{{ $establishment->name }}"
+                                     width="400" height="300"
+                                     @if($i === 0) fetchpriority="high" decoding="async" @else loading="lazy" decoding="async" @endif
+                                     class="object-cover h-40 sm:h-48 w-full max-w-full transition group-hover:scale-105">
                             </button>
                         @endforeach
                     </div>
