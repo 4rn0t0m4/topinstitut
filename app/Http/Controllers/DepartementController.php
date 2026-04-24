@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Department;
+use App\Models\Establishment;
 
 class DepartementController extends Controller
 {
@@ -15,6 +16,24 @@ class DepartementController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('departement.show', compact('department', 'cities'));
+        $markers = Establishment::active()
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->whereHas('city', fn ($q) => $q->where('department_code', $department->code))
+            ->with('city')
+            ->get()
+            ->map(fn ($e) => [
+                'lat' => (float) $e->latitude,
+                'lng' => (float) $e->longitude,
+                'title' => $e->name,
+                'type' => $e->type_label,
+                'city' => $e->city?->name,
+                'postal_code' => $e->postal_code,
+                'rating' => $e->review_count > 0 ? round($e->rating, 1) : null,
+                'url' => $e->url,
+            ])
+            ->values();
+
+        return view('departement.show', compact('department', 'cities', 'markers'));
     }
 }
