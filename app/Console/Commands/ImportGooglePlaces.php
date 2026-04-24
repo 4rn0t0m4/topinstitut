@@ -43,7 +43,7 @@ class ImportGooglePlaces extends Command
         $dryRun = $this->option('dry-run');
         $citiesPerDept = (int) $this->option('cities');
 
-        [$dept, $queryIndex] = $this->advanceCursor();
+        [$dept, $queryIndex, $cycleCount] = $this->advanceCursor();
         if (! $dept) {
             $this->error('Aucun département en base.');
 
@@ -51,17 +51,22 @@ class ImportGooglePlaces extends Command
         }
 
         $searchType = self::SEARCH_TYPES[$queryIndex];
+        $cityOffset = $cycleCount * $citiesPerDept;
         $this->info("Département : {$dept->code} - {$dept->name}");
         $this->info("Requête (#".($queryIndex + 1).'/'.count(self::SEARCH_TYPES)."): {$searchType}");
+        $this->info("Cycle #{$cycleCount} — villes #".($cityOffset + 1).' à #'.($cityOffset + $citiesPerDept));
 
         $cities = City::where('department_code', $dept->code)
             ->orderByDesc('population')
+            ->offset($cityOffset)
             ->limit($citiesPerDept)
             ->pluck('name')
             ->toArray();
 
         if (empty($cities)) {
-            $cities = [$dept->name];
+            $this->warn("  Aucune ville à cette profondeur pour ce département — skip.");
+
+            return self::SUCCESS;
         }
 
         $imported = 0;
@@ -127,19 +132,21 @@ class ImportGooglePlaces extends Command
     /**
      * Advance the cursor one step: next department for the current query.
      * When all departments are done, advance to the next query and restart the department loop.
+     * cycle_count increments at each full wrap (4 queries × all depts) — used as city offset.
      *
-     * @return array{0: ?Department, 1: int}  [department to process, query_index]
+     * @return array{0: ?Department, 1: int, 2: int}  [department, query_index, cycle_count]
      */
     private function advanceCursor(): array
     {
         // Override via CLI
         if ($forced = $this->option('departement')) {
             $dept = Department::where('code', $forced)->first();
+            $cursor = DB::table('google_import_cursor')->where('id', 1)->first();
             $queryIndex = $this->option('query') !== null
                 ? (int) $this->option('query')
-                : (int) DB::table('google_import_cursor')->where('id', 1)->value('query_index');
+                : (int) ($cursor->query_index ?? 0);
 
-            return [$dept, $queryIndex];
+            return [$dept, $queryIndex, (int) ($cursor->cycle_count ?? 0)];
         }
 
         $cursor = DB::table('google_import_cursor')->where('id', 1)->first();
@@ -149,6 +156,7 @@ class ImportGooglePlaces extends Command
         }
 
         $queryIndex = (int) $cursor->query_index;
+        $cycleCount = (int) $cursor->cycle_count;
         $lastCode = $cursor->last_department_code;
 
         $dept = Department::when($lastCode, fn ($q) => $q->where('code', '>', $lastCode))
@@ -160,11 +168,14 @@ class ImportGooglePlaces extends Command
             $queryIndex = ($queryIndex + 1) % count(self::SEARCH_TYPES);
             $dept = Department::orderBy('code')->first();
 
-            $cycleIncrement = $queryIndex === 0 ? 1 : 0;
+            if ($queryIndex === 0) {
+                $cycleCount++;
+            }
+
             DB::table('google_import_cursor')->where('id', 1)->update([
                 'query_index' => $queryIndex,
                 'last_department_code' => $dept?->code,
-                'cycle_count' => DB::raw('cycle_count + '.$cycleIncrement),
+                'cycle_count' => $cycleCount,
                 'updated_at' => now(),
             ]);
         } else {
@@ -174,7 +185,7 @@ class ImportGooglePlaces extends Command
             ]);
         }
 
-        return [$dept, $queryIndex];
+        return [$dept, $queryIndex, $cycleCount];
     }
 
     private function searchPlaces(string $query): array

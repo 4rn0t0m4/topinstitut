@@ -23,8 +23,13 @@
                     <div class="text-sm font-medium mt-1">{{ $cursor->last_department_code ?? '—' }}</div>
                 </div>
                 <div>
-                    <div class="text-xs text-gray-500 uppercase">Cycles complets</div>
-                    <div class="text-sm font-medium mt-1">{{ $cursor->cycle_count }}</div>
+                    <div class="text-xs text-gray-500 uppercase">Cycle en cours</div>
+                    <div class="text-sm font-medium mt-1">#{{ $cursor->cycle_count }}</div>
+                    @php
+                        $citiesPerDept = 5;
+                        $cityOffset = $cursor->cycle_count * $citiesPerDept;
+                    @endphp
+                    <div class="text-xs text-gray-600 mt-1">Villes #{{ $cityOffset + 1 }}–{{ $cityOffset + $citiesPerDept }} par dept</div>
                 </div>
                 <div>
                     <div class="text-xs text-gray-500 uppercase">Total importés</div>
