@@ -108,7 +108,7 @@
         <div class="grid lg:grid-cols-3 gap-8">
             {{-- Main content --}}
             <div class="lg:col-span-2">
-                <h1 class="text-3xl font-bold text-gray-900">{{ $establishment->name }}</h1>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{{ $establishment->name }}</h1>
                 <div class="flex items-center gap-3 mt-1">
                     <span class="text-pink-600">{{ $establishment->type_label }}</span>
                     <x-statut-ouverture :etablissement="$establishment" />
@@ -138,8 +138,8 @@
                         @foreach($establishment->photos as $i => $photo)
                             <button type="button"
                                     @click="$store.lightbox.show(@js($photoUrls), {{ $i }})"
-                                    class="block group relative overflow-hidden rounded-lg cursor-pointer">
-                                <img src="{{ $photo->url }}" alt="{{ $establishment->name }}" loading="lazy" class="object-cover h-48 w-full transition group-hover:scale-105">
+                                    class="block group relative w-full min-w-0 overflow-hidden rounded-lg cursor-pointer">
+                                <img src="{{ $photo->url }}" alt="{{ $establishment->name }}" loading="lazy" class="object-cover h-40 sm:h-48 w-full max-w-full transition group-hover:scale-105">
                             </button>
                         @endforeach
                     </div>
@@ -201,7 +201,7 @@
                 @if($establishment->description)
                     <div class="mt-8">
                         <h2 class="text-xl font-semibold mb-3">Présentation</h2>
-                        <div class="prose text-gray-700">{!! nl2br(e($establishment->description)) !!}</div>
+                        <div class="prose max-w-none text-gray-700 break-words">{!! nl2br(e($establishment->description)) !!}</div>
                     </div>
                 @endif
 
@@ -231,7 +231,7 @@
                 @elseif($establishment->pricing)
                     <div class="mt-8">
                         <h2 class="text-xl font-semibold mb-3">Tarifs</h2>
-                        <div class="prose text-gray-700">{!! nl2br(e($establishment->pricing)) !!}</div>
+                        <div class="prose max-w-none text-gray-700 break-words">{!! nl2br(e($establishment->pricing)) !!}</div>
                     </div>
                 @endif
 

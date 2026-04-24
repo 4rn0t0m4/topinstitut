@@ -34,13 +34,13 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
 </head>
-<body class="min-h-screen bg-gray-50 flex flex-col" x-data>
+<body class="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden" x-data="{ mobileMenu: false }">
     {{-- Header --}}
     <header class="bg-white shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20 gap-6">
-                <a href="{{ route('home') }}" class="flex items-center flex-shrink-0">
-                    <img src="{{ asset('logo-top-institut-rect.jpg') }}" alt="TopInstitut" class="h-12 w-auto max-h-12">
+            <div class="flex justify-between items-center h-20 gap-4 sm:gap-6">
+                <a href="{{ route('home') }}" class="flex items-center flex-shrink-0 min-w-0">
+                    <img src="{{ asset('logo-top-institut-rect.jpg') }}" alt="TopInstitut" class="h-10 sm:h-12 w-auto max-h-12">
                 </a>
 
                 <nav class="hidden md:flex items-center gap-6 text-sm">
@@ -50,7 +50,7 @@
                     <a href="{{ route('contact') }}" class="text-gray-700 hover:text-pink-600">Contact</a>
                 </nav>
 
-                <div class="flex items-center gap-4 text-sm">
+                <div class="hidden md:flex items-center gap-4 text-sm">
                     @auth
                         <a href="{{ route('client.dashboard') }}" class="text-gray-700 hover:text-pink-600">Mon espace</a>
                         @if(auth()->user()->is_admin)
@@ -60,6 +60,34 @@
                     @else
                         <a href="{{ route('login') }}" class="text-gray-700 hover:text-pink-600">Connexion</a>
                         <a href="{{ route('register') }}" class="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700">Inscription</a>
+                    @endauth
+                </div>
+
+                <button type="button"
+                        @click="mobileMenu = !mobileMenu"
+                        class="md:hidden inline-flex items-center justify-center p-2 -mr-2 rounded-lg text-gray-700 hover:bg-gray-100"
+                        :aria-expanded="mobileMenu"
+                        aria-label="Menu">
+                    <svg x-show="!mobileMenu" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <svg x-show="mobileMenu" x-cloak class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div x-show="mobileMenu" x-cloak class="md:hidden border-t py-3 space-y-1 text-sm">
+                <a href="{{ route('home') }}" class="block px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-pink-600">Accueil</a>
+                <a href="{{ route('recherche') }}" class="block px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-pink-600">Rechercher</a>
+                <a href="{{ route('etablissement.create') }}" class="block px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-pink-600">Ajouter un institut</a>
+                <a href="{{ route('contact') }}" class="block px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-pink-600">Contact</a>
+                <div class="border-t pt-2 mt-2 space-y-1">
+                    @auth
+                        <a href="{{ route('client.dashboard') }}" class="block px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-pink-600">Mon espace</a>
+                        @if(auth()->user()->is_admin)
+                            <a href="{{ route('admin.dashboard') }}" class="block px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-pink-600">Admin</a>
+                        @endif
+                        <a href="{{ route('logout') }}" class="block px-2 py-2 rounded-lg text-gray-500 hover:bg-gray-50 hover:text-pink-600">Déconnexion</a>
+                    @else
+                        <a href="{{ route('login') }}" class="block px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-pink-600">Connexion</a>
+                        <a href="{{ route('register') }}" class="block px-2 py-2 rounded-lg bg-pink-600 text-white text-center hover:bg-pink-700">Inscription</a>
                     @endauth
                 </div>
             </div>
