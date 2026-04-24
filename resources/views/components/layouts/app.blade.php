@@ -33,6 +33,18 @@
     @endauth
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
+    @production
+        @if(! isset($noindex))
+            {{-- Google Analytics --}}
+            <script async src="https://www.googletagmanager.com/gtag/js?id=G-XDTGPZW1WL"></script>
+            <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', 'G-XDTGPZW1WL');
+            </script>
+        @endif
+    @endproduction
 </head>
 <body class="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden" x-data="{ mobileMenu: false }">
     {{-- Header --}}
