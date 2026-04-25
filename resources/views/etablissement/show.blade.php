@@ -132,6 +132,10 @@
                 @elseif($establishment->google_rating)
                     <div class="flex items-center gap-2 mt-3">
                         <x-star-rating :rating="$establishment->google_rating" />
+                        <span class="font-semibold">{{ number_format($establishment->google_rating, 1, ',', '') }}/5</span>
+                        @if($establishment->google_review_count > 0)
+                            <span class="text-gray-500">({{ $establishment->google_review_count }} avis Google)</span>
+                        @endif
                     </div>
                 @endif
 
