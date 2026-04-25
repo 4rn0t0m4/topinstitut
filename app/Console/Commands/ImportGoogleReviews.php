@@ -9,9 +9,10 @@ use Illuminate\Support\Facades\Http;
 class ImportGoogleReviews extends Command
 {
     protected $signature = 'import:google-reviews
-        {--limit=10 : Nombre d\'établissements à traiter par exécution}';
+        {--limit=10 : Nombre d\'établissements à traiter par exécution}
+        {--refresh-days=90 : Nombre de jours avant de re-vérifier un établissement}';
 
-    protected $description = 'Importe les avis Google pour les établissements existants';
+    protected $description = 'Importe les avis Google pour les établissements existants (re-vérifie après --refresh-days jours)';
 
     private string $apiKey;
 
@@ -25,9 +26,15 @@ class ImportGoogleReviews extends Command
         }
 
         $limit = (int) $this->option('limit');
+        $refreshDays = (int) $this->option('refresh-days');
+        $threshold = now()->subDays($refreshDays);
 
         $establishments = Establishment::whereNotNull('google_place_id')
-            ->whereNull('google_reviews')
+            ->where(function ($q) use ($threshold) {
+                $q->whereNull('google_reviews_checked_at')
+                    ->orWhere('google_reviews_checked_at', '<', $threshold);
+            })
+            ->orderBy('google_reviews_checked_at', 'asc')
             ->limit($limit)
             ->get();
 
@@ -62,6 +69,7 @@ class ImportGoogleReviews extends Command
                 'google_reviews' => $reviews,
                 'google_rating' => $data['rating'] ?? $establishment->google_rating,
                 'google_review_count' => $data['userRatingCount'] ?? $establishment->google_review_count,
+                'google_reviews_checked_at' => now(),
             ]);
 
             $count = count($reviews);

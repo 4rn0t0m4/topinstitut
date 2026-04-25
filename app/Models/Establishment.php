@@ -75,7 +75,7 @@ class Establishment extends Model
         'description', 'pricing', 'services', 'phone', 'mobile',
         'siret', 'photo', 'tagline', 'is_active', 'rating', 'review_count',
         'google_place_id', 'google_rating', 'google_review_count', 'google_reviews',
-        'google_photos_checked_at',
+        'google_photos_checked_at', 'google_reviews_checked_at',
     ];
 
     protected function casts(): array
@@ -88,6 +88,7 @@ class Establishment extends Model
             'longitude' => 'decimal:7',
             'google_reviews' => 'array',
             'google_photos_checked_at' => 'datetime',
+            'google_reviews_checked_at' => 'datetime',
             'services' => 'array',
         ];
     }
