@@ -617,6 +617,7 @@
             </style>
         @endpush
         <script>
+            document.addEventListener('DOMContentLoaded', function () {
             window.lazyLoadMap({
                 target: '#map',
                 styles: ['https://unpkg.com/leaflet@1.9/dist/leaflet.css'],
@@ -644,6 +645,7 @@
                         .addTo(map)
                         .bindPopup('<strong>{{ e($establishment->name) }}</strong>');
                 },
+            });
             });
         </script>
     @endif

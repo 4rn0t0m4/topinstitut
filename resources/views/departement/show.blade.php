@@ -40,6 +40,7 @@
 
     @if($markers->isNotEmpty())
         <script>
+            document.addEventListener('DOMContentLoaded', function () {
             window.lazyLoadMap({
                 target: '#dept-map',
                 styles: ['https://unpkg.com/leaflet@1.9/dist/leaflet.css'],
@@ -78,6 +79,7 @@
                         );
                     });
                 },
+            });
             });
         </script>
     @endif

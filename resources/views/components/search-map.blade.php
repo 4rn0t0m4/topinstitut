@@ -36,6 +36,7 @@
 
     @push('scripts')
         <script>
+            document.addEventListener('DOMContentLoaded', function () {
             window.lazyLoadMap({
                 target: '#search-map',
                 styles: [
@@ -110,6 +111,7 @@
 
                     fitView();
                 },
+            });
             });
         </script>
     @endpush
