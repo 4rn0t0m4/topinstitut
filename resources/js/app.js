@@ -1,4 +1,5 @@
 import Alpine from 'alpinejs';
+import './lazy-map.js';
 
 window.Alpine = Alpine;
 

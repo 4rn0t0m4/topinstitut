@@ -1,9 +1,6 @@
 <x-layouts.app :title="'Instituts de beauté ' . $department->article . $department->name . ' - TopInstitut'" :description="'Tous les instituts de beauté, spas et esthéticiennes ' . $department->article . $department->name . '. Trouvez le meilleur institut près de chez vous.'">
     @push('head')
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.9/dist/leaflet.js"></script>
-        <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
-        <script src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_PLACES_API_KEY') }}"></script>
+        <noscript><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css"></noscript>
     @endpush
     @push('jsonld')
     <x-breadcrumb-jsonld :items="[
@@ -43,35 +40,44 @@
 
     @if($markers->isNotEmpty())
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                var establishments = @json($markers);
+            window.lazyLoadMap({
+                target: '#dept-map',
+                styles: ['https://unpkg.com/leaflet@1.9/dist/leaflet.css'],
+                scripts: [
+                    'https://unpkg.com/leaflet@1.9/dist/leaflet.js',
+                    'https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js',
+                    'https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_PLACES_API_KEY') }}',
+                ],
+                onReady: function () {
+                    var establishments = @json($markers);
 
-                var map = L.map('dept-map', { scrollWheelZoom: false }).setView([{{ $department->latitude ?? 46.6 }}, {{ $department->longitude ?? 2.3 }}], {{ $department->zoom ?? 9 }});
-                L.gridLayer.googleMutant({ type: 'roadmap', maxZoom: 20 }).addTo(map);
-                setTimeout(function () { map.invalidateSize(); }, 100);
+                    var map = L.map('dept-map', { scrollWheelZoom: false }).setView([{{ $department->latitude ?? 46.6 }}, {{ $department->longitude ?? 2.3 }}], {{ $department->zoom ?? 9 }});
+                    L.gridLayer.googleMutant({ type: 'roadmap', maxZoom: 20 }).addTo(map);
+                    setTimeout(function () { map.invalidateSize(); }, 100);
 
-                // Contour du département via gregoiredavid/france-geojson
-                var deptSlug = '{{ $department->code }}-{{ strtolower($department->slug) }}';
-                var geoUrl = 'https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements/' + deptSlug + '/departement-' + deptSlug + '.geojson';
-                fetch(geoUrl)
-                    .then(function (r) { return r.json(); })
-                    .then(function (geojson) {
-                        var layer = L.geoJSON(geojson, {
-                            style: { color: '#be185d', weight: 2, fillColor: '#ec4899', fillOpacity: 0.05 }
-                        }).addTo(map);
-                        map.fitBounds(layer.getBounds(), { padding: [20, 20] });
-                    })
-                    .catch(function () {});
+                    // Contour du département via gregoiredavid/france-geojson
+                    var deptSlug = '{{ $department->code }}-{{ strtolower($department->slug) }}';
+                    var geoUrl = 'https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements/' + deptSlug + '/departement-' + deptSlug + '.geojson';
+                    fetch(geoUrl)
+                        .then(function (r) { return r.json(); })
+                        .then(function (geojson) {
+                            var layer = L.geoJSON(geojson, {
+                                style: { color: '#be185d', weight: 2, fillColor: '#ec4899', fillOpacity: 0.05 }
+                            }).addTo(map);
+                            map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+                        })
+                        .catch(function () {});
 
-                establishments.forEach(function (e) {
-                    var marker = L.marker([e.lat, e.lng]).addTo(map);
-                    marker.bindPopup(
-                        '<strong><a href="' + e.url + '">' + e.title + '</a></strong><br>' +
-                        '<span style="color:#666">' + e.type + '</span><br>' +
-                        (e.city || '') + (e.postal_code ? ' (' + e.postal_code + ')' : '') +
-                        (e.rating ? '<br>⭐ ' + e.rating + '/5' : '')
-                    );
-                });
+                    establishments.forEach(function (e) {
+                        var marker = L.marker([e.lat, e.lng]).addTo(map);
+                        marker.bindPopup(
+                            '<strong><a href="' + e.url + '">' + e.title + '</a></strong><br>' +
+                            '<span style="color:#666">' + e.type + '</span><br>' +
+                            (e.city || '') + (e.postal_code ? ' (' + e.postal_code + ')' : '') +
+                            (e.rating ? '<br>⭐ ' + e.rating + '/5' : '')
+                        );
+                    });
+                },
             });
         </script>
     @endif
