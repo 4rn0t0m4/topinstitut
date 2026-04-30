@@ -13,7 +13,8 @@ class SitemapController extends Controller
     public function index(): Response
     {
         $establishments = Establishment::active()
-            ->select('slug', 'type', 'updated_at')
+            ->select('id', 'slug', 'type', 'city_id', 'updated_at')
+            ->with(['cityRelation:id,slug,department_code', 'cityRelation.department:code,slug'])
             ->orderByDesc('updated_at')
             ->get();
 

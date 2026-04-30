@@ -26,7 +26,7 @@
     @endforeach
     @foreach($establishments as $etab)
     <url>
-        <loc>{{ url('/' . \App\Models\Establishment::TYPE_SLUGS[$etab->type] . '/' . $etab->slug) }}</loc>
+        <loc>{{ url($etab->url) }}</loc>
         <lastmod>{{ $etab->updated_at->toW3cString() }}</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
