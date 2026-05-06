@@ -28,7 +28,6 @@ class ImportGooglePlaces extends Command
         'institut de beauté',
         'spa bien-être',
         'esthéticienne',
-        'thalassothérapie',
     ];
 
     public function handle(): int
@@ -50,6 +49,9 @@ class ImportGooglePlaces extends Command
             return self::FAILURE;
         }
 
+        // Safety : si query_index dépasse le tableau (suite à la suppression
+        // d'un type de recherche), on retombe dans les bornes.
+        $queryIndex = $queryIndex % count(self::SEARCH_TYPES);
         $searchType = self::SEARCH_TYPES[$queryIndex];
         $cityOffset = $cycleCount * $citiesPerDept;
         $this->info("Département : {$dept->code} - {$dept->name}");
