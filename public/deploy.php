@@ -99,6 +99,15 @@ try {
             tailLog($projectRoot.'/storage/logs/cron.log', $lines);
             break;
 
+        case 'test-email':
+            $url = isset($_GET['url']) ? $_GET['url'] : '';
+            if (! $url) {
+                echo "Missing ?url=\n";
+                exit;
+            }
+            testEmailScraper($projectRoot, $url);
+            break;
+
         case '':
         default:
             echo "Available commands:\n";
@@ -110,6 +119,7 @@ try {
             echo "  ?cmd=storage-link   - create public/storage symlink\n";
             echo "  ?cmd=artisan&arg=<command>\n";
             echo "  ?cmd=log[&lines=N]  - tail storage/logs/cron.log (default 100 lines)\n";
+            echo "  ?cmd=test-email&url=https://...  - test email scraping on a single URL\n";
             echo "  ?cmd=info           - phpinfo()\n";
     }
 } catch (Throwable $e) {
@@ -177,6 +187,28 @@ function runArtisan($root, $command, array $params = [])
     $exit = $kernel->call($command, $params);
     echo $kernel->output();
     echo "\nexit code: $exit\n";
+}
+
+function testEmailScraper($root, $url)
+{
+    if (! is_file($root.'/vendor/autoload.php')) {
+        echo "ERROR: vendor/autoload.php missing\n";
+        return;
+    }
+
+    require_once $root.'/vendor/autoload.php';
+    $app = require $root.'/bootstrap/app.php';
+    $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+    echo "URL testée : {$url}\n";
+    $start = microtime(true);
+
+    $scraper = new \App\Services\EmailScraperService();
+    $email = $scraper->findEmail($url);
+
+    $elapsed = round((microtime(true) - $start) * 1000);
+    echo "Durée : {$elapsed} ms\n";
+    echo 'Email trouvé : '.($email ?: '(aucun)')."\n";
 }
 
 function tailLog($path, $lines)
