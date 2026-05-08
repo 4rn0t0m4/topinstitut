@@ -21,7 +21,7 @@ try {
     $app = require_once __DIR__.'/bootstrap/app.php';
     $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 
-    $kernel->call('import:google-photos', ['--limit' => 5, '--max-photos' => 5]);
+    $kernel->call('import:google-photos', ['--limit' => 2, '--max-photos' => 3]);
     $log('Sortie : '.trim($kernel->output()));
 } catch (\Throwable $e) {
     $log('EXCEPTION '.get_class($e).': '.$e->getMessage().' @ '.$e->getFile().':'.$e->getLine());
