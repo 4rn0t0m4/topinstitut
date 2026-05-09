@@ -21,7 +21,7 @@ try {
     $app = require_once __DIR__.'/bootstrap/app.php';
     $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 
-    $kernel->call('import:google-places', ['--cities' => 3]);
+    $kernel->call('import:google-places', ['--cities' => 2]);
     $log('Sortie : '.trim($kernel->output()));
 } catch (\Throwable $e) {
     $log('EXCEPTION '.get_class($e).': '.$e->getMessage().' @ '.$e->getFile().':'.$e->getLine());
