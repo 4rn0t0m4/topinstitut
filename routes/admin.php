@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AvisController;
 use App\Http\Controllers\Admin\CategorieController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EtablissementController;
+use App\Http\Controllers\Admin\GuideController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\RevendicationController;
@@ -28,6 +29,8 @@ Route::get('imports', [ImportController::class, 'index'])->name('imports.index')
 Route::get('messages', [MessageController::class, 'index'])->name('messages.index');
 Route::get('messages/{message}', [MessageController::class, 'show'])->name('messages.show');
 Route::delete('messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
+
+Route::resource('guides', GuideController::class)->except(['show']);
 
 // Recherche Google Places
 Route::view('recherche-entreprises', 'admin.recherche-entreprises')->name('recherche-entreprises');

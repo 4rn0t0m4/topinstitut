@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\City;
 use App\Models\Department;
 use App\Models\Establishment;
+use App\Models\Guide;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
@@ -71,7 +72,9 @@ class SitemapController extends Controller
             ];
         }
 
-        return response()->view('sitemap', compact('establishments', 'departments', 'cities', 'prestations'))
+        $guides = Guide::published()->select('slug', 'updated_at')->get();
+
+        return response()->view('sitemap', compact('establishments', 'departments', 'cities', 'prestations', 'guides'))
             ->header('Content-Type', 'text/xml');
     }
 }

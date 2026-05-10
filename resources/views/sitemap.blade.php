@@ -39,4 +39,17 @@
         <priority>0.7</priority>
     </url>
     @endforeach
+    <url>
+        <loc>{{ url('/guides') }}</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    @foreach($guides as $g)
+    <url>
+        <loc>{{ url('/guides/' . $g->slug) }}</loc>
+        <lastmod>{{ $g->updated_at->toW3cString() }}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    @endforeach
 </urlset>

@@ -7,6 +7,7 @@ use App\Http\Controllers\ComparerController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DepartementController;
 use App\Http\Controllers\EtablissementController;
+use App\Http\Controllers\GuideController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InscriptionEtablissementController;
 use App\Http\Controllers\PhoneController;
@@ -33,6 +34,10 @@ Route::get('/comparer', [ComparerController::class, 'index'])->name('comparer');
 // Quiz
 Route::get('/quiz', [QuizController::class, 'index'])->name('quiz');
 Route::post('/quiz', [QuizController::class, 'submit'])->middleware('throttle:20,1')->name('quiz.submit');
+
+// Guides éditoriaux
+Route::get('/guides', [GuideController::class, 'index'])->name('guides.index');
+Route::get('/guides/{slug}', [GuideController::class, 'show'])->name('guides.show');
 
 // Establishment registration
 Route::get('/ajouter-un-institut-de-beaute', [InscriptionEtablissementController::class, 'create'])->name('etablissement.create');

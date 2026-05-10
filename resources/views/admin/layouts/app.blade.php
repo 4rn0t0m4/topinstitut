@@ -39,6 +39,9 @@
                 <a href="{{ route('admin.messages.index') }}" class="block px-4 py-2 text-sm hover:bg-gray-800 {{ request()->routeIs('admin.messages.*') ? 'bg-gray-800 text-pink-400' : '' }}">
                     Messages
                 </a>
+                <a href="{{ route('admin.guides.index') }}" class="block px-4 py-2 text-sm hover:bg-gray-800 {{ request()->routeIs('admin.guides.*') ? 'bg-gray-800 text-pink-400' : '' }}">
+                    Guides
+                </a>
                 <div class="border-t border-gray-800 mt-4 pt-4">
                     <a href="{{ route('home') }}" class="block px-4 py-2 text-sm text-gray-400 hover:bg-gray-800">Retour au site</a>
                     <a href="{{ route('logout') }}" class="block px-4 py-2 text-sm text-gray-400 hover:bg-gray-800">Déconnexion</a>
