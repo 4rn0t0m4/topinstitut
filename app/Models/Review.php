@@ -57,4 +57,9 @@ class Review extends Model
     {
         return $this->hasMany(ReviewVote::class);
     }
+
+    public function photos(): HasMany
+    {
+        return $this->hasMany(ReviewPhoto::class)->orderBy('sort_order');
+    }
 }

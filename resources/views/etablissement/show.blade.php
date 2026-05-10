@@ -392,6 +392,19 @@
                             <h3 class="font-medium mt-2">{{ $review->title }}</h3>
                             <p class="text-sm text-gray-700 mt-1">{{ $review->content }}</p>
 
+                            @if($review->photos->isNotEmpty())
+                                @php $reviewPhotoUrls = $review->photos->pluck('url')->values()->all(); @endphp
+                                <div class="flex gap-2 mt-3">
+                                    @foreach($review->photos as $j => $rp)
+                                        <button type="button"
+                                                @click="$store.lightbox.show(@js($reviewPhotoUrls), {{ $j }})"
+                                                class="block group relative w-20 h-20 sm:w-24 sm:h-24 overflow-hidden rounded cursor-pointer">
+                                            <img src="{{ $rp->url }}" alt="Photo de l'avis" loading="lazy" decoding="async" width="96" height="96" class="absolute inset-0 w-full h-full object-cover transition group-hover:scale-105">
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @endif
+
                             <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3 text-xs text-gray-500">
                                 <div>Accueil: {{ $review->rating_welcome }}/5</div>
                                 <div>Qualité: {{ $review->rating_quality }}/5</div>
@@ -413,7 +426,7 @@
                     {{-- Review form --}}
                     <div class="bg-white border rounded-lg p-6 mt-6" x-data="{ submitError: '' }">
                         <h3 class="text-lg font-semibold mb-4">Donner votre avis</h3>
-                        <form action="{{ route('avis.store') }}" method="POST" @submit="
+                        <form action="{{ route('avis.store') }}" method="POST" enctype="multipart/form-data" @submit="
                             const ratings = ['rating_welcome','rating_quality','rating_variety','rating_price','rating_ambiance','rating_cleanliness'];
                             const missing = ratings.filter(n => !$el.querySelector('[name='+n+']').value || $el.querySelector('[name='+n+']').value === '0');
                             if (missing.length) { submitError = 'Veuillez attribuer toutes les notes (étoiles).'; $event.preventDefault(); return; }
@@ -450,6 +463,26 @@
                                 @foreach(['welcome' => 'Accueil', 'quality' => 'Qualité', 'variety' => 'Choix', 'price' => 'Prix', 'ambiance' => 'Ambiance', 'cleanliness' => 'Propreté'] as $key => $label)
                                     <x-star-rating-input name="rating_{{ $key }}" :label="$label" :value="old('rating_' . $key, 0)" />
                                 @endforeach
+                            </div>
+
+                            <div class="mb-4" x-data="{ previews: [] }">
+                                <label class="block text-sm font-medium mb-1">Photos (optionnel, 3 max — 5 Mo chacune)</label>
+                                <input type="file" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple
+                                       @change="
+                                           previews = [];
+                                           const files = Array.from($event.target.files).slice(0, 3);
+                                           files.forEach(f => {
+                                               const r = new FileReader();
+                                               r.onload = e => previews.push(e.target.result);
+                                               r.readAsDataURL(f);
+                                           });
+                                       "
+                                       class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-pink-100 file:text-pink-700 file:py-1.5 file:px-3 file:cursor-pointer hover:file:bg-pink-200">
+                                <div class="flex gap-2 mt-2" x-show="previews.length" x-cloak>
+                                    <template x-for="(src, i) in previews" :key="i">
+                                        <img :src="src" class="w-20 h-20 object-cover rounded border" alt="">
+                                    </template>
+                                </div>
                             </div>
 
                             <p x-show="submitError" x-text="submitError" class="text-red-500 text-sm mb-3" x-cloak></p>
