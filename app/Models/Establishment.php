@@ -29,6 +29,19 @@ class Establishment extends Model
     ];
 
     /**
+     * Caractéristiques pratiques (filtres). Stockées en JSON dans `features`.
+     */
+    const FEATURES = [
+        'pmr' => 'Accessible PMR',
+        'men' => 'Hommes acceptés',
+        'organic' => 'Produits bio / vegan',
+        'parking' => 'Parking',
+        'english' => 'Anglais parlé',
+        'cb' => 'Carte bancaire acceptée',
+        'gift_card' => 'Bons cadeaux',
+    ];
+
+    /**
      * Resolve a type slug to its numeric ID (or null if unknown).
      */
     public static function typeIdFromSlug(string $slug): ?int
@@ -74,6 +87,7 @@ class Establishment extends Model
         'latitude', 'longitude', 'radius',
         'description', 'pricing', 'services', 'phone', 'mobile',
         'siret', 'photo', 'tagline', 'is_active', 'rating', 'review_count', 'view_count',
+        'features',
         'google_place_id', 'google_rating', 'google_review_count', 'google_reviews',
         'google_photos_checked_at', 'google_reviews_checked_at',
     ];
@@ -90,6 +104,7 @@ class Establishment extends Model
             'google_photos_checked_at' => 'datetime',
             'google_reviews_checked_at' => 'datetime',
             'services' => 'array',
+            'features' => 'array',
         ];
     }
 

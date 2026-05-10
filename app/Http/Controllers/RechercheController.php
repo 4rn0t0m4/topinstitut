@@ -20,6 +20,7 @@ class RechercheController extends Controller
         $openNow = $request->boolean('ouvert');
         $withPhotos = $request->boolean('avec_photos');
         $minRating = $request->filled('note_min') ? (float) $request->input('note_min') : null;
+        $features = array_intersect((array) $request->input('features', []), array_keys(Establishment::FEATURES));
         $sort = $request->input('tri', 'rating');
         $lat = $request->filled('lat') ? (float) $request->input('lat') : null;
         $lng = $request->filled('lng') ? (float) $request->input('lng') : null;
@@ -63,6 +64,11 @@ class RechercheController extends Controller
             $query->minRating($minRating);
         }
 
+        // Filtres caractéristiques (toutes doivent matcher : AND logique)
+        foreach ($features as $feature) {
+            $query->whereJsonContains('features', $feature);
+        }
+
         match ($sort) {
             'avis' => $query->orderByDesc('review_count'),
             'recent' => $query->latest(),
@@ -75,7 +81,7 @@ class RechercheController extends Controller
 
         return view('recherche.index', compact(
             'establishments', 'categories',
-            'name', 'cityName', 'category', 'type', 'openNow', 'withPhotos', 'minRating', 'sort',
+            'name', 'cityName', 'category', 'type', 'openNow', 'withPhotos', 'minRating', 'features', 'sort',
             'geoloc', 'lat', 'lng', 'radius'
         ));
     }

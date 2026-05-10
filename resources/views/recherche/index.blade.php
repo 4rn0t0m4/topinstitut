@@ -92,6 +92,19 @@
                         </label>
                     </div>
                 </div>
+
+                {{-- Caractéristiques --}}
+                <details class="mt-4" @if(! empty($features)) open @endif>
+                    <summary class="cursor-pointer text-sm font-medium text-gray-700 hover:text-pink-600">Caractéristiques (PMR, parking, hommes…)</summary>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mt-3">
+                        @foreach(\App\Models\Establishment::FEATURES as $key => $label)
+                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                <input type="checkbox" name="features[]" value="{{ $key }}" @checked(in_array($key, $features)) class="rounded text-pink-600 focus:ring-pink-500">
+                                {{ $label }}
+                            </label>
+                        @endforeach
+                    </div>
+                </details>
             </div>
         </form>
 

@@ -151,6 +151,8 @@
                     </p>
                 @endif
 
+                <x-features-badges :etablissement="$establishment" />
+
                 {{-- Photos --}}
                 @if($establishment->photos->isNotEmpty())
                     @php

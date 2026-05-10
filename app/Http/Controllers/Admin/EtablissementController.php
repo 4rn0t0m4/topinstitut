@@ -50,7 +50,11 @@ class EtablissementController extends Controller
             'email' => 'nullable|email|max:255',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'features' => 'nullable|array',
+            'features.*' => ['string', \Illuminate\Validation\Rule::in(array_keys(Establishment::FEATURES))],
         ]);
+
+        $validated['features'] = $request->input('features', []);
 
         $etablissement->update($validated);
 

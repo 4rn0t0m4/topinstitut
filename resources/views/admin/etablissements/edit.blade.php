@@ -63,6 +63,19 @@
                     </label>
                 </div>
             @endif
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Caractéristiques</label>
+                @php $currentFeatures = old('features', $etablissement->features ?? []); @endphp
+                <div class="grid grid-cols-2 gap-2">
+                    @foreach(\App\Models\Establishment::FEATURES as $key => $label)
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="features[]" value="{{ $key }}" @checked(in_array($key, $currentFeatures)) class="rounded text-pink-600 focus:ring-pink-500">
+                            {{ $label }}
+                        </label>
+                    @endforeach
+                </div>
+            </div>
         </div>
 
         <div class="flex gap-3 mt-6">
