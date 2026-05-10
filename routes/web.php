@@ -10,6 +10,7 @@ use App\Http\Controllers\EtablissementController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InscriptionEtablissementController;
 use App\Http\Controllers\PhoneController;
+use App\Http\Controllers\QuizController;
 use App\Http\Controllers\PrestationVilleController;
 use App\Http\Controllers\RechercheController;
 use App\Http\Controllers\RevendicationController;
@@ -28,6 +29,10 @@ Route::get('/recherche', [RechercheController::class, 'index'])->name('recherche
 
 // Comparator
 Route::get('/comparer', [ComparerController::class, 'index'])->name('comparer');
+
+// Quiz
+Route::get('/quiz', [QuizController::class, 'index'])->name('quiz');
+Route::post('/quiz', [QuizController::class, 'submit'])->middleware('throttle:20,1')->name('quiz.submit');
 
 // Establishment registration
 Route::get('/ajouter-un-institut-de-beaute', [InscriptionEtablissementController::class, 'create'])->name('etablissement.create');
