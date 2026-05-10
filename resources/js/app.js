@@ -55,6 +55,27 @@ Alpine.store('favorites', {
     },
 });
 
+Alpine.store('compare', {
+    ids: JSON.parse(localStorage.getItem('compare') || '[]'),
+    max: 3,
+
+    has(id) { return this.ids.includes(id); },
+
+    persist() { localStorage.setItem('compare', JSON.stringify(this.ids)); },
+
+    toggle(id) {
+        if (this.ids.includes(id)) {
+            this.ids = this.ids.filter(x => x !== id);
+        } else {
+            if (this.ids.length >= this.max) return;
+            this.ids.push(id);
+        }
+        this.persist();
+    },
+
+    clear() { this.ids = []; this.persist(); },
+});
+
 Alpine.store('lightbox', {
     open: false,
     photos: [],

@@ -12,6 +12,14 @@
             class="absolute top-2 right-2 z-20 w-9 h-9 bg-white/90 backdrop-blur hover:bg-white rounded-full shadow flex items-center justify-center transition">
         <svg class="w-5 h-5 transition" :class="$store.favorites.has({{ $etablissement->id }}) ? 'text-pink-600 fill-pink-600' : 'text-gray-400 fill-transparent'" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
     </button>
+
+    <button type="button"
+            @click.stop.prevent="$store.compare.toggle({{ $etablissement->id }})"
+            :aria-pressed="$store.compare.has({{ $etablissement->id }})"
+            :title="$store.compare.has({{ $etablissement->id }}) ? 'Retirer du comparatif' : 'Ajouter au comparatif'"
+            class="absolute top-2 right-12 z-20 w-9 h-9 bg-white/90 backdrop-blur hover:bg-white rounded-full shadow flex items-center justify-center transition">
+        <svg class="w-4 h-4 transition" :class="$store.compare.has({{ $etablissement->id }}) ? 'text-pink-600' : 'text-gray-400'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+    </button>
     <a href="{{ $etablissement->url }}" class="flex h-full min-h-32 sm:min-h-36">
         {{-- Photo --}}
         <div class="flex-shrink-0 w-28 sm:w-36 self-stretch bg-gray-100 relative">

@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AvisController;
 use App\Http\Controllers\CategorieAutocompleteController;
+use App\Http\Controllers\ComparerController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DepartementController;
 use App\Http\Controllers\EtablissementController;
@@ -24,6 +25,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Search
 Route::get('/recherche', [RechercheController::class, 'index'])->name('recherche');
+
+// Comparator
+Route::get('/comparer', [ComparerController::class, 'index'])->name('comparer');
 
 // Establishment registration
 Route::get('/ajouter-un-institut-de-beaute', [InscriptionEtablissementController::class, 'create'])->name('etablissement.create');

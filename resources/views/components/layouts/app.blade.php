@@ -168,6 +168,23 @@
             </div>
         </div>
     </footer>
+
+    {{-- Compare floating bar --}}
+    <div x-data x-show="$store.compare.ids.length > 0" x-cloak
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-y-4"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-white border shadow-lg rounded-full px-5 py-3 flex items-center gap-3">
+        <span class="text-sm">
+            <span class="font-semibold text-pink-600" x-text="$store.compare.ids.length"></span>
+            <span x-text="$store.compare.ids.length > 1 ? 'instituts à comparer' : 'institut sélectionné'"></span>
+        </span>
+        <a :href="'/comparer?ids=' + $store.compare.ids.join(',')"
+           x-show="$store.compare.ids.length >= 2"
+           class="bg-pink-600 text-white text-sm px-4 py-1.5 rounded-full hover:bg-pink-700">Comparer</a>
+        <button type="button" @click="$store.compare.clear()" class="text-xs text-gray-400 hover:text-gray-600">Vider</button>
+    </div>
+
     @stack('jsonld')
     @stack('scripts')
 </body>
