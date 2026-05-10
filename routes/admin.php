@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CategorieController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EtablissementController;
 use App\Http\Controllers\Admin\ImportController;
+use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\RevendicationController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,10 @@ Route::get('revendications', [RevendicationController::class, 'index'])->name('r
 Route::post('revendications/{revendication}/moderer', [RevendicationController::class, 'moderer'])->name('revendications.moderer');
 
 Route::get('imports', [ImportController::class, 'index'])->name('imports.index');
+
+Route::get('messages', [MessageController::class, 'index'])->name('messages.index');
+Route::get('messages/{message}', [MessageController::class, 'show'])->name('messages.show');
+Route::delete('messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
 
 // Recherche Google Places
 Route::view('recherche-entreprises', 'admin.recherche-entreprises')->name('recherche-entreprises');

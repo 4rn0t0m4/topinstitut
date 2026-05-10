@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Establishment;
+use App\Models\Message;
 use App\Notifications\NewContactNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -18,7 +19,14 @@ class ContactController extends Controller
     {
         $validated = $request->validate([
             'email' => 'required|email',
+            'name' => 'nullable|string|max:255',
             'content' => 'required|string|max:5000',
+        ]);
+
+        Message::create([
+            'establishment_id' => null,
+            'type' => 'general',
+            ...$validated,
         ]);
 
         Mail::raw($validated['content'], function ($mail) use ($validated) {
