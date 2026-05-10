@@ -81,6 +81,13 @@ class EtablissementController extends Controller
 
     private function render(Establishment $establishment, GeoSearchService $geoService)
     {
+        // Compteur de vues : 1 par session toutes les 30 min
+        $cacheKey = 'view_'.$establishment->id.'_'.session()->getId();
+        if (! cache()->has($cacheKey)) {
+            $establishment->increment('view_count');
+            cache()->put($cacheKey, true, now()->addMinutes(30));
+        }
+
         $establishment->load(['approvedReviews.user', 'photos', 'schedules', 'categories', 'news', 'faqs', 'cityRelation.department', 'owners']);
 
         $totalInCity = $establishment->city_id

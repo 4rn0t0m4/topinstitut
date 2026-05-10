@@ -73,7 +73,7 @@ class Establishment extends Model
         'address', 'postal_code', 'city', 'department_code', 'city_id',
         'latitude', 'longitude', 'radius',
         'description', 'pricing', 'services', 'phone', 'mobile',
-        'siret', 'photo', 'tagline', 'is_active', 'rating', 'review_count',
+        'siret', 'photo', 'tagline', 'is_active', 'rating', 'review_count', 'view_count',
         'google_place_id', 'google_rating', 'google_review_count', 'google_reviews',
         'google_photos_checked_at', 'google_reviews_checked_at',
     ];
