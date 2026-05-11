@@ -167,10 +167,13 @@ class ImportGooglePlaces extends Command
 
         if (! $dept) {
             // End of departments for this query → next query
+            $oldQueryIndex = $queryIndex;
             $queryIndex = ($queryIndex + 1) % count(self::SEARCH_TYPES);
             $dept = Department::orderBy('code')->first();
 
-            if ($queryIndex === 0) {
+            // Tout wrap (y compris quand count(SEARCH_TYPES) a diminué et que l'ancien
+            // query_index sauvegardé dépassait la nouvelle taille) incrémente cycle_count.
+            if ($queryIndex <= $oldQueryIndex) {
                 $cycleCount++;
             }
 
