@@ -5,6 +5,7 @@
 
         <form method="POST" action="{{ route('etablissement.store') }}" class="bg-white rounded-lg shadow-sm border p-6">
             @csrf
+            <x-honeypot />
             <div class="grid gap-4">
                 <div>
                     <label class="block text-sm font-medium mb-1">Nom de l'établissement</label>

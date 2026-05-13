@@ -10,6 +10,7 @@
 
         <form method="POST" action="{{ route('contact.send') }}" class="bg-white rounded-lg shadow-sm border p-6">
             @csrf
+            <x-honeypot />
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Votre nom</label>
                 <input type="text" name="name" value="{{ old('name', auth()->user()?->username) }}" class="w-full border rounded-lg px-3 py-2">

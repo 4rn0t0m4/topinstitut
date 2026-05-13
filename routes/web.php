@@ -41,13 +41,13 @@ Route::get('/guides/{slug}', [GuideController::class, 'show'])->name('guides.sho
 
 // Establishment registration
 Route::get('/ajouter-un-institut-de-beaute', [InscriptionEtablissementController::class, 'create'])->name('etablissement.create');
-Route::post('/ajouter-un-institut-de-beaute', [InscriptionEtablissementController::class, 'store'])->name('etablissement.store');
+Route::post('/ajouter-un-institut-de-beaute', [InscriptionEtablissementController::class, 'store'])->middleware('bot')->name('etablissement.store');
 
 // Contact
 Route::get('/contact', [ContactController::class, 'showGeneral'])->name('contact');
-Route::post('/contact', [ContactController::class, 'sendGeneral'])->middleware('throttle:5,1')->name('contact.send');
+Route::post('/contact', [ContactController::class, 'sendGeneral'])->middleware(['bot', 'throttle:5,1'])->name('contact.send');
 Route::get('/contact-etablissement/{establishment}', [ContactController::class, 'showEstablishment'])->name('contact.etablissement');
-Route::post('/contact-etablissement/{establishment}', [ContactController::class, 'sendEstablishment'])->middleware('throttle:5,1')->name('contact.etablissement.send');
+Route::post('/contact-etablissement/{establishment}', [ContactController::class, 'sendEstablishment'])->middleware(['bot', 'throttle:5,1'])->name('contact.etablissement.send');
 
 // Sitemap
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
@@ -79,14 +79,14 @@ Route::post('/ajax/phone', [PhoneController::class, 'reveal'])->name('phone.reve
 Route::post('/ajax/avis-utile', [AvisController::class, 'toggleHelpful'])->middleware('auth')->name('avis.utile');
 
 // Reviews
-Route::post('/avis', [AvisController::class, 'store'])->middleware('throttle:5,1')->name('avis.store');
+Route::post('/avis', [AvisController::class, 'store'])->middleware(['bot', 'throttle:5,1'])->name('avis.store');
 Route::get('/avis/confirmer/{token}', [AvisController::class, 'confirmEmail'])->name('review.confirm');
 
 // Claim ownership
 Route::post('/revendiquer/{establishment}', [RevendicationController::class, 'store'])->middleware(['auth', 'throttle:3,1'])->name('revendication.store');
 
 // Booking
-Route::post('/rdv/{establishment}', [\App\Http\Controllers\BookingController::class, 'store'])->middleware('throttle:5,1')->name('booking.store');
+Route::post('/rdv/{establishment}', [\App\Http\Controllers\BookingController::class, 'store'])->middleware(['bot', 'throttle:5,1'])->name('booking.store');
 
 // Favorites
 Route::post('/ajax/favorites/{establishment}', [\App\Http\Controllers\FavoriteController::class, 'toggle'])->name('favorites.toggle');

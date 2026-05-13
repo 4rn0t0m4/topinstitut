@@ -433,6 +433,7 @@
                             submitError = '';
                         ">
                             @csrf
+                            <x-honeypot />
                             <input type="hidden" name="establishment_id" value="{{ $establishment->id }}">
 
                             @guest
@@ -548,6 +549,7 @@
                   success-title="Demande envoyée !"
                   success-message="L'établissement vous contactera pour confirmer."
                   submit-label="Envoyer la demande">
+        <x-honeypot />
         <div class="grid grid-cols-2 gap-3 mb-3">
             <div>
                 <label class="block text-sm font-medium mb-1">Nom <span class="text-red-500">*</span></label>
