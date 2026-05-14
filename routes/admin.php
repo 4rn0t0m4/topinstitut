@@ -29,6 +29,8 @@ Route::get('imports', [ImportController::class, 'index'])->name('imports.index')
 Route::get('messages', [MessageController::class, 'index'])->name('messages.index');
 Route::get('messages/{message}', [MessageController::class, 'show'])->name('messages.show');
 Route::delete('messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
+Route::post('messages/{message}/toggle-handled', [MessageController::class, 'toggleHandled'])->name('messages.toggle-handled');
+Route::post('messages/{message}/forward', [MessageController::class, 'forward'])->name('messages.forward');
 
 Route::resource('guides', GuideController::class)->except(['show']);
 
