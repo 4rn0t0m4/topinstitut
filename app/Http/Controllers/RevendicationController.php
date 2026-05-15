@@ -2,58 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Etablissement;
-use App\Models\Revendication;
+use App\Models\Claim;
+use App\Models\Establishment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
 class RevendicationController extends Controller
 {
-    public function store(Request $request, Etablissement $etablissement)
+    public function store(Request $request, Establishment $establishment)
     {
         $validated = $request->validate([
-            'nom_gerant' => 'required|string|max:255',
+            'manager_name' => 'required|string|max:255',
             'siret' => 'nullable|string|max:14',
             'message' => 'nullable|string|max:2000',
         ]);
 
-        // Vérifier qu'il n'est pas déjà admin
-        if ($etablissement->administrateurs()->where('user_id', $request->user()->id)->exists()) {
-            if ($request->expectsJson()) {
-                return response()->json(['error' => 'Vous êtes déjà propriétaire de cet établissement.'], 422);
-            }
-
-            return back()->with('error', 'Vous êtes déjà propriétaire de cet établissement.');
+        // Déjà propriétaire ?
+        if ($establishment->owners()->where('user_id', $request->user()->id)->exists()) {
+            return $this->errorResponse($request, 'Vous êtes déjà propriétaire de cet établissement.');
         }
 
-        // Vérifier qu'il n'a pas déjà une demande en attente
-        if (Revendication::where('etablissement_id', $etablissement->id)
+        // Demande déjà en cours ?
+        if (Claim::where('establishment_id', $establishment->id)
             ->where('user_id', $request->user()->id)
-            ->where('statut', 'en_attente')
+            ->where('status', 'pending')
             ->exists()) {
-            if ($request->expectsJson()) {
-                return response()->json(['error' => 'Vous avez déjà une demande en cours pour cet établissement.'], 422);
-            }
-
-            return back()->with('error', 'Vous avez déjà une demande en cours.');
+            return $this->errorResponse($request, 'Vous avez déjà une demande en cours pour cet établissement.');
         }
 
-        $validated['etablissement_id'] = $etablissement->id;
+        $validated['establishment_id'] = $establishment->id;
         $validated['user_id'] = $request->user()->id;
+        $validated['status'] = 'pending';
 
-        Revendication::create($validated);
+        Claim::create($validated);
 
         // Notification admin
         Mail::raw(
             "Nouvelle demande de revendication :\n\n"
-            ."Établissement : {$etablissement->titre} (ID: {$etablissement->id})\n"
+            ."Établissement : {$establishment->name} (ID: {$establishment->id})\n"
             ."Utilisateur : {$request->user()->email}\n"
-            ."Nom gérant : {$validated['nom_gerant']}\n"
+            ."Nom gérant : {$validated['manager_name']}\n"
             ."SIRET : ".($validated['siret'] ?: 'Non renseigné')."\n"
             ."Message : ".($validated['message'] ?: '-'),
-            function ($message) use ($etablissement) {
-                $message->to(config('mail.from.address', 'contact@top-institut.fr'))
-                    ->subject('Revendication : '.$etablissement->titre);
+            function ($mail) use ($establishment) {
+                $mail->to(config('mail.from.address', 'contact@top-institut.fr'))
+                    ->subject('Revendication : '.$establishment->name);
             }
         );
 
@@ -62,5 +55,14 @@ class RevendicationController extends Controller
         }
 
         return back()->with('success', 'Votre demande de propriété a été envoyée. Elle sera vérifiée par notre équipe.');
+    }
+
+    private function errorResponse(Request $request, string $message)
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['error' => $message], 422);
+        }
+
+        return back()->with('error', $message);
     }
 }
