@@ -7,7 +7,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Claim extends Model
 {
-    protected $fillable = ['establishment_id', 'user_id', 'siret', 'manager_name', 'message', 'status'];
+    protected $fillable = [
+        'establishment_id', 'user_id', 'email', 'siret', 'manager_name', 'message', 'status',
+        'email_verified_at', 'verification_token',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+        ];
+    }
 
     public function establishment(): BelongsTo
     {

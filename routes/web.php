@@ -82,8 +82,9 @@ Route::post('/ajax/avis-utile', [AvisController::class, 'toggleHelpful'])->middl
 Route::post('/avis', [AvisController::class, 'store'])->middleware(['bot', 'throttle:5,1'])->name('avis.store');
 Route::get('/avis/confirmer/{token}', [AvisController::class, 'confirmEmail'])->name('review.confirm');
 
-// Claim ownership
-Route::post('/revendiquer/{establishment}', [RevendicationController::class, 'store'])->middleware(['auth', 'throttle:3,1'])->name('revendication.store');
+// Claim ownership (open to guests, email verification required)
+Route::post('/revendiquer/{establishment}', [RevendicationController::class, 'store'])->middleware(['bot', 'throttle:3,1'])->name('revendication.store');
+Route::get('/revendication/confirmer/{token}', [RevendicationController::class, 'confirmEmail'])->name('revendication.confirm');
 
 // Booking
 Route::post('/rdv/{establishment}', [\App\Http\Controllers\BookingController::class, 'store'])->middleware(['bot', 'throttle:5,1'])->name('booking.store');

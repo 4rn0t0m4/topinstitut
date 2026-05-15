@@ -24,7 +24,12 @@
                             <td class="px-4 py-3">
                                 <a href="{{ $rev->establishment->url }}" target="_blank" class="text-pink-600 hover:underline">{{ $rev->establishment->name }}</a>
                             </td>
-                            <td class="px-4 py-3">{{ $rev->user->email }}</td>
+                            <td class="px-4 py-3">
+                                {{ $rev->user?->email ?? $rev->email }}
+                                @if(! $rev->user_id)
+                                    <span class="block text-xs text-orange-600">(compte à créer)</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3">{{ $rev->manager_name }}</td>
                             <td class="px-4 py-3">{{ $rev->siret ?: '-' }}</td>
                             <td class="px-4 py-3">{{ $rev->created_at->format('d/m/Y') }}</td>

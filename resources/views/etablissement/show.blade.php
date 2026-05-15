@@ -206,15 +206,9 @@
                             </div>
                             @if(!$establishment->owners->contains(auth()->id()))
                                 <div class="pt-1">
-                                    @auth
-                                        <button @click="$store.claimModal.open = true" type="button" class="w-full text-center text-sm text-gray-500 hover:text-pink-600 transition cursor-pointer underline">
-                                            Vous êtes le propriétaire ? Revendiquez cet établissement
-                                        </button>
-                                    @else
-                                        <a href="{{ route('login') }}" class="block w-full text-center text-sm text-gray-500 hover:text-pink-600 transition underline">
-                                            Vous êtes le propriétaire ? Connectez-vous pour revendiquer
-                                        </a>
-                                    @endauth
+                                    <button @click="$store.claimModal.open = true" type="button" class="w-full text-center text-sm text-gray-500 hover:text-pink-600 transition cursor-pointer underline">
+                                        Vous êtes le propriétaire ? Revendiquez cet établissement
+                                    </button>
                                 </div>
                             @endif
                         </div>
@@ -630,13 +624,20 @@
     </div>
 
     {{-- Claim Modal --}}
-    @auth
     <x-ajax-modal store="claimModal"
                   title="Revendiquer cet établissement"
                   :subtitle="$establishment->name"
                   :action="route('revendication.store', $establishment)"
-                  success-message="Notre équipe vérifiera votre demande dans les plus brefs délais."
+                  success-message="Vérifiez votre boîte email pour confirmer votre revendication."
                   submit-label="Envoyer ma demande">
+        <x-honeypot />
+        @guest
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Votre email <span class="text-red-500">*</span></label>
+                <input type="email" name="email" required class="w-full border rounded-lg px-3 py-2" placeholder="email@exemple.fr">
+                <p class="text-xs text-gray-400 mt-1">Un email de confirmation vous sera envoyé. Si votre demande est approuvée, un compte sera créé avec cet email.</p>
+            </div>
+        @endguest
         <div class="mb-4">
             <label class="block text-sm font-medium mb-1">Nom du gérant <span class="text-red-500">*</span></label>
             <input type="text" name="manager_name" required class="w-full border rounded-lg px-3 py-2" placeholder="Prénom et nom">
@@ -651,7 +652,6 @@
         </div>
         <p class="text-xs text-gray-400 mb-4">Les demandes de propriété sont systématiquement vérifiées par notre équipe de modérateurs.</p>
     </x-ajax-modal>
-    @endauth
 
     @if($establishment->latitude && $establishment->longitude)
         @push('head')
