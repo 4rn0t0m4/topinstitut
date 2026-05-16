@@ -89,6 +89,7 @@ class Establishment extends Model
         'siret', 'photo', 'tagline', 'is_active', 'rating', 'review_count', 'view_count',
         'features',
         'subscription_tier', 'subscription_ends_at', 'is_verified_owner', 'featured_until',
+        'stripe_subscription_id',
         'google_place_id', 'google_rating', 'google_review_count', 'google_reviews',
         'google_photos_checked_at', 'google_reviews_checked_at',
     ];

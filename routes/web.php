@@ -16,6 +16,7 @@ use App\Http\Controllers\PrestationVilleController;
 use App\Http\Controllers\RechercheController;
 use App\Http\Controllers\RevendicationController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\VilleAutocompleteController;
 use App\Http\Controllers\VilleController;
 use App\Models\Department;
@@ -57,6 +58,9 @@ Route::view('/mentions-legales', 'pages.mentions-legales')->name('mentions-legal
 Route::view('/confidentialite', 'pages.confidentialite')->name('confidentialite');
 Route::view('/cgv', 'pages.cgv')->name('cgv');
 Route::view('/tarifs', 'pages.tarifs')->name('tarifs');
+
+// Stripe webhook (no CSRF — verified via signature)
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name('stripe.webhook');
 
 // Auth
 Route::middleware('guest')->group(function () {

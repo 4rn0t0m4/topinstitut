@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Client\AbonnementController;
 use App\Http\Controllers\Client\ActualiteController;
 use App\Http\Controllers\Client\AvisController;
 use App\Http\Controllers\Client\DashboardController;
@@ -47,3 +48,9 @@ Route::prefix('etablissement/{etablissement}')->name('etablissement.')->group(fu
 Route::get('mes-avis', [AvisController::class, 'mesAvis'])->name('mes-avis');
 
 Route::get('favoris', [\App\Http\Controllers\FavoriteController::class, 'index'])->name('favoris');
+
+// Abonnements Premium (Stripe)
+Route::get('abonnement', [AbonnementController::class, 'index'])->name('abonnement.index');
+Route::post('abonnement/{establishment}/checkout', [AbonnementController::class, 'checkout'])->name('abonnement.checkout');
+Route::get('abonnement/{establishment}/succes', [AbonnementController::class, 'success'])->name('abonnement.success');
+Route::get('abonnement/portail', [AbonnementController::class, 'portal'])->name('abonnement.portal');

@@ -44,7 +44,15 @@
                     <li class="flex items-start gap-2"><span class="text-green-500">✓</span> Dashboard statistiques de vues</li>
                 </ul>
 
-                <a href="{{ route('contact') }}?sujet=premium" class="mt-6 block text-center bg-pink-600 text-white font-semibold py-2 rounded-lg hover:bg-pink-700">Souscrire au Premium</a>
+                @auth
+                    @if(auth()->user()->establishments()->exists())
+                        <a href="{{ route('client.abonnement.index') }}" class="mt-6 block text-center bg-pink-600 text-white font-semibold py-2 rounded-lg hover:bg-pink-700">Activer Premium sur mon institut</a>
+                    @else
+                        <a href="{{ route('etablissement.create') }}" class="mt-6 block text-center bg-pink-600 text-white font-semibold py-2 rounded-lg hover:bg-pink-700">Ajouter mon institut d'abord</a>
+                    @endif
+                @else
+                    <a href="{{ route('login') }}?redirect={{ urlencode(route('client.abonnement.index')) }}" class="mt-6 block text-center bg-pink-600 text-white font-semibold py-2 rounded-lg hover:bg-pink-700">Souscrire au Premium</a>
+                @endauth
             </div>
 
             {{-- Sponsorisé --}}

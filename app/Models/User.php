@@ -18,7 +18,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email', 'password', 'username', 'last_name', 'first_name', 'gender',
         'address', 'postal_code', 'city', 'department_code', 'city_id',
         'longitude', 'latitude', 'phone', 'mobile',
-        'date_of_birth', 'photo', 'is_admin',
+        'date_of_birth', 'photo', 'is_admin', 'stripe_customer_id',
     ];
 
     protected $hidden = ['password', 'remember_token'];

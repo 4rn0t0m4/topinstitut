@@ -43,6 +43,13 @@ return [
         'client' => env('GOOGLE_ADSENSE_CLIENT', 'ca-pub-5987335767779300'),
     ],
 
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'premium_price_id' => env('STRIPE_PREMIUM_PRICE_ID'),
+    ],
+
     'audiotel' => [
         'enabled' => env('AUDIOTEL_ENABLED', false),
         'id_client' => env('AUDIOTEL_ID_CLIENT', 'BWIAPVJkBWEDYQBuB3MENlZiUzJWMAc7'),
