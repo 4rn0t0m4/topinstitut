@@ -31,7 +31,7 @@
             <div class="bg-white rounded-lg border-2 border-pink-600 p-6 flex flex-col relative shadow-lg">
                 <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-pink-600 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase">Recommandé</span>
                 <h2 class="text-lg font-semibold text-pink-600">Premium</h2>
-                <p class="text-3xl font-bold mt-2">19 €<span class="text-sm font-normal text-gray-500">/mois</span></p>
+                <p class="text-3xl font-bold mt-2">9,90 €<span class="text-sm font-normal text-gray-500">/mois</span></p>
                 <p class="text-sm text-gray-500 mt-1">Tout ce qu'il faut pour convertir</p>
 
                 <ul class="space-y-2 mt-6 text-sm flex-1">

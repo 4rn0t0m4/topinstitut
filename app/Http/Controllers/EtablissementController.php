@@ -25,11 +25,12 @@ class EtablissementController extends Controller
             ->where('department_code', $department->code)
             ->firstOrFail();
 
-        $establishment = Establishment::where('slug', $slug)
+        $query = Establishment::where('slug', $slug)
             ->where('city_id', $cityModel->id)
-            ->where('type', $typeId)
-            ->active()
-            ->first();
+            ->where('type', $typeId);
+
+        $establishment = (clone $query)->active()->first()
+            ?? (clone $query)->first();
 
         if (! $establishment) {
             // Old slug lookup (same city+type)
@@ -44,6 +45,10 @@ class EtablissementController extends Controller
             abort(404);
         }
 
+        if (! $establishment->is_active && ! $this->canPreview($establishment)) {
+            abort(404);
+        }
+
         return $this->render($establishment, $geoService);
     }
 
@@ -54,7 +59,8 @@ class EtablissementController extends Controller
      */
     public function show(string $slug, int $type, GeoSearchService $geoService)
     {
-        $establishment = Establishment::where('slug', $slug)->where('type', $type)->active()->first();
+        $query = Establishment::where('slug', $slug)->where('type', $type);
+        $establishment = (clone $query)->active()->first() ?? (clone $query)->first();
 
         if (! $establishment) {
             $oldSlug = EstablishmentSlug::where('slug', $slug)->first();
@@ -71,12 +77,28 @@ class EtablissementController extends Controller
             abort(404);
         }
 
+        if (! $establishment->is_active && ! $this->canPreview($establishment)) {
+            abort(404);
+        }
+
         // Evite la boucle 301 → 301 → … quand l'URL canonique == l'URL courante.
-        if ($establishment->url !== '/'.request()->path()) {
+        if ($establishment->is_active && $establishment->url !== '/'.request()->path()) {
             return redirect($establishment->url, 301);
         }
 
         return $this->render($establishment, $geoService);
+    }
+
+    private function canPreview(Establishment $establishment): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+        if ($user->is_admin) {
+            return true;
+        }
+        return $establishment->owners()->where('users.id', $user->id)->exists();
     }
 
     private function render(Establishment $establishment, GeoSearchService $geoService)

@@ -93,6 +93,12 @@
     @endpush
 
     <div class="max-w-7xl mx-auto px-4 py-8">
+        @if(! $establishment->is_active)
+            <div class="mb-6 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-4 py-3 text-sm">
+                <strong>Aperçu :</strong> cette fiche est en attente de validation par notre équipe. Elle n'est pas encore visible publiquement.
+            </div>
+        @endif
+
         {{-- Breadcrumb --}}
         <nav class="text-sm text-gray-500 mb-6">
             <a href="{{ route('home') }}" class="hover:text-pink-600">Accueil</a>

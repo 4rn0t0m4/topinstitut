@@ -56,7 +56,7 @@
                                 @if(! $etab->is_premium)
                                     <form action="{{ route('client.abonnement.checkout', $etab) }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="bg-pink-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-pink-700">Passer Premium — 19€/mois</button>
+                                        <button type="submit" class="bg-pink-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-pink-700">Passer Premium — 9,90€/mois</button>
                                     </form>
                                 @else
                                     <span class="text-xs text-green-600 text-right">✓ Abonnement actif</span>
