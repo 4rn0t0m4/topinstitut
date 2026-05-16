@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
 import './lazy-map.js';
+import villeAutocomplete from './ville-autocomplete.js';
 
 window.Alpine = Alpine;
 
@@ -135,37 +136,7 @@ Alpine.data('phoneReveal', (encoded, etablissementId) => ({
     },
 }));
 
-Alpine.data('villeAutocomplete', () => ({
-    query: '',
-    selectedId: '',
-    selectedPostalCode: '',
-    results: [],
-    open: false,
-    debounceTimer: null,
-
-    search() {
-        clearTimeout(this.debounceTimer);
-        this.selectedId = '';
-        if (this.query.length < 2) {
-            this.results = [];
-            this.open = false;
-            return;
-        }
-        this.debounceTimer = setTimeout(async () => {
-            const res = await fetch('/ajax/villes?q=' + encodeURIComponent(this.query));
-            this.results = await res.json();
-            this.open = this.results.length > 0;
-        }, 200);
-    },
-
-    select(item) {
-        this.query = item.value;
-        this.selectedId = item.id ?? '';
-        this.selectedPostalCode = item.postal_code ?? '';
-        this.open = false;
-        this.results = [];
-    },
-}));
+Alpine.data('villeAutocomplete', villeAutocomplete);
 
 Alpine.data('prestationAutocomplete', () => ({
     query: '',

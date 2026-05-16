@@ -1,0 +1,1 @@
+import{n as e,t}from"./ville-autocomplete-CsuP5v3m.js";window.Alpine=e,e.data(`villeAutocomplete`,t),e.start();

@@ -33,7 +33,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4" x-data="villeAutocomplete()" x-init="query = '{{ addslashes(old('city', $etablissement->city ?? '')) }}'; selectedId = '{{ old('city_id', $etablissement->city_id) }}'; selectedPostalCode = '{{ old('postal_code', $etablissement->postal_code) }}'">
+            <div class="grid grid-cols-2 gap-4" x-data="villeAutocomplete()" x-init="query = @js(old('city', $etablissement->city ?? '')); selectedId = @js((string) old('city_id', $etablissement->city_id ?? '')); selectedPostalCode = @js((string) old('postal_code', $etablissement->postal_code ?? ''))">
                 <div>
                     <label class="block text-sm font-medium mb-1">Code postal</label>
                     <input type="text" name="postal_code" x-model="selectedPostalCode" maxlength="5" class="w-full border rounded-lg px-3 py-2">
