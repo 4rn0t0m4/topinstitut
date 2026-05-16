@@ -39,14 +39,21 @@
                     <label class="block text-sm font-medium mb-1">Adresse</label>
                     <input type="text" name="address" value="{{ old('address') }}" class="w-full border rounded-lg px-3 py-2">
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-4" x-data="villeAutocomplete()" x-init="query = '{{ old('city') }}'; selectedId = '{{ old('city_id') }}'; selectedPostalCode = '{{ old('postal_code') }}'">
                     <div>
                         <label class="block text-sm font-medium mb-1">Code postal</label>
-                        <input type="text" name="postal_code" value="{{ old('postal_code') }}" maxlength="5" class="w-full border rounded-lg px-3 py-2">
+                        <input type="text" name="postal_code" x-model="selectedPostalCode" maxlength="5" class="w-full border rounded-lg px-3 py-2">
                     </div>
-                    <div>
+                    <div class="relative" @click.outside="open = false">
                         <label class="block text-sm font-medium mb-1">Ville</label>
-                        <input type="text" name="city" value="{{ old('city') }}" class="w-full border rounded-lg px-3 py-2">
+                        <input type="text" name="city" x-model="query" @input="search()" @focus="open = results.length > 0" autocomplete="off" required class="w-full border rounded-lg px-3 py-2">
+                        <input type="hidden" name="city_id" :value="selectedId">
+                        <ul x-show="open" x-cloak class="absolute z-50 left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <template x-for="item in results" :key="item.id">
+                                <li @click="select(item)" class="px-4 py-2 cursor-pointer hover:bg-pink-50 text-gray-900 text-sm" x-text="item.label"></li>
+                            </template>
+                        </ul>
+                        <p class="text-xs text-gray-500 mt-1">Sélectionnez votre ville dans la liste qui apparaît.</p>
                     </div>
                 </div>
                 <div>

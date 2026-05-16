@@ -137,12 +137,15 @@ Alpine.data('phoneReveal', (encoded, etablissementId) => ({
 
 Alpine.data('villeAutocomplete', () => ({
     query: '',
+    selectedId: '',
+    selectedPostalCode: '',
     results: [],
     open: false,
     debounceTimer: null,
 
     search() {
         clearTimeout(this.debounceTimer);
+        this.selectedId = '';
         if (this.query.length < 2) {
             this.results = [];
             this.open = false;
@@ -157,6 +160,8 @@ Alpine.data('villeAutocomplete', () => ({
 
     select(item) {
         this.query = item.value;
+        this.selectedId = item.id ?? '';
+        this.selectedPostalCode = item.postal_code ?? '';
         this.open = false;
         this.results = [];
     },
