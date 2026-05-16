@@ -11,6 +11,7 @@
     <title>Admin - {{ $title ?? 'TopInstitut' }}</title>
     <meta name="robots" content="noindex, nofollow">
     @vite(['resources/css/admin.css', 'resources/js/admin.js'])
+    @stack('head')
 </head>
 <body class="min-h-screen bg-gray-100" x-data="{ sidebarOpen: true }">
     <div class="flex">
@@ -69,5 +70,6 @@
             </main>
         </div>
     </div>
+    @stack('scripts')
 </body>
 </html>

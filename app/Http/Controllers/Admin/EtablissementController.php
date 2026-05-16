@@ -57,6 +57,8 @@ class EtablissementController extends Controller
             'subscription_ends_at' => 'nullable|date',
             'featured_until' => 'nullable|date',
             'is_verified_owner' => 'boolean',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         $validated['features'] = $request->input('features', []);
