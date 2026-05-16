@@ -50,6 +50,12 @@
                 gtag('js', new Date());
                 gtag('config', 'G-XDTGPZW1WL');
             </script>
+
+            {{-- Google AdSense (auto-ads) --}}
+            @if($client = config('services.adsense.client'))
+                <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ $client }}" crossorigin="anonymous"></script>
+                <meta name="google-adsense-account" content="{{ $client }}">
+            @endif
         @endif
     @endproduction
 </head>
