@@ -21,7 +21,8 @@ class PhoneController extends Controller
 
         $isMobile = preg_match('/Mobile|Android|iPhone|iPad/i', $request->userAgent() ?? '');
 
-        if (AudiotelService::isCrawler($request->userAgent())) {
+        // Bypass audiotel pour les crawlers ET les établissements Premium actifs.
+        if (AudiotelService::isCrawler($request->userAgent()) || $establishment->is_premium) {
             return response()->json([
                 'phone' => AudiotelService::format($phone),
                 'tel' => preg_replace('/[^0-9+]/', '', $phone),
