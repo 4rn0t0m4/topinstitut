@@ -25,10 +25,19 @@ class EtablissementController extends Controller
             'address' => 'nullable|string|max:255',
             'postal_code' => 'nullable|string|max:5',
             'city' => 'nullable|string|max:255',
+            'city_id' => 'nullable|integer|exists:cities,id',
             'phone' => 'nullable|string|max:20',
             'mobile' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
         ]);
+
+        if (empty($validated['city_id']) && ! empty($validated['city'])) {
+            $match = \App\Models\City::where('name', $validated['city'])
+                ->when($validated['postal_code'] ?? null, fn ($q, $cp) => $q->where('postal_code', $cp))
+                ->orderByDesc('population')
+                ->first();
+            $validated['city_id'] = $match?->id;
+        }
 
         $etablissement->update($validated);
 
