@@ -24,11 +24,19 @@ class StripeService
 
     /**
      * Récupère ou crée le Customer Stripe pour cet utilisateur.
+     * Si l'ID stocké n'existe plus côté Stripe (ex : bascule live↔test), recrée.
      */
     public function ensureCustomer(User $user): string
     {
         if ($user->stripe_customer_id) {
-            return $user->stripe_customer_id;
+            try {
+                $existing = $this->stripe->customers->retrieve($user->stripe_customer_id);
+                if (! ($existing->deleted ?? false)) {
+                    return $user->stripe_customer_id;
+                }
+            } catch (\Stripe\Exception\InvalidRequestException $e) {
+                // Customer introuvable dans ce mode → on recrée plus bas
+            }
         }
 
         $customer = $this->stripe->customers->create([
