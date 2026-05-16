@@ -25,6 +25,7 @@ class StripeWebhookController extends Controller
 
         match ($event->type) {
             'checkout.session.completed' => $this->onCheckoutCompleted($event->data->object),
+            'customer.subscription.created' => $this->onSubscriptionCreated($event->data->object),
             'customer.subscription.updated' => $this->onSubscriptionUpdated($event->data->object),
             'customer.subscription.deleted' => $this->onSubscriptionDeleted($event->data->object),
             default => null,
@@ -55,6 +56,49 @@ class StripeWebhookController extends Controller
             'stripe_subscription_id' => $subscriptionId,
             'is_verified_owner' => true,
         ]);
+    }
+
+    /**
+     * Subscription créée directement dans le dashboard Stripe (vente manuelle).
+     * Requiert metadata.establishment_id sur la subscription.
+     */
+    private function onSubscriptionCreated($sub): void
+    {
+        $establishmentId = (int) ($sub->metadata->establishment_id ?? 0);
+
+        if (! $establishmentId) {
+            Log::info('Stripe subscription.created sans establishment_id metadata', [
+                'subscription' => $sub->id,
+                'customer' => $sub->customer,
+            ]);
+            return;
+        }
+
+        $etab = Establishment::find($establishmentId);
+        if (! $etab) {
+            Log::warning('Stripe subscription.created : etablissement introuvable', [
+                'establishment_id' => $establishmentId,
+                'subscription' => $sub->id,
+            ]);
+            return;
+        }
+
+        $isActive = in_array($sub->status, ['active', 'trialing']);
+
+        $etab->update([
+            'subscription_tier' => $isActive ? 'premium' : 'free',
+            'subscription_ends_at' => $sub->current_period_end ? now()->createFromTimestamp($sub->current_period_end) : null,
+            'stripe_subscription_id' => $sub->id,
+            'is_verified_owner' => $isActive ? true : $etab->is_verified_owner,
+        ]);
+
+        // Lier le customer Stripe à l'owner si pas encore fait
+        if ($sub->customer) {
+            $owner = $etab->owners()->whereNull('stripe_customer_id')->first();
+            if ($owner) {
+                $owner->update(['stripe_customer_id' => $sub->customer]);
+            }
+        }
     }
 
     private function onSubscriptionUpdated($sub): void
