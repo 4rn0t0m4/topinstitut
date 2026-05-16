@@ -5,7 +5,10 @@
     $photoUrl = $firstPhoto?->url;
 @endphp
 
-<div class="relative bg-white rounded-lg shadow-sm border hover:shadow-md transition overflow-hidden h-full">
+<div class="relative bg-white rounded-lg shadow-sm border hover:shadow-md transition overflow-hidden h-full {{ $etablissement->is_featured ? 'ring-2 ring-amber-300' : '' }}">
+    @if($etablissement->is_featured)
+        <span class="absolute top-2 left-2 z-20 bg-amber-400 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Sponsorisé</span>
+    @endif
     <button type="button"
             @click.stop.prevent="$store.favorites.toggle({{ $etablissement->id }})"
             :aria-pressed="$store.favorites.has({{ $etablissement->id }})"

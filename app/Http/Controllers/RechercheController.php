@@ -69,11 +69,16 @@ class RechercheController extends Controller
             $query->whereJsonContains('features', $feature);
         }
 
-        match ($sort) {
-            'avis' => $query->orderByDesc('review_count'),
-            'recent' => $query->latest(),
-            default => $query->orderByDesc('rating'),
-        };
+        // Featured + premium toujours en tête, sauf si l'utilisateur trie explicitement
+        if ($sort === 'rating' || ! $sort) {
+            $query->orderedForListing();
+        } else {
+            match ($sort) {
+                'avis' => $query->orderByDesc('review_count'),
+                'recent' => $query->latest(),
+                default => $query->orderByDesc('rating'),
+            };
+        }
 
         $establishments = $query->with(['schedules', 'photos'])->paginate(20)->withQueryString();
 

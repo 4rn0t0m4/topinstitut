@@ -52,6 +52,10 @@ class EtablissementController extends Controller
             'is_active' => 'boolean',
             'features' => 'nullable|array',
             'features.*' => ['string', \Illuminate\Validation\Rule::in(array_keys(Establishment::FEATURES))],
+            'subscription_tier' => 'nullable|in:free,premium',
+            'subscription_ends_at' => 'nullable|date',
+            'featured_until' => 'nullable|date',
+            'is_verified_owner' => 'boolean',
         ]);
 
         $validated['features'] = $request->input('features', []);

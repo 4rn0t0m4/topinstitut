@@ -56,6 +56,7 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::view('/mentions-legales', 'pages.mentions-legales')->name('mentions-legales');
 Route::view('/confidentialite', 'pages.confidentialite')->name('confidentialite');
 Route::view('/cgv', 'pages.cgv')->name('cgv');
+Route::view('/tarifs', 'pages.tarifs')->name('tarifs');
 
 // Auth
 Route::middleware('guest')->group(function () {

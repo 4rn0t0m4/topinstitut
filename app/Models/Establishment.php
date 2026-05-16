@@ -88,6 +88,7 @@ class Establishment extends Model
         'description', 'pricing', 'services', 'phone', 'mobile',
         'siret', 'photo', 'tagline', 'is_active', 'rating', 'review_count', 'view_count',
         'features',
+        'subscription_tier', 'subscription_ends_at', 'is_verified_owner', 'featured_until',
         'google_place_id', 'google_rating', 'google_review_count', 'google_reviews',
         'google_photos_checked_at', 'google_reviews_checked_at',
     ];
@@ -105,6 +106,9 @@ class Establishment extends Model
             'google_reviews_checked_at' => 'datetime',
             'services' => 'array',
             'features' => 'array',
+            'is_verified_owner' => 'boolean',
+            'subscription_ends_at' => 'datetime',
+            'featured_until' => 'datetime',
         ];
     }
 
@@ -183,11 +187,53 @@ class Establishment extends Model
         return '/'.$deptSlug.'/'.$citySlug.'/'.$this->type_slug.'/'.$this->slug;
     }
 
+    /**
+     * Abonnement Premium actif ? Tier = 'premium' ET subscription_ends_at futur (ou null = sans limite).
+     */
+    public function getIsPremiumAttribute(): bool
+    {
+        if ($this->subscription_tier !== 'premium') {
+            return false;
+        }
+
+        return $this->subscription_ends_at === null || $this->subscription_ends_at->isFuture();
+    }
+
+    /**
+     * Mise en avant payante active dans la ville/recherche ?
+     */
+    public function getIsFeaturedAttribute(): bool
+    {
+        return $this->featured_until !== null && $this->featured_until->isFuture();
+    }
+
+    /**
+     * Limite de photos affichables selon le tier.
+     */
+    public function getMaxDisplayedPhotosAttribute(): int
+    {
+        return $this->is_premium ? 100 : 3;
+    }
+
     // --- Scopes ---
 
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Tri prioritaire pour les listings : featured > premium > rating.
+     */
+    public function scopeOrderedForListing(Builder $query): Builder
+    {
+        $now = now();
+
+        return $query
+            ->orderByRaw('CASE WHEN featured_until IS NOT NULL AND featured_until > ? THEN 0 ELSE 1 END', [$now])
+            ->orderByRaw("CASE WHEN subscription_tier = 'premium' AND (subscription_ends_at IS NULL OR subscription_ends_at > ?) THEN 0 ELSE 1 END", [$now])
+            ->orderByDesc('rating')
+            ->orderByDesc('review_count');
     }
 
     public function scopeByType(Builder $query, int $type): Builder

@@ -15,7 +15,11 @@ class VilleController extends Controller
             ->where('department_code', $department->code)
             ->firstOrFail();
 
+        // Tri : featured > premium > city_rank > rating
+        $now = now();
         $query = Establishment::active()->where('city_id', $city->id)
+            ->orderByRaw('CASE WHEN featured_until IS NOT NULL AND featured_until > ? THEN 0 ELSE 1 END', [$now])
+            ->orderByRaw("CASE WHEN subscription_tier = 'premium' AND (subscription_ends_at IS NULL OR subscription_ends_at > ?) THEN 0 ELSE 1 END", [$now])
             ->orderByRaw('city_rank = 0 ASC, city_rank ASC, rating DESC');
 
         if ($query->count() === 0 && $city->latitude && $city->longitude) {

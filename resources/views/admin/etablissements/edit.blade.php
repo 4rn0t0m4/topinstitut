@@ -76,6 +76,37 @@
                     @endforeach
                 </div>
             </div>
+
+            @if($etablissement->exists)
+                <div class="border-t pt-4 mt-2">
+                    <h2 class="text-sm font-semibold uppercase text-gray-500 mb-3">Monétisation</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Abonnement</label>
+                            <select name="subscription_tier" class="w-full border rounded-lg px-3 py-2">
+                                <option value="free" @selected(old('subscription_tier', $etablissement->subscription_tier) === 'free')>Gratuit</option>
+                                <option value="premium" @selected(old('subscription_tier', $etablissement->subscription_tier) === 'premium')>Premium</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Fin d'abonnement (laisser vide = illimité)</label>
+                            <input type="datetime-local" name="subscription_ends_at" value="{{ old('subscription_ends_at', $etablissement->subscription_ends_at?->format('Y-m-d\TH:i')) }}" class="w-full border rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Sponsorisé jusqu'au</label>
+                            <input type="datetime-local" name="featured_until" value="{{ old('featured_until', $etablissement->featured_until?->format('Y-m-d\TH:i')) }}" class="w-full border rounded-lg px-3 py-2">
+                            <p class="text-xs text-gray-500 mt-1">Affichage prioritaire dans la recherche et la ville.</p>
+                        </div>
+                        <div class="flex items-end">
+                            <label class="flex items-center gap-2 text-sm font-medium">
+                                <input type="hidden" name="is_verified_owner" value="0">
+                                <input type="checkbox" name="is_verified_owner" value="1" @checked(old('is_verified_owner', $etablissement->is_verified_owner)) class="rounded text-pink-600">
+                                Propriétaire vérifié (badge bleu)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
 
         <div class="flex gap-3 mt-6">

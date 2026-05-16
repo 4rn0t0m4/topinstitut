@@ -73,6 +73,7 @@
                     <a href="{{ route('recherche') }}" class="text-gray-700 hover:text-pink-600">Rechercher</a>
                     <a href="{{ route('quiz') }}" class="text-gray-700 hover:text-pink-600">Quiz</a>
                     <a href="{{ route('etablissement.create') }}" class="text-gray-700 hover:text-pink-600">Ajouter un institut</a>
+                    <a href="{{ route('tarifs') }}" class="text-gray-700 hover:text-pink-600">Tarifs Pro</a>
                     <a href="{{ route('contact') }}" class="text-gray-700 hover:text-pink-600">Contact</a>
                 </nav>
 
@@ -104,6 +105,7 @@
                 <a href="{{ route('recherche') }}" class="block px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-pink-600">Rechercher</a>
                 <a href="{{ route('quiz') }}" class="block px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-pink-600">Quiz</a>
                 <a href="{{ route('etablissement.create') }}" class="block px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-pink-600">Ajouter un institut</a>
+                <a href="{{ route('tarifs') }}" class="block px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-pink-600">Tarifs Pro</a>
                 <a href="{{ route('contact') }}" class="block px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-pink-600">Contact</a>
                 <div class="border-t pt-2 mt-2 space-y-1">
                     @auth

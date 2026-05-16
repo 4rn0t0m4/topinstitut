@@ -115,10 +115,21 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {{-- Main content --}}
             <div class="lg:col-span-2 min-w-0">
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{{ $establishment->name }}</h1>
-                <div class="flex items-center gap-3 mt-1">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 break-words flex items-start gap-2">
+                    <span>{{ $establishment->name }}</span>
+                    @if($establishment->is_verified_owner)
+                        <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-medium px-2 py-1 rounded-full border border-blue-200" title="Établissement vérifié par son propriétaire">
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                            Vérifié
+                        </span>
+                    @endif
+                </h1>
+                <div class="flex items-center gap-3 mt-1 flex-wrap">
                     <span class="text-pink-600">{{ $establishment->type_label }}</span>
                     <x-statut-ouverture :etablissement="$establishment" />
+                    @if($establishment->is_featured)
+                        <span class="bg-amber-400 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Sponsorisé</span>
+                    @endif
                 </div>
 
                 @if($establishment->review_count > 0)
@@ -156,10 +167,11 @@
                 {{-- Photos --}}
                 @if($establishment->photos->isNotEmpty())
                     @php
-                        $photoUrls = $establishment->photos->pluck('url')->values()->all();
+                        $visiblePhotos = $establishment->photos->take($establishment->max_displayed_photos);
+                        $photoUrls = $visiblePhotos->pluck('url')->values()->all();
                     @endphp
                     <div class="mt-6 grid grid-cols-2 md:grid-cols-3 gap-2">
-                        @foreach($establishment->photos as $i => $photo)
+                        @foreach($visiblePhotos as $i => $photo)
                             <button type="button"
                                     @click="$store.lightbox.show(@js($photoUrls), {{ $i }})"
                                     class="block group relative w-full min-w-0 overflow-hidden rounded-lg cursor-pointer">
