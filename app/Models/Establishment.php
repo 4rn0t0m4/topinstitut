@@ -113,6 +113,19 @@ class Establishment extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::saving(function (Establishment $e) {
+            // Si city_id est lié et department_code absent, on déduit depuis la ville.
+            if ($e->city_id && empty($e->department_code)) {
+                $code = City::where('id', $e->city_id)->value('department_code');
+                if ($code) {
+                    $e->department_code = $code;
+                }
+            }
+        });
+    }
+
     // --- Accessors ---
 
     public function getOpeningStatusAttribute(): string

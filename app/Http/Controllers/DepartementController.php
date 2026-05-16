@@ -17,8 +17,10 @@ class DepartementController extends Controller
             ->get();
 
         $now = now();
+        $cityIds = $department->cities()->pluck('id');
         $premiums = Establishment::active()
-            ->where('department_code', $department->code)
+            ->where(fn ($q) => $q->where('department_code', $department->code)
+                ->orWhereIn('city_id', $cityIds))
             ->where('subscription_tier', 'premium')
             ->where(fn ($q) => $q->whereNull('subscription_ends_at')->orWhere('subscription_ends_at', '>', $now))
             ->with(['schedules', 'photos'])
