@@ -16,6 +16,18 @@ class DepartementController extends Controller
             ->orderBy('name')
             ->get();
 
+        $now = now();
+        $premiums = Establishment::active()
+            ->where('department_code', $department->code)
+            ->where('subscription_tier', 'premium')
+            ->where(fn ($q) => $q->whereNull('subscription_ends_at')->orWhere('subscription_ends_at', '>', $now))
+            ->with(['schedules', 'photos'])
+            ->orderByRaw('CASE WHEN featured_until IS NOT NULL AND featured_until > ? THEN 0 ELSE 1 END', [$now])
+            ->orderByDesc('rating')
+            ->orderByDesc('review_count')
+            ->limit(12)
+            ->get();
+
         $markers = Establishment::active()
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
@@ -33,6 +45,6 @@ class DepartementController extends Controller
             ])
             ->values();
 
-        return view('departement.show', compact('department', 'cities', 'markers'));
+        return view('departement.show', compact('department', 'cities', 'markers', 'premiums'));
     }
 }

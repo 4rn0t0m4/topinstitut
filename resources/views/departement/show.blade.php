@@ -22,6 +22,15 @@
             <div class="mb-8 rounded-lg border shadow-sm" id="dept-map" style="height: 400px; width: 100%; z-index: 0;"></div>
         @endif
 
+        @if($premiums->isNotEmpty())
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Instituts à la une {{ $department->article }}{{ $department->name }}</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+                @foreach($premiums as $etab)
+                    <x-etablissement-card :etablissement="$etab" />
+                @endforeach
+            </div>
+        @endif
+
         @if($cities->isNotEmpty())
             <h2 class="text-xl font-semibold text-gray-900 mb-4">Villes avec instituts</h2>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
