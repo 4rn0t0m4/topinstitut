@@ -46,6 +46,7 @@ class EtablissementController extends Controller
             'address' => 'nullable|string|max:255',
             'postal_code' => 'nullable|string|max:5',
             'city' => 'nullable|string|max:255',
+            'city_id' => 'nullable|integer|exists:cities,id',
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'description' => 'nullable|string',
@@ -59,6 +60,7 @@ class EtablissementController extends Controller
         ]);
 
         $validated['features'] = $request->input('features', []);
+        $validated['city_id'] = $this->resolveCityId($validated);
 
         $etablissement->update($validated);
 
@@ -78,6 +80,7 @@ class EtablissementController extends Controller
             'address' => 'nullable|string|max:255',
             'postal_code' => 'nullable|string|max:5',
             'city' => 'nullable|string|max:255',
+            'city_id' => 'nullable|integer|exists:cities,id',
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'description' => 'nullable|string',
@@ -85,10 +88,26 @@ class EtablissementController extends Controller
 
         $validated['slug'] = SlugService::generate($validated['name']);
         $validated['is_active'] = true;
+        $validated['city_id'] = $this->resolveCityId($validated);
 
         Establishment::create($validated);
 
         return redirect()->route('admin.etablissements.index')->with('success', 'Établissement créé.');
+    }
+
+    private function resolveCityId(array $data): ?int
+    {
+        if (! empty($data['city_id'])) {
+            return (int) $data['city_id'];
+        }
+        if (empty($data['city'])) {
+            return null;
+        }
+        $match = \App\Models\City::where('name', $data['city'])
+            ->when($data['postal_code'] ?? null, fn ($q, $cp) => $q->where('postal_code', $cp))
+            ->orderByDesc('population')
+            ->first();
+        return $match?->id;
     }
 
     public function destroy(Establishment $etablissement)
