@@ -134,6 +134,9 @@
                 <div x-show="view === 'list'" class="grid gap-4 lg:grid-cols-2">
                     @foreach($establishments as $establishment)
                         <x-etablissement-card :etablissement="$establishment" />
+                        @if($loop->iteration === 4 && ! $loop->last)
+                            <div class="lg:col-span-2"><x-adsense-infeed /></div>
+                        @endif
                     @endforeach
                 </div>
 

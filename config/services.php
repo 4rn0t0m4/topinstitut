@@ -41,6 +41,8 @@ return [
 
     'adsense' => [
         'client' => env('GOOGLE_ADSENSE_CLIENT', 'ca-pub-5987335767779300'),
+        'slot_infeed' => env('GOOGLE_ADSENSE_SLOT_INFEED'),
+        'slot_infeed_layout' => env('GOOGLE_ADSENSE_SLOT_INFEED_LAYOUT', '-fb+5w+4e-db+86'),
     ],
 
     'stripe' => [
