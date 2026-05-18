@@ -45,6 +45,8 @@ class DepartementController extends Controller
                 'postal_code' => $e->postal_code,
                 'rating' => $e->review_count > 0 ? round($e->rating, 1) : null,
                 'url' => $e->url,
+                'premium' => $e->is_premium,
+                'featured' => $e->is_featured,
             ])
             ->values();
 
