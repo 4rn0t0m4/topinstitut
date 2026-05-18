@@ -33,7 +33,8 @@ class DepartementController extends Controller
         $markers = Establishment::active()
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
-            ->where('department_code', $department->code)
+            ->where(fn ($q) => $q->where('department_code', $department->code)
+                ->orWhereIn('city_id', $cityIds))
             ->get()
             ->map(fn ($e) => [
                 'lat' => (float) $e->latitude,
