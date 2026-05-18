@@ -32,7 +32,9 @@
                         </div>
                         <div class="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-sm">
                             <a href="{{ route('client.etablissement.edit', $etab) }}" class="text-pink-600 hover:underline">Coordonnées</a>
-                            @if(! $etab->latitude || ! $etab->longitude)
+                            @if($etab->latitude && $etab->longitude)
+                                <a href="{{ route('client.etablissement.localisation', $etab) }}" class="text-pink-600 hover:underline">Localisation</a>
+                            @else
                                 <a href="{{ route('client.etablissement.localisation', $etab) }}" class="text-amber-600 hover:underline">📍 Placer sur la carte</a>
                             @endif
                             <a href="{{ route('client.etablissement.presentation', $etab) }}" class="text-pink-600 hover:underline">Présentation</a>
