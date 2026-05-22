@@ -9,10 +9,6 @@
                 <p class="text-sm text-gray-600">{{ $user->username }}</p>
                 <p class="text-sm text-gray-500">{{ $user->email }}</p>
                 <p class="text-sm text-gray-500 mt-2">{{ $user->reviews_count ?? 0 }} avis publiés</p>
-                <div class="flex flex-col gap-1 mt-3">
-                    <a href="{{ route('client.profil.edit') }}" class="text-pink-600 text-sm hover:underline">Modifier mon profil</a>
-                    <a href="{{ route('client.abonnement.index') }}" class="text-pink-600 text-sm hover:underline">Mes abonnements</a>
-                </div>
             </div>
 
             {{-- Establishments --}}

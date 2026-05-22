@@ -146,6 +146,9 @@
 
     {{-- Content --}}
     <main class="flex-1">
+        @if(Request::is('espace-client*'))
+            <x-client-nav />
+        @endif
         {{ $slot }}
     </main>
 
