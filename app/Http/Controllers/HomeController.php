@@ -10,7 +10,7 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $departments = Department::orderBy('name')->get();
+        $departments = Department::orderBy('code')->get();
         $latestReviews = Review::approved()->with(['establishment', 'user'])->latest()->limit(6)->get();
         $latestEstablishments = Establishment::active()->has('photos')->with(['schedules', 'photos'])->latest()->limit(6)->get();
 
