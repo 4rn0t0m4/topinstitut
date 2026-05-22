@@ -1,4 +1,5 @@
-<nav class="bg-white rounded-lg shadow-sm border p-4 mb-6">
+<div class="max-w-5xl mx-auto px-4 py-4">
+    <nav class="bg-white rounded-lg shadow-sm border p-4 mb-6">
     <ul class="space-y-2 text-sm">
         <li>
             <a href="{{ route('client.profil.edit') }}" class="text-gray-700 hover:text-pink-600 @if(request()->routeIs('client.profil.*')) font-semibold text-pink-600 @endif">
@@ -22,3 +23,4 @@
         </a>
     </div>
 </nav>
+</div>
