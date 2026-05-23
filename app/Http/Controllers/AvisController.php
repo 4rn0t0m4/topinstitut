@@ -3,17 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Review;
-use App\Models\ReviewPhoto;
 use App\Models\ReviewVote;
 use App\Services\RatingService;
+use App\Services\ReviewPhotoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AvisController extends Controller
 {
-    public function store(Request $request, RatingService $ratingService)
+    public function store(Request $request, RatingService $ratingService, ReviewPhotoService $reviewPhotoService)
     {
         $rules = [
             'establishment_id' => 'required|exists:establishments,id',
@@ -49,7 +48,7 @@ class AvisController extends Controller
 
         // Upload photos sur R2 (converties en WebP, 1200px max)
         if ($request->hasFile('photos')) {
-            $this->storeReviewPhotos($review, $request->file('photos'));
+            $reviewPhotoService->upload($review, $request->file('photos'));
         }
 
         if (! $request->user()) {
@@ -89,62 +88,6 @@ class AvisController extends Controller
         );
 
         return response()->json(['ok' => true]);
-    }
-
-    /**
-     * Convertit chaque photo uploadée en WebP (max 1200px), stocke sur R2 et crée
-     * un enregistrement ReviewPhoto. Skippe silencieusement si GD/WebP indispo.
-     */
-    private function storeReviewPhotos(Review $review, array $files): void
-    {
-        if (! function_exists('imagewebp')) {
-            return;
-        }
-
-        foreach (array_values($files) as $i => $file) {
-            try {
-                $image = @imagecreatefromstring(file_get_contents($file->getRealPath()));
-                if (! $image) {
-                    continue;
-                }
-
-                $maxWidth = 1200;
-                $w = imagesx($image);
-                $h = imagesy($image);
-                if ($w > $maxWidth) {
-                    $newH = (int) round($h * ($maxWidth / $w));
-                    $resized = imagecreatetruecolor($maxWidth, $newH);
-                    imagecopyresampled($resized, $image, 0, 0, 0, 0, $maxWidth, $newH, $w, $h);
-                    imagedestroy($image);
-                    $image = $resized;
-                }
-
-                ob_start();
-                imagewebp($image, null, 80);
-                $bytes = ob_get_clean();
-                imagedestroy($image);
-
-                if (! $bytes) {
-                    continue;
-                }
-
-                $filename = 'review_'.($i + 1).'.webp';
-                $path = "reviews/{$review->id}/{$filename}";
-
-                Storage::disk('r2')->put($path, $bytes, [
-                    'ContentType' => 'image/webp',
-                    'CacheControl' => 'public, max-age=15552000, immutable',
-                ]);
-
-                ReviewPhoto::create([
-                    'review_id' => $review->id,
-                    'filename' => $filename,
-                    'sort_order' => $i,
-                ]);
-            } catch (\Throwable $e) {
-                \Log::warning('Review photo upload failed: '.$e->getMessage());
-            }
-        }
     }
 
     private function sendConfirmationEmail(Review $review): void
