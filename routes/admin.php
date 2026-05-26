@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AbonnementController;
 use App\Http\Controllers\Admin\AvisController;
 use App\Http\Controllers\Admin\CategorieController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -33,6 +34,8 @@ Route::post('messages/{message}/toggle-handled', [MessageController::class, 'tog
 Route::post('messages/{message}/forward', [MessageController::class, 'forward'])->name('messages.forward');
 
 Route::resource('guides', GuideController::class)->except(['show']);
+
+Route::get('abonnements', [AbonnementController::class, 'index'])->name('abonnements.index');
 
 // Recherche Google Places
 Route::view('recherche-entreprises', 'admin.recherche-entreprises')->name('recherche-entreprises');
