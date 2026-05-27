@@ -16,14 +16,19 @@
             </div>
         @endif
 
-        {{-- Fil d'étapes --}}
+        {{-- Fil d'étapes (cliquable pour revenir en arrière) --}}
         <div class="flex items-center gap-2 mb-6 text-xs">
             <template x-for="(label, i) in ['Prestation','Praticien','Créneau','Coordonnées']" :key="i">
                 <div class="flex items-center gap-2">
-                    <span class="w-6 h-6 rounded-full flex items-center justify-center font-semibold"
-                          :class="step > i+1 ? 'bg-green-500 text-white' : (step === i+1 ? 'bg-pink-600 text-white' : 'bg-gray-200 text-gray-500')"
-                          x-text="i+1"></span>
-                    <span class="hidden sm:inline" :class="step === i+1 ? 'font-semibold text-gray-900' : 'text-gray-400'" x-text="label"></span>
+                    <button type="button" @click="goStep(i+1)"
+                            :disabled="i+1 > step"
+                            class="flex items-center gap-2"
+                            :class="i+1 < step ? 'cursor-pointer group' : 'cursor-default'">
+                        <span class="w-6 h-6 rounded-full flex items-center justify-center font-semibold transition"
+                              :class="step > i+1 ? 'bg-green-500 text-white group-hover:bg-green-600' : (step === i+1 ? 'bg-pink-600 text-white' : 'bg-gray-200 text-gray-500')"
+                              x-text="i+1"></span>
+                        <span class="hidden sm:inline" :class="step === i+1 ? 'font-semibold text-gray-900' : (i+1 < step ? 'text-gray-500 group-hover:text-pink-600' : 'text-gray-400')" x-text="label"></span>
+                    </button>
                     <span x-show="i < 3" class="text-gray-300">—</span>
                 </div>
             </template>
@@ -137,9 +142,10 @@
                 minDate: new Date().toISOString().slice(0, 10),
                 maxDate: new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10),
 
-                selectService(s) { this.selectedService = s; this.step = 2; },
-                selectPractitioner(id) { this.selectedPractitioner = id; this.step = 3; this.slots = []; this.date = ''; },
+                selectService(s) { this.selectedService = s; this.date = ''; this.time = ''; this.slots = []; this.step = 2; },
+                selectPractitioner(id) { this.selectedPractitioner = id; this.time = ''; this.slots = []; this.date = ''; this.step = 3; },
                 selectSlot(slot) { this.time = slot; this.step = 4; },
+                goStep(n) { if (n <= this.step) this.step = n; },
 
                 async loadSlots() {
                     if (!this.date || !this.selectedService) return;
