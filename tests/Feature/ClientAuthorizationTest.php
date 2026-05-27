@@ -52,10 +52,12 @@ class ClientAuthorizationTest extends TestCase
 
         $this->actingAs($owner)
             ->put('/espace-client/etablissement/'.$establishment->id.'/prestations', [
-                'services' => [['name' => 'Manucure', 'price' => '25€']],
+                'services' => [['name' => 'Manucure', 'price' => '25€', 'duration_minutes' => 30]],
             ])
             ->assertRedirect();
 
-        $this->assertSame('Manucure', $establishment->fresh()->services[0]['name']);
+        $service = $establishment->fresh()->services->first();
+        $this->assertSame('Manucure', $service->name);
+        $this->assertSame(30, $service->duration_minutes);
     }
 }
