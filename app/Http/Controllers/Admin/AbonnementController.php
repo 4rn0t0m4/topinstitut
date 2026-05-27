@@ -31,11 +31,15 @@ class AbonnementController extends Controller
             ->limit(50)
             ->get();
 
+        // Sponsorisé = tout compris (19,90 €) : on ne compte pas son Premium en plus.
+        $sponsoriseCount = $sponsorisesActifs->count();
+        $premiumSeulCount = max($premiumActifs->count() - $sponsoriseCount, 0);
+
         $stats = [
             'premium_count' => $premiumActifs->count(),
-            'sponsorise_count' => $sponsorisesActifs->count(),
-            'mrr_premium' => $premiumActifs->count() * 9.90,
-            'mrr_sponsorise' => $sponsorisesActifs->count() * 20.00,
+            'sponsorise_count' => $sponsoriseCount,
+            'mrr_premium' => $premiumSeulCount * 9.90,
+            'mrr_sponsorise' => $sponsoriseCount * 19.90,
             'expires_count' => $expires->count(),
         ];
         $stats['mrr_total'] = $stats['mrr_premium'] + $stats['mrr_sponsorise'];

@@ -64,9 +64,54 @@ class EtablissementController extends Controller
         $validated['features'] = $request->input('features', []);
         $validated['city_id'] = $this->resolveCityId($validated);
 
+        if ($error = $this->checkFeaturedLimit($validated, $etablissement)) {
+            return back()->withInput()->withErrors(['featured_until' => $error]);
+        }
+
         $etablissement->update($validated);
 
         return redirect()->route('admin.etablissements.index')->with('success', 'Établissement mis à jour.');
+    }
+
+    /**
+     * Limite : 5 sponsorisés actifs maximum par département.
+     * Retourne un message d'erreur si la limite serait dépassée, sinon null.
+     */
+    private function checkFeaturedLimit(array $data, ?Establishment $current = null): ?string
+    {
+        if (empty($data['featured_until']) || ! \Illuminate\Support\Carbon::parse($data['featured_until'])->isFuture()) {
+            return null;
+        }
+
+        $deptCode = $this->resolveDepartmentCode($data, $current);
+        if (! $deptCode) {
+            return null;
+        }
+
+        $cityIds = \App\Models\City::where('department_code', $deptCode)->pluck('id');
+
+        $count = Establishment::query()
+            ->when($current, fn ($q) => $q->where('id', '!=', $current->id))
+            ->whereNotNull('featured_until')
+            ->where('featured_until', '>', now())
+            ->where(fn ($q) => $q->where('department_code', $deptCode)->orWhereIn('city_id', $cityIds))
+            ->count();
+
+        return $count >= 5
+            ? 'Limite de 5 sponsorisés actifs atteinte pour ce département. Retirez-en un avant d\'en ajouter un nouveau.'
+            : null;
+    }
+
+    private function resolveDepartmentCode(array $data, ?Establishment $current): ?string
+    {
+        if (! empty($data['city_id'])) {
+            $code = \App\Models\City::where('id', $data['city_id'])->value('department_code');
+            if ($code) {
+                return $code;
+            }
+        }
+
+        return $data['department_code'] ?? $current?->department_code;
     }
 
     public function create()

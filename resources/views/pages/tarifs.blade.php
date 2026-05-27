@@ -58,15 +58,16 @@
             {{-- Sponsorisé --}}
             <div class="bg-white rounded-lg border p-6 flex flex-col">
                 <h2 class="text-lg font-semibold text-amber-600">Sponsorisé</h2>
-                <p class="text-3xl font-bold mt-2">+ 20 €<span class="text-sm font-normal text-gray-500">/mois</span></p>
-                <p class="text-sm text-gray-500 mt-1">À ajouter au forfait Premium</p>
+                <p class="text-3xl font-bold mt-2">19,90 €<span class="text-sm font-normal text-gray-500">/mois</span></p>
+                <p class="text-sm text-gray-500 mt-1">Visibilité maximale, tout compris</p>
 
                 <ul class="space-y-2 mt-6 text-sm flex-1">
+                    <li class="flex items-start gap-2"><span class="text-green-500">✓</span> Tout du forfait Premium, plus :</li>
                     <li class="flex items-start gap-2"><span class="text-green-500">✓</span> Badge <strong>« Sponsorisé »</strong> en or</li>
                     <li class="flex items-start gap-2"><span class="text-green-500">✓</span> Position <strong>n°1</strong> dans la recherche locale</li>
                     <li class="flex items-start gap-2"><span class="text-green-500">✓</span> Mise en avant sur la page de votre ville</li>
                     <li class="flex items-start gap-2"><span class="text-green-500">✓</span> Bordure dorée distinctive sur les cards</li>
-                    <li class="flex items-start gap-2 text-gray-500"><span class="text-amber-500">i</span> Limité à 3 instituts par ville</li>
+                    <li class="flex items-start gap-2 text-gray-500"><span class="text-amber-500">i</span> Limité à 5 instituts par département</li>
                 </ul>
 
                 <a href="{{ route('contact') }}?sujet=sponsor" class="mt-6 block text-center border-2 border-amber-500 text-amber-700 font-semibold py-2 rounded-lg hover:bg-amber-50">Devenir sponsor</a>
