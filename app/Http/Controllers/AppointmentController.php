@@ -1,0 +1,136 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Appointment;
+use App\Models\Establishment;
+use App\Notifications\AppointmentConfirmation;
+use App\Notifications\NewAppointmentNotification;
+use App\Services\SlotService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
+
+class AppointmentController extends Controller
+{
+    public function __construct(private SlotService $slots) {}
+
+    /** Page de prise de rendez-vous. */
+    public function create(Establishment $establishment)
+    {
+        abort_unless($establishment->is_active && $establishment->accepts_bookings, 404);
+
+        $establishment->load(['services' => fn ($q) => $q->where('is_bookable', true), 'practitioners' => fn ($q) => $q->where('is_active', true)]);
+
+        return view('rdv.create', compact('establishment'));
+    }
+
+    /** Créneaux libres (AJAX). */
+    public function slots(Request $request, Establishment $establishment): JsonResponse
+    {
+        $validated = $request->validate([
+            'service_id' => 'required|integer',
+            'practitioner_id' => 'nullable|integer',
+            'date' => 'required|date_format:Y-m-d|after_or_equal:today',
+        ]);
+
+        $service = $establishment->services()->where('is_bookable', true)->findOrFail($validated['service_id']);
+        $date = Carbon::createFromFormat('Y-m-d', $validated['date'])->startOfDay();
+
+        if ($date->gt(now()->addDays(60))) {
+            return response()->json(['slots' => []]);
+        }
+
+        $slots = $this->slots->availableSlots($establishment, $service, $date, $validated['practitioner_id'] ?? null);
+
+        return response()->json(['slots' => $slots]);
+    }
+
+    /** Enregistre le rendez-vous. */
+    public function store(Request $request, Establishment $establishment)
+    {
+        abort_unless($establishment->is_active && $establishment->accepts_bookings, 404);
+
+        $validated = $request->validate([
+            'service_id' => 'required|integer',
+            'practitioner_id' => 'nullable|integer',
+            'date' => 'required|date_format:Y-m-d|after_or_equal:today',
+            'time' => 'required|date_format:H:i',
+            'customer_name' => 'required|string|max:255',
+            'customer_email' => 'required|email|max:255',
+            'customer_phone' => 'nullable|string|max:30',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $service = $establishment->services()->where('is_bookable', true)->findOrFail($validated['service_id']);
+        $start = Carbon::createFromFormat('Y-m-d H:i', $validated['date'].' '.$validated['time']);
+
+        if ($start->isPast() || $start->gt(now()->addDays(60))) {
+            return back()->withInput()->withErrors(['time' => 'Ce créneau n\'est plus disponible.']);
+        }
+
+        $appointment = DB::transaction(function () use ($establishment, $service, $start, $validated) {
+            // Verrouille les RDV du jour pour éviter une double réservation simultanée.
+            Appointment::where('establishment_id', $establishment->id)
+                ->whereBetween('starts_at', [$start->copy()->startOfDay(), $start->copy()->endOfDay()])
+                ->lockForUpdate()
+                ->get();
+
+            $practitioner = $this->slots->findFreePractitioner(
+                $establishment,
+                $service,
+                $start,
+                $validated['practitioner_id'] ?? null
+            );
+
+            if (! $practitioner) {
+                return null;
+            }
+
+            return Appointment::create([
+                'establishment_id' => $establishment->id,
+                'practitioner_id' => $practitioner->id,
+                'service_id' => $service->id,
+                'user_id' => auth()->id(),
+                'service_name' => $service->name,
+                'duration_minutes' => $service->duration_minutes,
+                'customer_name' => $validated['customer_name'],
+                'customer_email' => $validated['customer_email'],
+                'customer_phone' => $validated['customer_phone'] ?? null,
+                'starts_at' => $start,
+                'ends_at' => $start->copy()->addMinutes($service->duration_minutes),
+                'status' => 'confirmed',
+                'notes' => $validated['notes'] ?? null,
+            ]);
+        });
+
+        if (! $appointment) {
+            return back()->withInput()->withErrors(['time' => 'Désolé, ce créneau vient d\'être réservé. Merci d\'en choisir un autre.']);
+        }
+
+        // Notifications (client + établissement) — sans bloquer la réservation en cas d'échec mail.
+        $appointment->load(['practitioner', 'establishment']);
+        try {
+            Notification::route('mail', $appointment->customer_email)
+                ->notify(new AppointmentConfirmation($appointment));
+
+            if ($establishment->email) {
+                $establishment->notify(new NewAppointmentNotification($appointment));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Echec envoi mail RDV: '.$e->getMessage());
+        }
+
+        return redirect()->route('rdv.confirmation', [$establishment, $appointment]);
+    }
+
+    public function confirmation(Establishment $establishment, Appointment $appointment)
+    {
+        abort_unless($appointment->establishment_id === $establishment->id, 404);
+
+        return view('rdv.confirmation', compact('establishment', 'appointment'));
+    }
+}

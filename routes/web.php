@@ -91,8 +91,14 @@ Route::get('/avis/confirmer/{token}', [AvisController::class, 'confirmEmail'])->
 Route::post('/revendiquer/{establishment}', [RevendicationController::class, 'store'])->middleware(['bot', 'throttle:3,1'])->name('revendication.store');
 Route::get('/revendication/confirmer/{token}', [RevendicationController::class, 'confirmEmail'])->name('revendication.confirm');
 
-// Booking
+// Booking (demande simple — établissements sans agenda)
 Route::post('/rdv/{establishment}', [\App\Http\Controllers\BookingController::class, 'store'])->middleware(['bot', 'throttle:5,1'])->name('booking.store');
+
+// Réservation en ligne (agenda avec créneaux)
+Route::get('/rdv/{establishment}/reserver', [\App\Http\Controllers\AppointmentController::class, 'create'])->name('rdv.create');
+Route::get('/rdv/{establishment}/creneaux', [\App\Http\Controllers\AppointmentController::class, 'slots'])->name('rdv.slots');
+Route::post('/rdv/{establishment}/reserver', [\App\Http\Controllers\AppointmentController::class, 'store'])->middleware(['bot', 'throttle:10,1'])->name('rdv.store');
+Route::get('/rdv/{establishment}/confirmation/{appointment}', [\App\Http\Controllers\AppointmentController::class, 'confirmation'])->name('rdv.confirmation');
 
 // Favorites
 Route::post('/ajax/favorites/{establishment}', [\App\Http\Controllers\FavoriteController::class, 'toggle'])->name('favorites.toggle');

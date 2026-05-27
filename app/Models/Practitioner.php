@@ -26,4 +26,9 @@ class Practitioner extends Model
     {
         return $this->hasMany(PractitionerSchedule::class);
     }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
 }

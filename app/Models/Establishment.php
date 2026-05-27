@@ -325,6 +325,17 @@ class Establishment extends Model
         return $this->hasMany(Practitioner::class)->orderBy('sort_order');
     }
 
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    public function getAcceptsBookingsAttribute(): bool
+    {
+        return $this->practitioners->where('is_active', true)->isNotEmpty()
+            && $this->services->where('is_bookable', true)->isNotEmpty();
+    }
+
     public function owners(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withTimestamps();
