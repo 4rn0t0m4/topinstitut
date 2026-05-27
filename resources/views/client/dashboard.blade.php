@@ -20,31 +20,62 @@
                 ['avis',          'Avis',         'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.05 9.771c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z'],
             ],
         ];
+        // Thèmes de couleur par groupe (classes littérales pour la compilation Tailwind).
+        $groupThemes = [
+            'Fiche'       => ['dot' => 'bg-rose-400',   'icon' => 'bg-rose-50 text-rose-600 group-hover:bg-rose-100',       'hover' => 'hover:border-rose-300 hover:shadow-rose-100'],
+            'Réservation' => ['dot' => 'bg-violet-400', 'icon' => 'bg-violet-50 text-violet-600 group-hover:bg-violet-100', 'hover' => 'hover:border-violet-300 hover:shadow-violet-100'],
+            'Avis'        => ['dot' => 'bg-amber-400',  'icon' => 'bg-amber-50 text-amber-600 group-hover:bg-amber-100',    'hover' => 'hover:border-amber-300 hover:shadow-amber-100'],
+        ];
     @endphp
 
     <div class="space-y-8">
-        {{-- En-tête + stats --}}
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Bonjour {{ $user->username }}</h1>
-            <p class="text-sm text-gray-500 mt-1">Gérez vos établissements et suivez votre activité.</p>
+        {{-- Hero --}}
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-pink-600 via-fuchsia-500 to-rose-500 px-6 py-8 sm:px-8 sm:py-10 text-white shadow-lg">
+            <div class="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10"></div>
+            <div class="absolute right-16 bottom-0 w-24 h-24 rounded-full bg-white/10"></div>
+            <div class="relative">
+                <h1 class="text-2xl sm:text-3xl font-bold">Bonjour {{ $user->username }} 👋</h1>
+                <p class="text-sm text-white/80 mt-1">Gérez vos établissements et suivez votre activité.</p>
+            </div>
         </div>
 
+        {{-- Stats --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white rounded-lg border shadow-sm p-4">
-                <div class="text-2xl font-bold text-gray-900">{{ $stats['establishments'] }}</div>
-                <div class="text-sm text-gray-500">Établissement{{ $stats['establishments'] > 1 ? 's' : '' }}</div>
+            <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+                <div class="w-11 h-11 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m4-14h.01M11 7h.01M7 11h.01M11 11h.01"/></svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-900 leading-none">{{ $stats['establishments'] }}</div>
+                    <div class="text-xs text-gray-500 mt-1">Établissement{{ $stats['establishments'] > 1 ? 's' : '' }}</div>
+                </div>
             </div>
-            <div class="bg-white rounded-lg border shadow-sm p-4">
-                <div class="text-2xl font-bold text-gray-900">{{ $stats['reviews_received'] }}</div>
-                <div class="text-sm text-gray-500">Avis reçus</div>
+            <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+                <div class="w-11 h-11 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-900 leading-none">{{ $stats['reviews_received'] }}</div>
+                    <div class="text-xs text-gray-500 mt-1">Avis reçus</div>
+                </div>
             </div>
-            <a href="{{ route('client.mes-avis') }}" class="bg-white rounded-lg border shadow-sm p-4 hover:border-pink-300 hover:bg-pink-50 transition">
-                <div class="text-2xl font-bold text-gray-900">{{ $stats['reviews_published'] }}</div>
-                <div class="text-sm text-gray-500">Mes avis publiés</div>
+            <a href="{{ route('client.mes-avis') }}" class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3 hover:border-violet-300 hover:shadow-md transition">
+                <div class="w-11 h-11 rounded-full bg-violet-50 text-violet-600 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-900 leading-none">{{ $stats['reviews_published'] }}</div>
+                    <div class="text-xs text-gray-500 mt-1">Mes avis publiés</div>
+                </div>
             </a>
-            <a href="{{ route('client.favoris') }}" class="bg-white rounded-lg border shadow-sm p-4 hover:border-pink-300 hover:bg-pink-50 transition">
-                <div class="text-2xl font-bold text-gray-900">{{ $stats['favorites'] }}</div>
-                <div class="text-sm text-gray-500">Mes favoris</div>
+            <a href="{{ route('client.favoris') }}" class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3 hover:border-rose-300 hover:shadow-md transition">
+                <div class="w-11 h-11 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/></svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-900 leading-none">{{ $stats['favorites'] }}</div>
+                    <div class="text-xs text-gray-500 mt-1">Mes favoris</div>
+                </div>
             </a>
         </div>
 
@@ -53,12 +84,17 @@
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Mes établissements</h2>
 
             @forelse($etablissements as $etab)
-                <div class="bg-white rounded-lg shadow-sm border p-5 mb-4">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
                     {{-- En-tête de la carte --}}
-                    <div class="flex items-start justify-between gap-4 pb-4 border-b">
-                        <div class="min-w-0">
-                            <h3 class="font-semibold text-gray-900 truncate">{{ $etab->name }}</h3>
-                            <p class="text-sm text-gray-500">{{ $etab->type_label }} · {{ $etab->city }} · {{ $etab->reviews_count ?? 0 }} avis</p>
+                    <div class="flex items-start justify-between gap-4 pb-4 border-b border-gray-100">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
+                                {{ mb_strtoupper(mb_substr($etab->name, 0, 1)) }}
+                            </div>
+                            <div class="min-w-0">
+                                <h3 class="font-semibold text-gray-900 truncate">{{ $etab->name }}</h3>
+                                <p class="text-sm text-gray-500">{{ $etab->type_label }} · {{ $etab->city }} · {{ $etab->reviews_count ?? 0 }} avis</p>
+                            </div>
                         </div>
                         <a href="{{ $etab->url }}" target="_blank" rel="noopener" class="flex-shrink-0 inline-flex items-center gap-1 text-sm font-medium text-pink-600 hover:text-pink-700">
                             Voir la fiche
@@ -75,18 +111,24 @@
                     @endif
 
                     {{-- Actions groupées --}}
-                    <div class="mt-4 space-y-4">
+                    <div class="mt-5 space-y-5">
                         @foreach($actionGroups as $groupLabel => $actions)
+                            @php $theme = $groupThemes[$groupLabel] ?? $groupThemes['Fiche']; @endphp
                             <div>
-                                <div class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">{{ $groupLabel }}</div>
-                                <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
+                                <div class="flex items-center gap-2 mb-2.5">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $theme['dot'] }}"></span>
+                                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">{{ $groupLabel }}</span>
+                                </div>
+                                <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2.5">
                                     @foreach($actions as [$routeName, $label, $iconPath])
                                         <a href="{{ route('client.etablissement.'.$routeName, $etab) }}"
-                                           class="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-gray-200 px-2 py-3 text-center hover:border-pink-300 hover:bg-pink-50 transition group">
-                                            <svg class="w-5 h-5 text-gray-400 group-hover:text-pink-600" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="{{ $iconPath }}"/>
-                                            </svg>
-                                            <span class="text-xs font-medium text-gray-700 group-hover:text-pink-700 leading-tight">{{ $label }}</span>
+                                           class="flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-100 bg-white px-2 py-3.5 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md {{ $theme['hover'] }}">
+                                            <span class="w-10 h-10 rounded-full flex items-center justify-center transition {{ $theme['icon'] }}">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="{{ $iconPath }}"/>
+                                                </svg>
+                                            </span>
+                                            <span class="text-xs font-medium text-gray-700 leading-tight">{{ $label }}</span>
                                         </a>
                                     @endforeach
                                 </div>
@@ -95,7 +137,7 @@
                     </div>
                 </div>
             @empty
-                <div class="bg-white rounded-lg border border-dashed p-8 text-center">
+                <div class="bg-white rounded-2xl border border-dashed border-gray-200 p-8 text-center">
                     <p class="text-gray-500">Vous ne gérez aucun établissement pour le moment.</p>
                 </div>
             @endforelse
