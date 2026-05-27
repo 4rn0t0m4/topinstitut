@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ServiceCategory extends Model
 {
     protected $fillable = [
-        'establishment_id', 'name', 'sort_order',
+        'establishment_id', 'name', 'description', 'sort_order',
     ];
 
     public function establishment(): BelongsTo

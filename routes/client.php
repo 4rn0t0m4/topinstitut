@@ -39,9 +39,6 @@ Route::prefix('etablissement/{etablissement}')->name('etablissement.')->group(fu
     Route::get('prestations', [\App\Http\Controllers\Client\ServicesController::class, 'edit'])->name('prestations');
     Route::put('prestations', [\App\Http\Controllers\Client\ServicesController::class, 'update'])->name('prestations.update');
 
-    Route::get('categories', [\App\Http\Controllers\Client\ServiceCategoryController::class, 'index'])->name('categories');
-    Route::put('categories', [\App\Http\Controllers\Client\ServiceCategoryController::class, 'update'])->name('categories.update');
-
     Route::get('praticiens', [\App\Http\Controllers\Client\PractitionerController::class, 'index'])->name('praticiens');
     Route::post('praticiens', [\App\Http\Controllers\Client\PractitionerController::class, 'store'])->name('praticiens.store');
     Route::put('praticiens/{practitioner}', [\App\Http\Controllers\Client\PractitionerController::class, 'update'])->name('praticiens.update');
