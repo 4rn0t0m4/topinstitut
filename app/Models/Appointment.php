@@ -20,6 +20,7 @@ class Appointment extends Model
         'service_name', 'duration_minutes',
         'customer_name', 'customer_email', 'customer_phone',
         'starts_at', 'ends_at', 'status', 'notes',
+        'reminded_day_before_at', 'reminded_same_day_at',
     ];
 
     protected function casts(): array
@@ -28,6 +29,8 @@ class Appointment extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'duration_minutes' => 'integer',
+            'reminded_day_before_at' => 'datetime',
+            'reminded_same_day_at' => 'datetime',
         ];
     }
 
