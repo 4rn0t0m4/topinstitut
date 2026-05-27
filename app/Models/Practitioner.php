@@ -31,4 +31,9 @@ class Practitioner extends Model
     {
         return $this->hasMany(Appointment::class);
     }
+
+    public function timeOffs(): HasMany
+    {
+        return $this->hasMany(TimeOff::class);
+    }
 }

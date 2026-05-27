@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\Establishment;
 use App\Models\Practitioner;
 use App\Models\Service;
+use App\Models\TimeOff;
 use Illuminate\Support\Carbon;
 
 class SlotService
@@ -144,22 +145,37 @@ class SlotService
     }
 
     /**
-     * Intervalles occupés (RDV actifs) du praticien pour la date.
+     * Intervalles occupés (RDV actifs + plages bloquées) du praticien pour la date.
      *
      * @return array<int, array{start:int, end:int}>
      */
     private function busyIntervals(Practitioner $practitioner, Carbon $date): array
     {
-        return Appointment::query()
+        $dayStart = $date->copy()->startOfDay();
+        $dayEnd = $date->copy()->endOfDay();
+
+        $appointments = Appointment::query()
             ->where('practitioner_id', $practitioner->id)
             ->active()
-            ->whereBetween('starts_at', [$date->copy()->startOfDay(), $date->copy()->endOfDay()])
+            ->whereBetween('starts_at', [$dayStart, $dayEnd])
             ->get(['starts_at', 'ends_at'])
             ->map(fn ($a) => [
                 'start' => $a->starts_at->hour * 60 + $a->starts_at->minute,
                 'end' => $a->ends_at->hour * 60 + $a->ends_at->minute,
-            ])
-            ->all();
+            ]);
+
+        // Plages bloquées (congés/pauses) qui chevauchent la journée.
+        $timeOffs = TimeOff::query()
+            ->where('practitioner_id', $practitioner->id)
+            ->where('starts_at', '<', $dayEnd)
+            ->where('ends_at', '>', $dayStart)
+            ->get(['starts_at', 'ends_at'])
+            ->map(fn ($t) => [
+                'start' => max(0, $t->starts_at->lt($dayStart) ? 0 : $t->starts_at->hour * 60 + $t->starts_at->minute),
+                'end' => $t->ends_at->gt($dayEnd) ? 24 * 60 : $t->ends_at->hour * 60 + $t->ends_at->minute,
+            ]);
+
+        return $appointments->merge($timeOffs)->all();
     }
 
     private function overlapsAny(int $start, int $end, array $intervals): bool
