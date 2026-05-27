@@ -1,9 +1,12 @@
 <x-layouts.app :noindex="true" :title="'Horaires - ' . $etablissement->name">
     @php
-        // Normalise en HH:MM strict ; toute valeur malformée devient '' (évite le "Non valide" natif).
+        // Valeur HH:MM stricte ; 00:00 et valeurs malformées => '' (demi-journée non renseignée).
         $fmt = function ($v) {
             $v = substr((string) $v, 0, 5);
-            return preg_match('/^\d{2}:\d{2}$/', $v) ? $v : '';
+            if (! preg_match('/^\d{2}:\d{2}$/', $v)) {
+                return '';
+            }
+            return $v === '00:00' ? '' : $v;
         };
         $daysData = [];
         foreach (\App\Models\Schedule::DAYS as $num => $label) {
@@ -16,10 +19,16 @@
                 'is_closed' => (bool) ($h?->is_closed),
             ];
         }
+        // Options de créneaux toutes les 15 min.
+        $times = [];
+        for ($m = 0; $m < 24 * 60; $m += 15) {
+            $times[] = sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
+        }
     @endphp
 
     <div class="max-w-3xl mx-auto px-4 py-8">
-        <h1 class="text-2xl font-bold mb-6">Horaires - {{ $etablissement->name }}</h1>
+        <h1 class="text-2xl font-bold mb-2">Horaires - {{ $etablissement->name }}</h1>
+        <p class="text-sm text-gray-500 mb-6">Laissez <strong>« — »</strong> sur une demi-journée pour indiquer qu'elle est fermée (ex. ouvert le matin uniquement).</p>
 
         @if(session('success'))
             <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">{{ session('success') }}</div>
@@ -63,10 +72,8 @@
             {{-- En-têtes (desktop) --}}
             <div class="hidden sm:grid grid-cols-12 gap-2 text-xs text-gray-500 mb-1 px-1">
                 <span class="col-span-3"></span>
-                <span class="col-span-2 text-center">Matin ouv.</span>
-                <span class="col-span-2 text-center">Matin ferm.</span>
-                <span class="col-span-2 text-center">A-M ouv.</span>
-                <span class="col-span-2 text-center">A-M ferm.</span>
+                <span class="col-span-4 text-center">Matin (ouv. → ferm.)</span>
+                <span class="col-span-4 text-center">Après-midi (ouv. → ferm.)</span>
                 <span class="col-span-1 text-center">Fermé</span>
             </div>
 
@@ -90,10 +97,28 @@
 
                     <template x-if="!days[{{ $num }}].is_closed">
                         <div class="contents">
-                            <input type="time" name="horaires[{{ $num }}][open_am]" x-model="days[{{ $num }}].open_am" aria-label="{{ $label }} ouverture matin" class="col-span-1 sm:col-span-2 border rounded px-2 py-1.5 text-sm">
-                            <input type="time" name="horaires[{{ $num }}][close_am]" x-model="days[{{ $num }}].close_am" aria-label="{{ $label }} fermeture matin" class="col-span-1 sm:col-span-2 border rounded px-2 py-1.5 text-sm">
-                            <input type="time" name="horaires[{{ $num }}][open_pm]" x-model="days[{{ $num }}].open_pm" aria-label="{{ $label }} ouverture après-midi" class="col-span-1 sm:col-span-2 border rounded px-2 py-1.5 text-sm">
-                            <input type="time" name="horaires[{{ $num }}][close_pm]" x-model="days[{{ $num }}].close_pm" aria-label="{{ $label }} fermeture après-midi" class="col-span-1 sm:col-span-2 border rounded px-2 py-1.5 text-sm">
+                            <div class="col-span-2 sm:col-span-4 flex items-center gap-1">
+                                <select name="horaires[{{ $num }}][open_am]" x-model="days[{{ $num }}].open_am" aria-label="{{ $label }} ouverture matin" class="flex-1 border rounded px-2 py-1.5 text-sm">
+                                    <option value="">—</option>
+                                    @foreach($times as $t)<option value="{{ $t }}">{{ $t }}</option>@endforeach
+                                </select>
+                                <span class="text-gray-400">→</span>
+                                <select name="horaires[{{ $num }}][close_am]" x-model="days[{{ $num }}].close_am" aria-label="{{ $label }} fermeture matin" class="flex-1 border rounded px-2 py-1.5 text-sm">
+                                    <option value="">—</option>
+                                    @foreach($times as $t)<option value="{{ $t }}">{{ $t }}</option>@endforeach
+                                </select>
+                            </div>
+                            <div class="col-span-2 sm:col-span-4 flex items-center gap-1">
+                                <select name="horaires[{{ $num }}][open_pm]" x-model="days[{{ $num }}].open_pm" aria-label="{{ $label }} ouverture après-midi" class="flex-1 border rounded px-2 py-1.5 text-sm">
+                                    <option value="">—</option>
+                                    @foreach($times as $t)<option value="{{ $t }}">{{ $t }}</option>@endforeach
+                                </select>
+                                <span class="text-gray-400">→</span>
+                                <select name="horaires[{{ $num }}][close_pm]" x-model="days[{{ $num }}].close_pm" aria-label="{{ $label }} fermeture après-midi" class="flex-1 border rounded px-2 py-1.5 text-sm">
+                                    <option value="">—</option>
+                                    @foreach($times as $t)<option value="{{ $t }}">{{ $t }}</option>@endforeach
+                                </select>
+                            </div>
                         </div>
                     </template>
 
