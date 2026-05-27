@@ -90,7 +90,8 @@
             <div x-show="step === 3" x-cloak>
                 <input type="date" x-model="date" :min="minDate" :max="maxDate" @change="loadSlots()" class="border rounded-lg px-3 py-2 mb-4">
                 <div x-show="loading" class="text-sm text-gray-500">Recherche des disponibilités…</div>
-                <div x-show="!loading && date && slots.length === 0" class="text-sm text-gray-500">Aucun créneau disponible ce jour-là. Essayez une autre date.</div>
+                <div x-show="!loading && slots.length === 0 && date" class="text-sm text-gray-500">Aucun créneau disponible ce jour-là. Essayez une autre date.</div>
+                <div x-show="!loading && slots.length === 0 && !date" class="text-sm text-gray-500">Aucune disponibilité dans les 60 prochains jours.</div>
                 <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     <template x-for="slot in slots" :key="slot">
                         <button type="button" @click="selectSlot(slot)" class="border rounded-lg py-2 text-sm hover:border-pink-400 hover:bg-pink-50 cursor-pointer transition" x-text="slot"></button>
@@ -179,18 +180,21 @@
 
                 goStep(n) { if (n < this.step) this.step = n; },
                 selectService(s) { this.selectedService = s; this.step = 2; },
-                selectPractitioner(id) { this.selectedPractitioner = id; this.step = 3; this.slots = []; this.date = ''; },
+                selectPractitioner(id) { this.selectedPractitioner = id; this.step = 3; this.slots = []; this.date = ''; this.loadSlots(); },
                 selectSlot(slot) { this.time = slot; this.step = 4; },
 
                 async loadSlots() {
-                    if (!this.date || !this.selectedService) return;
+                    if (!this.selectedService) return;
                     this.loading = true;
                     this.slots = [];
                     try {
-                        const params = new URLSearchParams({ service_id: this.selectedService.id, date: this.date });
+                        const params = new URLSearchParams({ service_id: this.selectedService.id });
+                        if (this.date) params.append('date', this.date);
                         if (this.selectedPractitioner) params.append('practitioner_id', this.selectedPractitioner);
                         const res = await fetch(this.slotsUrl + '?' + params.toString());
                         const data = await res.json();
+                        // Si aucune date choisie, on adopte le premier jour disponible renvoyé.
+                        if (!this.date && data.date) this.date = data.date;
                         this.slots = data.slots || [];
                     } catch (e) {
                         this.slots = [];

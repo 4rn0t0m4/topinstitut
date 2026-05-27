@@ -42,6 +42,27 @@ class SlotService
     }
 
     /**
+     * Premier jour (à partir d'aujourd'hui) avec au moins un créneau libre,
+     * et ses créneaux. Retourne ['date' => Carbon|null, 'slots' => string[]].
+     *
+     * @return array{date: ?\Illuminate\Support\Carbon, slots: array<int, string>}
+     */
+    public function nextAvailability(Establishment $establishment, Service $service, ?int $practitionerId = null, int $maxDays = 60): array
+    {
+        $date = now()->startOfDay();
+
+        for ($i = 0; $i <= $maxDays; $i++) {
+            $slots = $this->availableSlots($establishment, $service, $date, $practitionerId);
+            if (! empty($slots)) {
+                return ['date' => $date->copy(), 'slots' => $slots];
+            }
+            $date->addDay();
+        }
+
+        return ['date' => null, 'slots' => []];
+    }
+
+    /**
      * Trouve un praticien libre pour un créneau précis (pour la réservation).
      * Respecte le praticien demandé si fourni.
      */

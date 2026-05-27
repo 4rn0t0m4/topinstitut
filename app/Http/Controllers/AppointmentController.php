@@ -36,19 +36,31 @@ class AppointmentController extends Controller
         $validated = $request->validate([
             'service_id' => 'required|integer',
             'practitioner_id' => 'nullable|integer',
-            'date' => 'required|date_format:Y-m-d|after_or_equal:today',
+            'date' => 'nullable|date_format:Y-m-d|after_or_equal:today',
         ]);
 
         $service = $establishment->services()->where('is_bookable', true)->findOrFail($validated['service_id']);
+        $practitionerId = $validated['practitioner_id'] ?? null;
+
+        // Pas de date : on cherche le premier jour disponible.
+        if (empty($validated['date'])) {
+            $result = $this->slots->nextAvailability($establishment, $service, $practitionerId);
+
+            return response()->json([
+                'date' => $result['date']?->format('Y-m-d'),
+                'slots' => $result['slots'],
+            ]);
+        }
+
         $date = Carbon::createFromFormat('Y-m-d', $validated['date'])->startOfDay();
 
         if ($date->gt(now()->addDays(60))) {
-            return response()->json(['slots' => []]);
+            return response()->json(['date' => $date->format('Y-m-d'), 'slots' => []]);
         }
 
-        $slots = $this->slots->availableSlots($establishment, $service, $date, $validated['practitioner_id'] ?? null);
+        $slots = $this->slots->availableSlots($establishment, $service, $date, $practitionerId);
 
-        return response()->json(['slots' => $slots]);
+        return response()->json(['date' => $date->format('Y-m-d'), 'slots' => $slots]);
     }
 
     /** Enregistre le rendez-vous. */
