@@ -161,7 +161,7 @@
                 },
 
                 selectService(s) { this.selectedService = s; this.date = ''; this.time = ''; this.slots = []; this.step = 2; },
-                selectPractitioner(id) { this.selectedPractitioner = id; this.time = ''; this.slots = []; this.date = ''; this.step = 3; },
+                selectPractitioner(id) { this.selectedPractitioner = id; this.time = ''; this.date = this.minDate; this.step = 3; this.loadSlots(); },
                 selectSlot(slot) { this.time = slot; this.step = 4; },
                 goStep(n) { if (n <= this.step) this.step = n; },
 
