@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\URL;
 
 class AppointmentConfirmation extends Notification
 {
@@ -23,6 +24,11 @@ class AppointmentConfirmation extends Notification
         $a = $this->appointment;
         $establishment = $a->establishment;
 
+        $cancelUrl = URL::signedRoute('rdv.cancel', [
+            'establishment' => $establishment,
+            'appointment' => $a,
+        ]);
+
         return (new MailMessage)
             ->subject('Confirmation de votre rendez-vous - '.$establishment->name)
             ->greeting('Bonjour '.$a->customer_name)
@@ -32,6 +38,7 @@ class AppointmentConfirmation extends Notification
             ->line('**Avec :** '.$a->practitioner->name)
             ->when($establishment->address, fn ($m) => $m->line('**Adresse :** '.trim($establishment->address.' '.$establishment->postal_code.' '.$establishment->city)))
             ->action('Voir l\'établissement', url($establishment->url))
+            ->line('Un imprévu ? [Annuler ce rendez-vous]('.$cancelUrl.')')
             ->line('À bientôt !')
             ->salutation('— '.$establishment->name.' via TopInstitut');
     }

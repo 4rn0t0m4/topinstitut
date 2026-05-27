@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\Establishment;
+use App\Notifications\AppointmentCancelled;
 use App\Notifications\AppointmentConfirmation;
 use App\Notifications\NewAppointmentNotification;
 use App\Services\SlotService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -72,40 +74,47 @@ class AppointmentController extends Controller
             return back()->withInput()->withErrors(['time' => 'Ce créneau n\'est plus disponible.']);
         }
 
-        $appointment = DB::transaction(function () use ($establishment, $service, $start, $validated) {
-            // Verrouille les RDV du jour pour éviter une double réservation simultanée.
-            Appointment::where('establishment_id', $establishment->id)
-                ->whereBetween('starts_at', [$start->copy()->startOfDay(), $start->copy()->endOfDay()])
-                ->lockForUpdate()
-                ->get();
+        try {
+            $appointment = DB::transaction(function () use ($establishment, $service, $start, $validated) {
+                // Sérialise les réservations de cet établissement (row lock, indépendant
+                // du niveau d'isolation) pour éviter une double réservation simultanée.
+                Establishment::whereKey($establishment->id)->lockForUpdate()->first();
 
-            $practitioner = $this->slots->findFreePractitioner(
-                $establishment,
-                $service,
-                $start,
-                $validated['practitioner_id'] ?? null
-            );
+                $practitioner = $this->slots->findFreePractitioner(
+                    $establishment,
+                    $service,
+                    $start,
+                    $validated['practitioner_id'] ?? null
+                );
 
-            if (! $practitioner) {
-                return null;
+                if (! $practitioner) {
+                    return null;
+                }
+
+                return Appointment::create([
+                    'establishment_id' => $establishment->id,
+                    'practitioner_id' => $practitioner->id,
+                    'service_id' => $service->id,
+                    'user_id' => auth()->id(),
+                    'service_name' => $service->name,
+                    'duration_minutes' => $service->duration_minutes,
+                    'customer_name' => $validated['customer_name'],
+                    'customer_email' => $validated['customer_email'],
+                    'customer_phone' => $validated['customer_phone'] ?? null,
+                    'starts_at' => $start,
+                    'ends_at' => $start->copy()->addMinutes($service->duration_minutes),
+                    'status' => 'confirmed',
+                    'notes' => $validated['notes'] ?? null,
+                ]);
+            });
+        } catch (QueryException $e) {
+            // Filet BDD : violation de l'index unique (practitioner_id, active_slot).
+            if ((int) ($e->errorInfo[1] ?? 0) === 1062) {
+                $appointment = null;
+            } else {
+                throw $e;
             }
-
-            return Appointment::create([
-                'establishment_id' => $establishment->id,
-                'practitioner_id' => $practitioner->id,
-                'service_id' => $service->id,
-                'user_id' => auth()->id(),
-                'service_name' => $service->name,
-                'duration_minutes' => $service->duration_minutes,
-                'customer_name' => $validated['customer_name'],
-                'customer_email' => $validated['customer_email'],
-                'customer_phone' => $validated['customer_phone'] ?? null,
-                'starts_at' => $start,
-                'ends_at' => $start->copy()->addMinutes($service->duration_minutes),
-                'status' => 'confirmed',
-                'notes' => $validated['notes'] ?? null,
-            ]);
-        });
+        }
 
         if (! $appointment) {
             return back()->withInput()->withErrors(['time' => 'Désolé, ce créneau vient d\'être réservé. Merci d\'en choisir un autre.']);
@@ -132,5 +141,27 @@ class AppointmentController extends Controller
         abort_unless($appointment->establishment_id === $establishment->id, 404);
 
         return view('rdv.confirmation', compact('establishment', 'appointment'));
+    }
+
+    /** Annulation via lien signé envoyé par email. */
+    public function cancel(Establishment $establishment, Appointment $appointment)
+    {
+        abort_unless($appointment->establishment_id === $establishment->id, 404);
+
+        $cancellable = $appointment->status !== 'cancelled' && $appointment->starts_at->isFuture();
+
+        if ($cancellable) {
+            $appointment->update(['status' => 'cancelled']);
+
+            try {
+                if ($establishment->email) {
+                    $establishment->notify(new AppointmentCancelled($appointment));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Echec envoi mail annulation RDV: '.$e->getMessage());
+            }
+        }
+
+        return view('rdv.cancelled', compact('establishment', 'appointment', 'cancellable'));
     }
 }
