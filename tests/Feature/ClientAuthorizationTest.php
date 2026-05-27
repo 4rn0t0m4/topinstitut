@@ -60,4 +60,51 @@ class ClientAuthorizationTest extends TestCase
         $this->assertSame('Manucure', $service->name);
         $this->assertSame(30, $service->duration_minutes);
     }
+
+    public function test_owner_can_create_category_and_assign_service(): void
+    {
+        $owner = User::factory()->create();
+        $establishment = Establishment::factory()->create();
+        $owner->establishments()->attach($establishment->id);
+
+        $this->actingAs($owner)
+            ->put('/espace-client/etablissement/'.$establishment->id.'/prestations', [
+                'categories' => [
+                    ['cid' => 'new1', 'id' => null, 'name' => 'Épilation', 'description' => 'Zones du corps'],
+                ],
+                'services' => [
+                    ['id' => null, 'name' => 'Sourcils', 'category_cid' => 'new1', 'duration_minutes' => 10, 'price' => '9', 'is_bookable' => 1],
+                ],
+            ])
+            ->assertRedirect();
+
+        $establishment->refresh();
+        $category = $establishment->serviceCategories->first();
+        $this->assertNotNull($category, 'La catégorie devrait être créée');
+        $this->assertSame('Épilation', $category->name);
+        $this->assertSame('Zones du corps', $category->description);
+
+        $service = $establishment->services->first();
+        $this->assertSame($category->id, $service->service_category_id, 'La prestation devrait être liée à la catégorie');
+    }
+
+    public function test_empty_string_ids_like_real_form(): void
+    {
+        $owner = User::factory()->create();
+        $establishment = Establishment::factory()->create();
+        $owner->establishments()->attach($establishment->id);
+
+        $resp = $this->actingAs($owner)
+            ->put('/espace-client/etablissement/'.$establishment->id.'/prestations', [
+                'categories' => [
+                    ['cid' => 'new1', 'id' => '', 'name' => 'Épilation', 'description' => ''],
+                ],
+                'services' => [
+                    ['id' => '', 'name' => 'Sourcils', 'category_cid' => 'new1', 'duration_minutes' => '10', 'price' => '9', 'is_bookable' => '1'],
+                ],
+            ]);
+        $resp->assertSessionHasNoErrors();
+        $resp->assertRedirect();
+        $this->assertSame('Épilation', $establishment->fresh()->serviceCategories->first()?->name);
+    }
 }

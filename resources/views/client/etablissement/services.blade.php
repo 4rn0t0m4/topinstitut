@@ -97,7 +97,9 @@
                                 <input type="text" :name="`services[${i}][name]`" x-model="svc.name" placeholder="Nom (Manucure...)" class="w-full border rounded-lg px-3 py-2 text-sm" required>
                             </div>
                             <div class="col-span-6 sm:col-span-2">
-                                <select :name="`services[${i}][category_cid]`" x-model="svc.category_cid" class="w-full border rounded-lg px-3 py-2 text-sm">
+                                <select :name="`services[${i}][category_cid]`" x-model="svc.category_cid"
+                                        x-init="$nextTick(() => $el.value = svc.category_cid)"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm">
                                     <option value="">— Sans catégorie —</option>
                                     <template x-for="cat in categories" :key="cat.cid">
                                         <option :value="cat.cid" x-text="cat.name || '(sans nom)'"></option>
