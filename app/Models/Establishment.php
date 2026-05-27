@@ -320,6 +320,11 @@ class Establishment extends Model
         return $this->hasMany(Service::class)->orderBy('sort_order');
     }
 
+    public function serviceCategories(): HasMany
+    {
+        return $this->hasMany(ServiceCategory::class)->orderBy('sort_order');
+    }
+
     public function practitioners(): HasMany
     {
         return $this->hasMany(Practitioner::class)->orderBy('sort_order');

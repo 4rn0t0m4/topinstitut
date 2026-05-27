@@ -1,7 +1,7 @@
 <x-layouts.app :noindex="true" :title="'Prendre rendez-vous - ' . $establishment->name">
     <div class="max-w-2xl mx-auto px-4 py-8"
          x-data="bookingFlow({
-             services: {{ Illuminate\Support\Js::from($establishment->services->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'category' => $s->category, 'duration_label' => $s->duration_label, 'price' => $s->price])) }},
+             services: {{ Illuminate\Support\Js::from($establishment->services->sortBy(fn($s) => sprintf('%05d-%05d', $s->category?->sort_order ?? 99999, $s->sort_order))->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'category' => $s->category?->name, 'duration_label' => $s->duration_label, 'price' => $s->price])->values()) }},
              practitioners: {{ Illuminate\Support\Js::from($establishment->practitioners->map(fn($p) => ['id' => $p->id, 'name' => $p->name])) }},
              slotsUrl: '{{ route('rdv.slots', $establishment) }}',
          })">

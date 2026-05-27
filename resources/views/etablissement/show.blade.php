@@ -257,7 +257,7 @@
                     <div class="mt-8">
                         <h2 class="text-xl font-semibold mb-3">Prestations & tarifs</h2>
                         <div class="bg-white border rounded-lg divide-y">
-                            @foreach($establishment->services->groupBy(fn($s) => $s->category ?: '') as $cat => $items)
+                            @foreach($establishment->services->sortBy(fn($s) => sprintf('%05d-%05d', $s->category?->sort_order ?? 99999, $s->sort_order))->groupBy(fn($s) => $s->category?->name ?: '') as $cat => $items)
                                 @if($cat)
                                     <div class="px-4 py-2 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">{{ $cat }}</div>
                                 @endif

@@ -15,17 +15,14 @@
             </div>
         @endif
 
+        <div class="flex items-center justify-between mb-3">
+            <p class="text-sm text-gray-500">Astuce : créez des catégories pour regrouper vos prestations dans le menu de réservation.</p>
+            <a href="{{ route('client.etablissement.categories', $etablissement) }}" class="flex-shrink-0 text-sm text-pink-600 hover:underline">Gérer les catégories →</a>
+        </div>
+
         <form method="POST" action="{{ route('client.etablissement.prestations.update', $etablissement) }}"
-              x-data="{ services: {{ Illuminate\Support\Js::from($etablissement->services->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'category' => $s->category, 'duration_minutes' => $s->duration_minutes, 'price' => $s->price, 'description' => $s->description, 'is_bookable' => (bool) $s->is_bookable])->values()) }} }"
+              x-data="{ services: {{ Illuminate\Support\Js::from($etablissement->services->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'service_category_id' => $s->service_category_id, 'duration_minutes' => $s->duration_minutes, 'price' => $s->price, 'description' => $s->description, 'is_bookable' => (bool) $s->is_bookable])->values()) }} }"
               class="bg-white rounded-lg shadow-sm border p-6">
-            @php
-                $categorySuggestions = $etablissement->services->pluck('category')->filter()->unique()
-                    ->merge(['Épilation', 'Soins du visage', 'Massages & bien-être', 'Mains & pieds (manucure, pédicure)', 'Maquillage', 'Soins du corps'])
-                    ->unique()->values();
-            @endphp
-            <datalist id="cat-suggestions">
-                @foreach($categorySuggestions as $c)<option value="{{ $c }}">@endforeach
-            </datalist>
             @csrf @method('PUT')
 
             <div class="hidden sm:grid grid-cols-12 gap-2 text-xs text-gray-500 mb-2 px-1">
@@ -45,7 +42,12 @@
                             <input type="text" :name="`services[${i}][name]`" x-model="svc.name" placeholder="Nom (Manucure, Épilation jambes...)" class="w-full border rounded-lg px-3 py-2 text-sm" required>
                         </div>
                         <div class="col-span-6 sm:col-span-2">
-                            <input type="text" list="cat-suggestions" :name="`services[${i}][category]`" x-model="svc.category" placeholder="Catégorie" class="w-full border rounded-lg px-3 py-2 text-sm">
+                            <select :name="`services[${i}][service_category_id]`" x-model.number="svc.service_category_id" class="w-full border rounded-lg px-3 py-2 text-sm">
+                                <option value="">— Sans catégorie —</option>
+                                @foreach($etablissement->serviceCategories as $cat)
+                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-span-3 sm:col-span-2">
                             <input type="number" min="5" max="600" step="5" :name="`services[${i}][duration_minutes]`" x-model.number="svc.duration_minutes" placeholder="min" class="w-full border rounded-lg px-3 py-2 text-sm text-center" required>
@@ -74,7 +76,7 @@
 
                 <p x-show="services.length === 0" class="text-sm text-gray-500 italic">Aucune prestation pour l'instant.</p>
 
-                <button type="button" @click="services.push({id:null,name:'',category:'',duration_minutes:30,price:'',description:'',is_bookable:true})" class="mt-2 inline-flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700">
+                <button type="button" @click="services.push({id:null,name:'',service_category_id:null,duration_minutes:30,price:'',description:'',is_bookable:true})" class="mt-2 inline-flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                     Ajouter une prestation
                 </button>

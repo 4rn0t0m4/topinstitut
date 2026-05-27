@@ -25,7 +25,7 @@ class AppointmentController extends Controller
     {
         abort_unless($establishment->is_active && $establishment->accepts_bookings, 404);
 
-        $establishment->load(['services' => fn ($q) => $q->where('is_bookable', true), 'practitioners' => fn ($q) => $q->where('is_active', true)]);
+        $establishment->load(['services' => fn ($q) => $q->where('is_bookable', true)->with('category'), 'practitioners' => fn ($q) => $q->where('is_active', true)]);
 
         return view('rdv.create', compact('establishment'));
     }

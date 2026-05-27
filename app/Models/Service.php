@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Service extends Model
 {
     protected $fillable = [
-        'establishment_id', 'name', 'category', 'description',
+        'establishment_id', 'service_category_id', 'name', 'description',
         'duration_minutes', 'price', 'is_bookable', 'sort_order',
     ];
 
@@ -23,6 +23,11 @@ class Service extends Model
     public function establishment(): BelongsTo
     {
         return $this->belongsTo(Establishment::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(ServiceCategory::class, 'service_category_id');
     }
 
     public function getDurationLabelAttribute(): string

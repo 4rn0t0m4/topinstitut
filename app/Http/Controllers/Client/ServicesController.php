@@ -11,7 +11,7 @@ class ServicesController extends Controller
     public function edit(Establishment $etablissement)
     {
         $this->authorize('manage', $etablissement);
-        $etablissement->load('services');
+        $etablissement->load('services', 'serviceCategories');
 
         return view('client.etablissement.services', compact('etablissement'));
     }
@@ -24,7 +24,7 @@ class ServicesController extends Controller
             'services' => 'array|max:100',
             'services.*.id' => 'nullable|integer',
             'services.*.name' => 'required|string|max:255',
-            'services.*.category' => 'nullable|string|max:100',
+            'services.*.service_category_id' => 'nullable|integer',
             'services.*.description' => 'nullable|string|max:500',
             'services.*.duration_minutes' => 'required|integer|min:5|max:600',
             'services.*.price' => 'nullable|string|max:50',
@@ -36,12 +36,17 @@ class ServicesController extends Controller
             ->values();
 
         $existingIds = $etablissement->services()->pluck('id')->all();
+        $validCategoryIds = $etablissement->serviceCategories()->pluck('id')->all();
         $keptIds = [];
 
         foreach ($rows as $i => $s) {
+            $categoryId = (isset($s['service_category_id']) && in_array((int) $s['service_category_id'], $validCategoryIds))
+                ? (int) $s['service_category_id']
+                : null;
+
             $attrs = [
                 'name' => trim($s['name']),
-                'category' => filled($s['category'] ?? null) ? trim($s['category']) : null,
+                'service_category_id' => $categoryId,
                 'description' => filled($s['description'] ?? null) ? trim($s['description']) : null,
                 'duration_minutes' => (int) $s['duration_minutes'],
                 'price' => filled($s['price'] ?? null) ? trim($s['price']) : null,
