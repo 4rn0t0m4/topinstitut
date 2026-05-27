@@ -19,9 +19,9 @@ class EtablissementController extends Controller
         return view('client.etablissement.edit', compact('etablissement'));
     }
 
-    public function update(UpdateEstablishmentBasicInfoRequest $request, Establishment $etablishment, EstablishmentService $service)
+    public function update(UpdateEstablishmentBasicInfoRequest $request, Establishment $etablissement, EstablishmentService $service)
     {
-        $service->updateBasicInfo($etablishment, $request->validated());
+        $service->updateBasicInfo($etablissement, $request->validated());
 
         return back()->with('success', 'Établissement mis à jour.');
     }
@@ -48,9 +48,9 @@ class EtablissementController extends Controller
         return view('client.etablissement.horaires', compact('etablissement', 'horaires'));
     }
 
-    public function updateHoraires(UpdateHorairesRequest $request, Establishment $etablishment, EstablishmentService $service)
+    public function updateHoraires(UpdateHorairesRequest $request, Establishment $etablissement, EstablishmentService $service)
     {
-        $service->updateSchedules($etablishment, $request->horaires);
+        $service->updateSchedules($etablissement, $request->horaires);
 
         return back()->with('success', 'Horaires mis à jour.');
     }
@@ -64,7 +64,7 @@ class EtablissementController extends Controller
 
     public function updateLocalisation(UpdateLocalisationRequest $request, Establishment $etablissement, EstablishmentService $service)
     {
-        $service->updateLocation($etablishment, $request->validated());
+        $service->updateLocation($etablissement, $request->validated());
 
         return back()->with('success', 'Localisation mise à jour.');
     }
