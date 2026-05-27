@@ -30,7 +30,7 @@ class SlotService
         $slots = [];
 
         foreach ($practitioners as $practitioner) {
-            foreach ($this->freeStartMinutes($practitioner, $date, $duration) as $minute) {
+            foreach ($this->freeStartMinutes($practitioner, $establishment, $date, $duration) as $minute) {
                 $slots[$minute] = true;
             }
         }
@@ -52,7 +52,7 @@ class SlotService
         $date = $start->copy()->startOfDay();
 
         foreach ($practitioners as $practitioner) {
-            if (in_array($startMinute, $this->freeStartMinutes($practitioner, $date, $duration), true)) {
+            if (in_array($startMinute, $this->freeStartMinutes($practitioner, $establishment, $date, $duration), true)) {
                 return $practitioner;
             }
         }
@@ -74,19 +74,13 @@ class SlotService
      *
      * @return array<int, int>
      */
-    private function freeStartMinutes(Practitioner $practitioner, Carbon $date, int $duration): array
+    private function freeStartMinutes(Practitioner $practitioner, Establishment $establishment, Carbon $date, int $duration): array
     {
         $dayOfWeek = (int) $date->isoWeekday(); // 1 = lundi … 7 = dimanche
 
-        $workRanges = $practitioner->schedules
-            ->where('day_of_week', $dayOfWeek)
-            ->map(fn ($s) => [
-                'start' => $this->toMinutes($s->start_time),
-                'end' => $this->toMinutes($s->end_time),
-            ])
-            ->values();
+        $workRanges = $this->workRanges($practitioner, $establishment, $dayOfWeek);
 
-        if ($workRanges->isEmpty()) {
+        if (empty($workRanges)) {
             return [];
         }
 
@@ -109,6 +103,44 @@ class SlotService
         }
 
         return $free;
+    }
+
+    /**
+     * Plages de travail du praticien pour un jour donné. Si le praticien n'a
+     * pas d'horaires propres, on retombe sur les horaires de l'établissement.
+     *
+     * @return array<int, array{start:int, end:int}>
+     */
+    private function workRanges(Practitioner $practitioner, Establishment $establishment, int $dayOfWeek): array
+    {
+        $ranges = $practitioner->schedules
+            ->where('day_of_week', $dayOfWeek)
+            ->map(fn ($s) => [
+                'start' => $this->toMinutes($s->start_time),
+                'end' => $this->toMinutes($s->end_time),
+            ])
+            ->values()
+            ->all();
+
+        if (! empty($ranges)) {
+            return $ranges;
+        }
+
+        // Fallback : horaires d'ouverture de l'établissement pour ce jour.
+        $schedule = $establishment->schedules->firstWhere('day_of_week', $dayOfWeek);
+        if (! $schedule || $schedule->is_closed) {
+            return [];
+        }
+
+        $fallback = [];
+        if ($schedule->open_am && $schedule->close_am) {
+            $fallback[] = ['start' => $this->toMinutes($schedule->open_am), 'end' => $this->toMinutes($schedule->close_am)];
+        }
+        if ($schedule->open_pm && $schedule->close_pm) {
+            $fallback[] = ['start' => $this->toMinutes($schedule->open_pm), 'end' => $this->toMinutes($schedule->close_pm)];
+        }
+
+        return $fallback;
     }
 
     /**
