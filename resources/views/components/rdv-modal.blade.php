@@ -1,7 +1,7 @@
 @props(['establishment'])
 
 <div x-data="bookingFlow({
-         services: {{ Illuminate\Support\Js::from($establishment->services->where('is_bookable', true)->sortBy(fn($s) => sprintf('%05d-%05d', $s->category?->sort_order ?? 99999, $s->sort_order))->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'category' => $s->category?->name, 'duration_label' => $s->duration_label, 'price' => $s->price])->values()) }},
+         services: {{ Illuminate\Support\Js::from($establishment->services->where('is_bookable', true)->sortBy(fn($s) => sprintf('%05d-%05d', $s->category?->sort_order ?? 99999, $s->sort_order))->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'category' => $s->category?->name, 'duration_label' => $s->duration_label, 'price' => $s->price_label])->values()) }},
          practitioners: {{ Illuminate\Support\Js::from($establishment->practitioners->where('is_active', true)->map(fn($p) => ['id' => $p->id, 'name' => $p->name])->values()) }},
          slotsUrl: '{{ route('rdv.slots', $establishment) }}',
      })"
@@ -44,7 +44,7 @@
                         <div class="space-y-2">
                             <template x-for="s in group.items" :key="s.id">
                                 <button type="button" @click="selectService(s)"
-                                        class="w-full text-left bg-white border rounded-lg p-4 hover:border-pink-400 flex justify-between items-center">
+                                        class="w-full text-left bg-white border rounded-lg p-4 hover:border-pink-400 hover:bg-pink-50/40 cursor-pointer flex justify-between items-center transition">
                                     <span>
                                         <span class="font-medium text-gray-900" x-text="s.name"></span>
                                         <span class="block text-sm text-gray-500" x-text="s.duration_label"></span>
@@ -59,12 +59,12 @@
 
             {{-- Étape 2 : praticien --}}
             <div x-show="step === 2" x-cloak class="space-y-2">
-                <button type="button" @click="selectPractitioner(null)" class="w-full text-left bg-white border rounded-lg p-4 hover:border-pink-400">
+                <button type="button" @click="selectPractitioner(null)" class="w-full text-left bg-white border rounded-lg p-4 hover:border-pink-400 hover:bg-pink-50/40 cursor-pointer transition">
                     <span class="font-medium text-gray-900">Sans préférence</span>
                     <span class="block text-sm text-gray-500">Premier praticien disponible</span>
                 </button>
                 <template x-for="p in practitioners" :key="p.id">
-                    <button type="button" @click="selectPractitioner(p.id)" class="w-full text-left bg-white border rounded-lg p-4 hover:border-pink-400">
+                    <button type="button" @click="selectPractitioner(p.id)" class="w-full text-left bg-white border rounded-lg p-4 hover:border-pink-400 hover:bg-pink-50/40 cursor-pointer transition">
                         <span class="font-medium text-gray-900" x-text="p.name"></span>
                     </button>
                 </template>
@@ -78,7 +78,7 @@
                 <div x-show="!loading && date && slots.length === 0" class="text-sm text-gray-500">Aucun créneau disponible ce jour-là. Essayez une autre date.</div>
                 <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     <template x-for="slot in slots" :key="slot">
-                        <button type="button" @click="selectSlot(slot)" class="border rounded-lg py-2 text-sm hover:border-pink-400 hover:bg-pink-50" x-text="slot"></button>
+                        <button type="button" @click="selectSlot(slot)" class="border rounded-lg py-2 text-sm hover:border-pink-400 hover:bg-pink-50 cursor-pointer transition" x-text="slot"></button>
                     </template>
                 </div>
                 <button type="button" @click="step = 2" class="mt-4 text-sm text-gray-500 hover:underline">&larr; Retour</button>

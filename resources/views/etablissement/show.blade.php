@@ -270,8 +270,8 @@
                                             @endif
                                             <div class="text-xs text-gray-400 mt-1">{{ $service->duration_label }}</div>
                                         </div>
-                                        @if($service->price)
-                                            <div class="flex-shrink-0 text-pink-600 font-semibold whitespace-nowrap">{{ $service->price }}</div>
+                                        @if($service->price_label)
+                                            <div class="flex-shrink-0 text-pink-600 font-semibold whitespace-nowrap">{{ $service->price_label }}</div>
                                         @endif
                                     </div>
                                 @endforeach

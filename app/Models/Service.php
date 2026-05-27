@@ -44,4 +44,17 @@ class Service extends Model
 
         return "{$m} min";
     }
+
+    /**
+     * Prix formaté avec « € » (ajouté si absent). Vide si pas de prix.
+     */
+    public function getPriceLabelAttribute(): string
+    {
+        $price = trim((string) $this->price);
+        if ($price === '') {
+            return '';
+        }
+
+        return str_contains($price, '€') ? $price : $price.' €';
+    }
 }
