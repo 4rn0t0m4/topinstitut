@@ -24,6 +24,7 @@ class ServicesController extends Controller
             'services' => 'array|max:100',
             'services.*.id' => 'nullable|integer',
             'services.*.name' => 'required|string|max:255',
+            'services.*.category' => 'nullable|string|max:100',
             'services.*.description' => 'nullable|string|max:500',
             'services.*.duration_minutes' => 'required|integer|min:5|max:600',
             'services.*.price' => 'nullable|string|max:50',
@@ -40,6 +41,7 @@ class ServicesController extends Controller
         foreach ($rows as $i => $s) {
             $attrs = [
                 'name' => trim($s['name']),
+                'category' => filled($s['category'] ?? null) ? trim($s['category']) : null,
                 'description' => filled($s['description'] ?? null) ? trim($s['description']) : null,
                 'duration_minutes' => (int) $s['duration_minutes'],
                 'price' => filled($s['price'] ?? null) ? trim($s['price']) : null,

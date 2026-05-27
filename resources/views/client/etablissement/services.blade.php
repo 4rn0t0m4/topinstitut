@@ -16,15 +16,24 @@
         @endif
 
         <form method="POST" action="{{ route('client.etablissement.prestations.update', $etablissement) }}"
-              x-data="{ services: {{ Illuminate\Support\Js::from($etablissement->services->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'duration_minutes' => $s->duration_minutes, 'price' => $s->price, 'description' => $s->description, 'is_bookable' => (bool) $s->is_bookable])->values()) }} }"
+              x-data="{ services: {{ Illuminate\Support\Js::from($etablissement->services->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'category' => $s->category, 'duration_minutes' => $s->duration_minutes, 'price' => $s->price, 'description' => $s->description, 'is_bookable' => (bool) $s->is_bookable])->values()) }} }"
               class="bg-white rounded-lg shadow-sm border p-6">
+            @php
+                $categorySuggestions = $etablissement->services->pluck('category')->filter()->unique()
+                    ->merge(['Épilation', 'Soins du visage', 'Massages & bien-être', 'Mains & pieds (manucure, pédicure)', 'Maquillage', 'Soins du corps'])
+                    ->unique()->values();
+            @endphp
+            <datalist id="cat-suggestions">
+                @foreach($categorySuggestions as $c)<option value="{{ $c }}">@endforeach
+            </datalist>
             @csrf @method('PUT')
 
             <div class="hidden sm:grid grid-cols-12 gap-2 text-xs text-gray-500 mb-2 px-1">
-                <span class="col-span-4">Prestation</span>
+                <span class="col-span-3">Prestation</span>
+                <span class="col-span-2">Catégorie</span>
                 <span class="col-span-2 text-center">Durée (min)</span>
                 <span class="col-span-2 text-center">Prix</span>
-                <span class="col-span-3">Description</span>
+                <span class="col-span-2">Description</span>
                 <span class="col-span-1 text-center">Résa</span>
             </div>
 
@@ -32,16 +41,19 @@
                 <template x-for="(svc, i) in services" :key="i">
                     <div class="grid grid-cols-12 gap-2 items-center border-b sm:border-0 pb-3 sm:pb-0">
                         <input type="hidden" :name="`services[${i}][id]`" :value="svc.id">
-                        <div class="col-span-12 sm:col-span-4">
+                        <div class="col-span-12 sm:col-span-3">
                             <input type="text" :name="`services[${i}][name]`" x-model="svc.name" placeholder="Nom (Manucure, Épilation jambes...)" class="w-full border rounded-lg px-3 py-2 text-sm" required>
                         </div>
-                        <div class="col-span-4 sm:col-span-2">
+                        <div class="col-span-6 sm:col-span-2">
+                            <input type="text" list="cat-suggestions" :name="`services[${i}][category]`" x-model="svc.category" placeholder="Catégorie" class="w-full border rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div class="col-span-3 sm:col-span-2">
                             <input type="number" min="5" max="600" step="5" :name="`services[${i}][duration_minutes]`" x-model.number="svc.duration_minutes" placeholder="min" class="w-full border rounded-lg px-3 py-2 text-sm text-center" required>
                         </div>
-                        <div class="col-span-4 sm:col-span-2">
+                        <div class="col-span-3 sm:col-span-2">
                             <input type="text" :name="`services[${i}][price]`" x-model="svc.price" placeholder="45€" class="w-full border rounded-lg px-3 py-2 text-sm">
                         </div>
-                        <div class="col-span-10 sm:col-span-3">
+                        <div class="col-span-12 sm:col-span-2">
                             <input type="text" :name="`services[${i}][description]`" x-model="svc.description" placeholder="Description (optionnel)" class="w-full border rounded-lg px-3 py-2 text-sm">
                         </div>
                         <div class="col-span-1 hidden sm:flex items-center justify-center gap-2">
@@ -62,7 +74,7 @@
 
                 <p x-show="services.length === 0" class="text-sm text-gray-500 italic">Aucune prestation pour l'instant.</p>
 
-                <button type="button" @click="services.push({id:null,name:'',duration_minutes:30,price:'',description:'',is_bookable:true})" class="mt-2 inline-flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700">
+                <button type="button" @click="services.push({id:null,name:'',category:'',duration_minutes:30,price:'',description:'',is_bookable:true})" class="mt-2 inline-flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                     Ajouter une prestation
                 </button>

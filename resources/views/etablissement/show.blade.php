@@ -257,19 +257,24 @@
                     <div class="mt-8">
                         <h2 class="text-xl font-semibold mb-3">Prestations & tarifs</h2>
                         <div class="bg-white border rounded-lg divide-y">
-                            @foreach($establishment->services as $service)
-                                <div class="flex items-center justify-between gap-4 px-4 py-3">
-                                    <div class="min-w-0 flex-1">
-                                        <div class="font-medium text-gray-900">{{ $service->name }}</div>
-                                        @if($service->description)
-                                            <div class="text-sm text-gray-500 mt-0.5">{{ $service->description }}</div>
+                            @foreach($establishment->services->groupBy(fn($s) => $s->category ?: '') as $cat => $items)
+                                @if($cat)
+                                    <div class="px-4 py-2 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">{{ $cat }}</div>
+                                @endif
+                                @foreach($items as $service)
+                                    <div class="flex items-center justify-between gap-4 px-4 py-3">
+                                        <div class="min-w-0 flex-1">
+                                            <div class="font-medium text-gray-900">{{ $service->name }}</div>
+                                            @if($service->description)
+                                                <div class="text-sm text-gray-500 mt-0.5">{{ $service->description }}</div>
+                                            @endif
+                                            <div class="text-xs text-gray-400 mt-1">{{ $service->duration_label }}</div>
+                                        </div>
+                                        @if($service->price)
+                                            <div class="flex-shrink-0 text-pink-600 font-semibold whitespace-nowrap">{{ $service->price }}</div>
                                         @endif
-                                        <div class="text-xs text-gray-400 mt-1">{{ $service->duration_label }}</div>
                                     </div>
-                                    @if($service->price)
-                                        <div class="flex-shrink-0 text-pink-600 font-semibold whitespace-nowrap">{{ $service->price }}</div>
-                                    @endif
-                                </div>
+                                @endforeach
                             @endforeach
                         </div>
                     </div>

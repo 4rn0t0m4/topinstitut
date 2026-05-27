@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Service extends Model
 {
     protected $fillable = [
-        'establishment_id', 'name', 'description',
+        'establishment_id', 'name', 'category', 'description',
         'duration_minutes', 'price', 'is_bookable', 'sort_order',
     ];
 

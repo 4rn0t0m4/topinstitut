@@ -1,7 +1,7 @@
 <x-layouts.app :noindex="true" :title="'Prendre rendez-vous - ' . $establishment->name">
     <div class="max-w-2xl mx-auto px-4 py-8"
          x-data="bookingFlow({
-             services: {{ Illuminate\Support\Js::from($establishment->services->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'duration_label' => $s->duration_label, 'price' => $s->price])) }},
+             services: {{ Illuminate\Support\Js::from($establishment->services->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'category' => $s->category, 'duration_label' => $s->duration_label, 'price' => $s->price])) }},
              practitioners: {{ Illuminate\Support\Js::from($establishment->practitioners->map(fn($p) => ['id' => $p->id, 'name' => $p->name])) }},
              slotsUrl: '{{ route('rdv.slots', $establishment) }}',
          })">
@@ -34,18 +34,25 @@
             </template>
         </div>
 
-        {{-- Étape 1 : prestation --}}
-        <div x-show="step === 1" class="space-y-2">
+        {{-- Étape 1 : prestation (groupée par catégorie) --}}
+        <div x-show="step === 1">
             <h2 class="font-semibold mb-3">Choisissez une prestation</h2>
-            <template x-for="s in services" :key="s.id">
-                <button type="button" @click="selectService(s)"
-                        class="w-full text-left bg-white border rounded-lg p-4 hover:border-pink-400 flex justify-between items-center">
-                    <span>
-                        <span class="font-medium text-gray-900" x-text="s.name"></span>
-                        <span class="block text-sm text-gray-500" x-text="s.duration_label"></span>
-                    </span>
-                    <span class="text-pink-600 font-semibold" x-text="s.price"></span>
-                </button>
+            <template x-for="group in groupedServices" :key="group.category">
+                <div class="mb-5">
+                    <h3 x-show="group.category" class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2" x-text="group.category"></h3>
+                    <div class="space-y-2">
+                        <template x-for="s in group.items" :key="s.id">
+                            <button type="button" @click="selectService(s)"
+                                    class="w-full text-left bg-white border rounded-lg p-4 hover:border-pink-400 flex justify-between items-center">
+                                <span>
+                                    <span class="font-medium text-gray-900" x-text="s.name"></span>
+                                    <span class="block text-sm text-gray-500" x-text="s.duration_label"></span>
+                                </span>
+                                <span class="text-pink-600 font-semibold" x-text="s.price"></span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
             </template>
         </div>
 
@@ -141,6 +148,17 @@
                 loading: false,
                 minDate: new Date().toISOString().slice(0, 10),
                 maxDate: new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10),
+
+                get groupedServices() {
+                    const groups = {};
+                    const order = [];
+                    for (const s of this.services) {
+                        const cat = s.category || '';
+                        if (!(cat in groups)) { groups[cat] = []; order.push(cat); }
+                        groups[cat].push(s);
+                    }
+                    return order.map(cat => ({ category: cat, items: groups[cat] }));
+                },
 
                 selectService(s) { this.selectedService = s; this.date = ''; this.time = ''; this.slots = []; this.step = 2; },
                 selectPractitioner(id) { this.selectedPractitioner = id; this.time = ''; this.slots = []; this.date = ''; this.step = 3; },
