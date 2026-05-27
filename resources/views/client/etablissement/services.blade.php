@@ -16,7 +16,7 @@
         @endif
 
         <form method="POST" action="{{ route('client.etablissement.prestations.update', $etablissement) }}"
-              x-data='{ services: @json($etablissement->services->map(fn($s) => ["id" => $s->id, "name" => $s->name, "duration_minutes" => $s->duration_minutes, "price" => $s->price, "description" => $s->description, "is_bookable" => $s->is_bookable])->values()) }'
+              x-data="{ services: {{ Illuminate\Support\Js::from($etablissement->services->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'duration_minutes' => $s->duration_minutes, 'price' => $s->price, 'description' => $s->description, 'is_bookable' => (bool) $s->is_bookable])->values()) }} }"
               class="bg-white rounded-lg shadow-sm border p-6">
             @csrf @method('PUT')
 
