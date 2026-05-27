@@ -71,7 +71,7 @@ class AppointmentController extends Controller
         $start = Carbon::createFromFormat('Y-m-d H:i', $validated['date'].' '.$validated['time']);
 
         if ($start->isPast() || $start->gt(now()->addDays(60))) {
-            return back()->withInput()->withErrors(['time' => 'Ce créneau n\'est plus disponible.']);
+            return $this->slotError($request, 'Ce créneau n\'est plus disponible.');
         }
 
         try {
@@ -117,7 +117,7 @@ class AppointmentController extends Controller
         }
 
         if (! $appointment) {
-            return back()->withInput()->withErrors(['time' => 'Désolé, ce créneau vient d\'être réservé. Merci d\'en choisir un autre.']);
+            return $this->slotError($request, 'Désolé, ce créneau vient d\'être réservé. Merci d\'en choisir un autre.');
         }
 
         // Notifications (client + établissement) — sans bloquer la réservation en cas d'échec mail.
@@ -133,7 +133,30 @@ class AppointmentController extends Controller
             Log::warning('Echec envoi mail RDV: '.$e->getMessage());
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'appointment' => [
+                    'establishment' => $establishment->name,
+                    'service' => $appointment->service_name,
+                    'practitioner' => $appointment->practitioner->name,
+                    'date' => $appointment->starts_at->locale('fr')->isoFormat('dddd D MMMM YYYY [à] HH[h]mm'),
+                    'email' => $appointment->customer_email,
+                    'url' => $establishment->url,
+                ],
+            ]);
+        }
+
         return redirect()->route('rdv.confirmation', [$establishment, $appointment]);
+    }
+
+    private function slotError(Request $request, string $message)
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $message, 'errors' => ['time' => [$message]]], 422);
+        }
+
+        return back()->withInput()->withErrors(['time' => $message]);
     }
 
     public function confirmation(Establishment $establishment, Appointment $appointment)

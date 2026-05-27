@@ -19,7 +19,22 @@
             </button>
         </div>
 
-        <div class="p-6">
+        {{-- Confirmation (après réservation) --}}
+        <div x-show="confirmed" x-cloak class="p-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-5">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Rendez-vous confirmé !</h3>
+            <p class="text-sm text-gray-500 mb-5">Un email de confirmation a été envoyé à <strong x-text="confirmed?.email"></strong>.</p>
+            <div class="bg-gray-50 border rounded-lg p-4 text-left space-y-2 text-sm mb-6">
+                <div class="flex justify-between gap-4"><span class="text-gray-500">Prestation</span><span class="font-medium text-right" x-text="confirmed?.service"></span></div>
+                <div class="flex justify-between gap-4"><span class="text-gray-500">Praticien</span><span class="font-medium text-right" x-text="confirmed?.practitioner"></span></div>
+                <div class="flex justify-between gap-4"><span class="text-gray-500">Date</span><span class="font-medium text-right" x-text="confirmed?.date"></span></div>
+            </div>
+            <button @click="$store.rdvModal.open = false" type="button" class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 cursor-pointer">Fermer</button>
+        </div>
+
+        <div class="p-6" x-show="!confirmed">
             {{-- Fil d'étapes --}}
             <div class="flex items-center gap-2 mb-6 text-xs">
                 <template x-for="(label, i) in ['Prestation','Praticien','Créneau','Coordonnées']" :key="i">
@@ -89,13 +104,15 @@
                 <p class="text-sm text-gray-500 mb-4">
                     <span x-text="selectedService?.name"></span> — <span x-text="formatDate(date)"></span> à <span x-text="time"></span>
                 </p>
-                <form method="POST" action="{{ route('rdv.store', $establishment) }}" class="space-y-4">
+                <form method="POST" action="{{ route('rdv.store', $establishment) }}" class="space-y-4" @submit.prevent="submit($event)">
                     @csrf
                     <x-honeypot />
                     <input type="hidden" name="service_id" :value="selectedService?.id">
                     <input type="hidden" name="practitioner_id" :value="selectedPractitioner ?? ''">
                     <input type="hidden" name="date" :value="date">
                     <input type="hidden" name="time" :value="time">
+
+                    <p x-show="submitError" x-text="submitError" x-cloak class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2"></p>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Nom complet <span class="text-red-500">*</span></label>
@@ -117,7 +134,10 @@
                     </div>
                     <div class="flex items-center justify-between">
                         <button type="button" @click="step = 3" class="text-sm text-gray-500 hover:underline">&larr; Retour</button>
-                        <button type="submit" class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700">Confirmer le rendez-vous</button>
+                        <button type="submit" :disabled="submitting" class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 cursor-pointer disabled:opacity-60">
+                            <span x-show="!submitting">Confirmer le rendez-vous</span>
+                            <span x-show="submitting">Confirmation…</span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -140,6 +160,9 @@
                 time: '',
                 slots: [],
                 loading: false,
+                submitting: false,
+                submitError: '',
+                confirmed: null,
                 minDate: new Date().toISOString().slice(0, 10),
                 maxDate: new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10),
 
@@ -179,6 +202,29 @@
                 formatDate(d) {
                     if (!d) return '';
                     return new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+                },
+
+                async submit(e) {
+                    this.submitting = true;
+                    this.submitError = '';
+                    try {
+                        const res = await fetch(e.target.action, {
+                            method: 'POST',
+                            body: new FormData(e.target),
+                            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.confirmed = data.appointment;
+                        } else {
+                            const data = await res.json().catch(() => ({}));
+                            this.submitError = data.message || 'Une erreur est survenue. Merci de réessayer.';
+                        }
+                    } catch (err) {
+                        this.submitError = 'Une erreur est survenue. Merci de réessayer.';
+                    } finally {
+                        this.submitting = false;
+                    }
                 },
             }));
         });
