@@ -12,6 +12,13 @@ class DashboardController extends Controller
         $user = $request->user();
         $etablissements = $user->establishments()->withCount('reviews')->get();
 
-        return view('client.dashboard', compact('user', 'etablissements'));
+        $stats = [
+            'establishments' => $etablissements->count(),
+            'reviews_published' => $user->reviews()->count(),
+            'reviews_received' => $etablissements->sum('reviews_count'),
+            'favorites' => $user->favorites()->count(),
+        ];
+
+        return view('client.dashboard', compact('user', 'etablissements', 'stats'));
     }
 }
