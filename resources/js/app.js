@@ -7,6 +7,7 @@ window.Alpine = Alpine;
 Alpine.store('contactModal', { open: false });
 Alpine.store('claimModal', { open: false });
 Alpine.store('bookingModal', { open: false });
+Alpine.store('rdvModal', { open: false });
 
 Alpine.store('favorites', {
     ids: (function () {

@@ -214,10 +214,10 @@
 
                             <div class="pt-2 space-y-2">
                                 @if($establishment->accepts_bookings)
-                                    <a href="{{ route('rdv.create', $establishment) }}" class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 px-5 rounded-lg hover:bg-pink-700 transition">
+                                    <button @click="$store.rdvModal.open = true" type="button" class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 px-5 rounded-lg hover:bg-pink-700 transition cursor-pointer">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0V10.5h18v8.25"/></svg>
                                         Prendre rendez-vous
-                                    </a>
+                                    </button>
                                 @else
                                     <button @click="$store.bookingModal.open = true" type="button" class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 px-5 rounded-lg hover:bg-pink-700 transition cursor-pointer">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0V10.5h18v8.25"/></svg>
@@ -563,7 +563,12 @@
         </div>
     </x-ajax-modal>
 
-    {{-- Booking Modal --}}
+    {{-- Modale de réservation en ligne (agenda avec créneaux) --}}
+    @if($establishment->accepts_bookings)
+        <x-rdv-modal :establishment="$establishment" />
+    @endif
+
+    {{-- Booking Modal (demande simple, établissements sans agenda) --}}
     <x-ajax-modal store="bookingModal"
                   title="Prendre RDV"
                   :subtitle="'chez ' . $establishment->name"
