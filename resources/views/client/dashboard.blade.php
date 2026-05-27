@@ -35,6 +35,7 @@
                             @endif
                             <a href="{{ route('client.etablissement.presentation', $etab) }}" class="text-pink-600 hover:underline">Présentation</a>
                             <a href="{{ route('client.etablissement.prestations', $etab) }}" class="text-pink-600 hover:underline">Prestations</a>
+                            <a href="{{ route('client.etablissement.praticiens', $etab) }}" class="text-pink-600 hover:underline">Praticiens</a>
                             <a href="{{ route('client.etablissement.horaires', $etab) }}" class="text-pink-600 hover:underline">Horaires</a>
                             <a href="{{ route('client.etablissement.photos', $etab) }}" class="text-pink-600 hover:underline">Photos</a>
                             <a href="{{ route('client.etablissement.faq', $etab) }}" class="text-pink-600 hover:underline">FAQ</a>

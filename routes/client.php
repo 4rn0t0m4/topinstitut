@@ -39,6 +39,13 @@ Route::prefix('etablissement/{etablissement}')->name('etablissement.')->group(fu
     Route::get('prestations', [\App\Http\Controllers\Client\ServicesController::class, 'edit'])->name('prestations');
     Route::put('prestations', [\App\Http\Controllers\Client\ServicesController::class, 'update'])->name('prestations.update');
 
+    Route::get('praticiens', [\App\Http\Controllers\Client\PractitionerController::class, 'index'])->name('praticiens');
+    Route::post('praticiens', [\App\Http\Controllers\Client\PractitionerController::class, 'store'])->name('praticiens.store');
+    Route::put('praticiens/{practitioner}', [\App\Http\Controllers\Client\PractitionerController::class, 'update'])->name('praticiens.update');
+    Route::delete('praticiens/{practitioner}', [\App\Http\Controllers\Client\PractitionerController::class, 'destroy'])->name('praticiens.destroy');
+    Route::get('praticiens/{practitioner}/horaires', [\App\Http\Controllers\Client\PractitionerController::class, 'editSchedules'])->name('praticiens.horaires');
+    Route::put('praticiens/{practitioner}/horaires', [\App\Http\Controllers\Client\PractitionerController::class, 'updateSchedules'])->name('praticiens.horaires.update');
+
     Route::get('faq', [\App\Http\Controllers\Client\FaqController::class, 'index'])->name('faq');
     Route::post('faq', [\App\Http\Controllers\Client\FaqController::class, 'store'])->name('faq.store');
     Route::put('faq/{faq}', [\App\Http\Controllers\Client\FaqController::class, 'update'])->name('faq.update');

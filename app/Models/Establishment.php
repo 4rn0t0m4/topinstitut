@@ -52,28 +52,6 @@ class Establishment extends Model
     }
 
     /**
-     * Normalize a services array (from a form) into JSON-ready shape.
-     *
-     * @param  array<int, array<string, mixed>>  $input
-     * @return array<int, array{name:string,description:string,duration:string,price:string}>|null
-     */
-    public static function normalizeServices(array $input): ?array
-    {
-        $clean = collect($input)
-            ->filter(fn ($s) => ! empty($s['name']))
-            ->map(fn ($s) => [
-                'name' => trim($s['name']),
-                'description' => trim($s['description'] ?? ''),
-                'duration' => trim($s['duration'] ?? ''),
-                'price' => trim($s['price'] ?? ''),
-            ])
-            ->values()
-            ->all();
-
-        return $clean ?: null;
-    }
-
-    /**
      * Route notifications to the establishment's contact email.
      */
     public function routeNotificationForMail(): ?string
@@ -85,7 +63,7 @@ class Establishment extends Model
         'type', 'name', 'slug', 'email', 'website', 'google_maps_url',
         'address', 'postal_code', 'city', 'department_code', 'city_id',
         'latitude', 'longitude', 'radius',
-        'description', 'pricing', 'services', 'phone', 'mobile',
+        'description', 'pricing', 'phone', 'mobile',
         'siret', 'photo', 'tagline', 'is_active', 'rating', 'review_count', 'view_count',
         'features',
         'subscription_tier', 'subscription_ends_at', 'is_verified_owner', 'featured_until',
@@ -105,7 +83,6 @@ class Establishment extends Model
             'google_reviews' => 'array',
             'google_photos_checked_at' => 'datetime',
             'google_reviews_checked_at' => 'datetime',
-            'services' => 'array',
             'features' => 'array',
             'is_verified_owner' => 'boolean',
             'subscription_ends_at' => 'datetime',
@@ -336,6 +313,16 @@ class Establishment extends Model
     public function schedules(): HasMany
     {
         return $this->hasMany(Schedule::class)->orderBy('day_of_week');
+    }
+
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class)->orderBy('sort_order');
+    }
+
+    public function practitioners(): HasMany
+    {
+        return $this->hasMany(Practitioner::class)->orderBy('sort_order');
     }
 
     public function owners(): BelongsToMany

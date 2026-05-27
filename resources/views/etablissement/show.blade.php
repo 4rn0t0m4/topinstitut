@@ -246,23 +246,21 @@
                 @endif
 
                 {{-- Prestations & tarifs --}}
-                @if($establishment->services && count($establishment->services) > 0)
+                @if($establishment->services->isNotEmpty())
                     <div class="mt-8">
                         <h2 class="text-xl font-semibold mb-3">Prestations & tarifs</h2>
                         <div class="bg-white border rounded-lg divide-y">
                             @foreach($establishment->services as $service)
                                 <div class="flex items-center justify-between gap-4 px-4 py-3">
                                     <div class="min-w-0 flex-1">
-                                        <div class="font-medium text-gray-900">{{ $service['name'] ?? '' }}</div>
-                                        @if(! empty($service['description']))
-                                            <div class="text-sm text-gray-500 mt-0.5">{{ $service['description'] }}</div>
+                                        <div class="font-medium text-gray-900">{{ $service->name }}</div>
+                                        @if($service->description)
+                                            <div class="text-sm text-gray-500 mt-0.5">{{ $service->description }}</div>
                                         @endif
-                                        @if(! empty($service['duration']))
-                                            <div class="text-xs text-gray-400 mt-1">{{ $service['duration'] }}</div>
-                                        @endif
+                                        <div class="text-xs text-gray-400 mt-1">{{ $service->duration_label }}</div>
                                     </div>
-                                    @if(isset($service['price']) && $service['price'] !== '')
-                                        <div class="flex-shrink-0 text-pink-600 font-semibold whitespace-nowrap">{{ $service['price'] }}</div>
+                                    @if($service->price)
+                                        <div class="flex-shrink-0 text-pink-600 font-semibold whitespace-nowrap">{{ $service->price }}</div>
                                     @endif
                                 </div>
                             @endforeach

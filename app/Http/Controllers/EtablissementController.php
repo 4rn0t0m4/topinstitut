@@ -110,7 +110,7 @@ class EtablissementController extends Controller
             cache()->put($cacheKey, true, now()->addMinutes(30));
         }
 
-        $establishment->load(['approvedReviews.user', 'approvedReviews.photos', 'photos', 'schedules', 'categories', 'news', 'faqs', 'cityRelation.department', 'owners']);
+        $establishment->load(['approvedReviews.user', 'approvedReviews.photos', 'photos', 'schedules', 'services', 'categories', 'news', 'faqs', 'cityRelation.department', 'owners']);
 
         $totalInCity = $establishment->city_id
             ? Establishment::active()->where('city_id', $establishment->city_id)->count()
