@@ -108,6 +108,15 @@ try {
             testEmailScraper($projectRoot, $url);
             break;
 
+        case 'mail-test':
+            $to = isset($_GET['arg']) ? $_GET['arg'] : '';
+            if (! $to) {
+                echo "Missing ?arg=email@exemple.com\n";
+                exit;
+            }
+            runArtisan($projectRoot, 'mail:test', ['to' => $to]);
+            break;
+
         case '':
         default:
             echo "Available commands:\n";
@@ -120,6 +129,7 @@ try {
             echo "  ?cmd=artisan&arg=<command>\n";
             echo "  ?cmd=log[&lines=N]  - tail storage/logs/cron.log (default 100 lines)\n";
             echo "  ?cmd=test-email&url=https://...  - test email scraping on a single URL\n";
+            echo "  ?cmd=mail-test&arg=email@x.com   - envoie un vrai email de test (diag config mail)\n";
             echo "  ?cmd=info           - phpinfo()\n";
     }
 } catch (Throwable $e) {
