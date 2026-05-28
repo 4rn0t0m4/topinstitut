@@ -19,29 +19,54 @@ class AppointmentController extends Controller
 {
     public function __construct(private AppointmentService $appointments) {}
 
-    /** Agenda du jour. */
+    /** Agenda jour ou semaine. */
     public function index(Request $request, Establishment $etablissement)
     {
         $this->authorize('manage', $etablissement);
+
+        $view = $request->input('view') === 'week' ? 'week' : 'day';
 
         $date = $request->filled('date')
             ? Carbon::createFromFormat('Y-m-d', $request->input('date'))->startOfDay()
             : now()->startOfDay();
 
-        $practitioners = $etablissement->practitioners()
+        [$rangeStart, $rangeEnd] = $view === 'week'
+            ? [$date->copy()->startOfWeek(), $date->copy()->endOfWeek()]
+            : [$date->copy()->startOfDay(), $date->copy()->endOfDay()];
+
+        $allPractitioners = $etablissement->practitioners()
             ->where('is_active', true)
-            ->with([
-                'appointments' => fn ($q) => $q->whereBetween('starts_at', [$date->copy()->startOfDay(), $date->copy()->endOfDay()])
+            ->orderBy('name')
+            ->get();
+
+        $selectedPractitioner = null;
+        if ($view === 'week' && $allPractitioners->isNotEmpty()) {
+            $selectedPractitioner = $request->filled('practitioner_id')
+                ? $allPractitioners->firstWhere('id', $request->integer('practitioner_id'))
+                : null;
+            $selectedPractitioner ??= $allPractitioners->first();
+        }
+
+        // En vue jour : tous les praticiens. En vue semaine : uniquement le sélectionné.
+        $practitioners = ($view === 'week' ? collect([$selectedPractitioner])->filter() : $allPractitioners)
+            ->load([
+                'appointments' => fn ($q) => $q->whereBetween('starts_at', [$rangeStart, $rangeEnd])
                     ->whereIn('status', ['confirmed', 'completed', 'no_show'])
                     ->orderBy('starts_at'),
-                'timeOffs' => fn ($q) => $q->where('starts_at', '<', $date->copy()->endOfDay())
-                    ->where('ends_at', '>', $date->copy()->startOfDay()),
-            ])
-            ->get();
+                'timeOffs' => fn ($q) => $q->where('starts_at', '<', $rangeEnd)
+                    ->where('ends_at', '>', $rangeStart),
+            ]);
 
         $services = $etablissement->services()->orderBy('sort_order')->get();
 
-        return view('client.etablissement.agenda', compact('etablissement', 'practitioners', 'services', 'date'));
+        $weekDays = $view === 'week'
+            ? collect(range(0, 6))->map(fn ($i) => $rangeStart->copy()->addDays($i))
+            : collect();
+
+        return view('client.etablissement.agenda', compact(
+            'etablissement', 'practitioners', 'allPractitioners', 'selectedPractitioner',
+            'services', 'date', 'view', 'weekDays'
+        ));
     }
 
     /** Change le statut d'un RDV (honoré, absent, annulé). */

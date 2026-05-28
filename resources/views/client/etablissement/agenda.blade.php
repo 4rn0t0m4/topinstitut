@@ -4,6 +4,7 @@
         $endHour = 21;
         $hours = range($startHour, $endHour - 1);
         $totalMin = ($endHour - $startHour) * 60;
+        $isWeek = $view === 'week';
 
         // Snapshot JS de chaque RDV : sert à pré-remplir la modale d'édition.
         $appointmentsJs = [];
@@ -36,8 +37,15 @@
             'completed' => 'bg-emerald-100 border-emerald-500 text-emerald-900 hover:bg-emerald-200',
             'no_show'   => 'bg-gray-100 border-gray-400 text-gray-500 hover:bg-gray-200',
         ];
-        $dayStart = $date->copy()->startOfDay();
-        $dayEnd = $date->copy()->endOfDay();
+
+        // Helper d'URL : conserve view + praticien à travers la navigation.
+        $urlFor = function (\Illuminate\Support\Carbon $d, ?string $forceView = null) use ($etablissement, $view, $selectedPractitioner) {
+            $params = [$etablissement, 'date' => $d->format('Y-m-d'), 'view' => $forceView ?? $view];
+            if (($forceView ?? $view) === 'week' && $selectedPractitioner) {
+                $params['practitioner_id'] = $selectedPractitioner->id;
+            }
+            return route('client.etablissement.agenda', $params);
+        };
     @endphp
 
     <div class="max-w-7xl mx-auto px-4 py-6"
@@ -70,108 +78,217 @@
             </div>
         @endif
 
-        {{-- Navigation date --}}
-        <div class="flex items-center justify-center gap-3 mb-3">
-            <a href="{{ route('client.etablissement.agenda', [$etablissement, 'date' => $date->copy()->subDay()->format('Y-m-d')]) }}" class="px-3 py-1.5 border rounded-lg hover:bg-gray-50">&larr;</a>
+        {{-- Barre d'outils : navigation + toggle + sélecteur praticien --}}
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-3">
+            <a href="{{ $urlFor($isWeek ? $date->copy()->subWeek() : $date->copy()->subDay()) }}" class="px-3 py-1.5 border rounded-lg hover:bg-gray-50">&larr;</a>
             <form method="GET" class="flex items-center gap-2">
+                <input type="hidden" name="view" value="{{ $view }}">
+                @if($isWeek && $selectedPractitioner)
+                    <input type="hidden" name="practitioner_id" value="{{ $selectedPractitioner->id }}">
+                @endif
                 <input type="date" name="date" value="{{ $date->format('Y-m-d') }}" onchange="this.form.submit()" class="border rounded-lg px-3 py-1.5">
             </form>
-            <a href="{{ route('client.etablissement.agenda', [$etablissement, 'date' => $date->copy()->addDay()->format('Y-m-d')]) }}" class="px-3 py-1.5 border rounded-lg hover:bg-gray-50">&rarr;</a>
-            <a href="{{ route('client.etablissement.agenda', $etablissement) }}" class="text-sm text-pink-600 hover:underline ml-2">Aujourd'hui</a>
-        </div>
-        <p class="text-center font-medium text-gray-700 mb-4 capitalize">{{ $date->locale('fr')->isoFormat('dddd D MMMM YYYY') }}</p>
+            <a href="{{ $urlFor($isWeek ? $date->copy()->addWeek() : $date->copy()->addDay()) }}" class="px-3 py-1.5 border rounded-lg hover:bg-gray-50">&rarr;</a>
+            <a href="{{ $urlFor(now()) }}" class="text-sm text-pink-600 hover:underline ml-2">Aujourd'hui</a>
 
-        @if($practitioners->isEmpty())
+            <span class="mx-2 h-6 w-px bg-gray-200"></span>
+
+            <div class="inline-flex border rounded-lg overflow-hidden text-sm">
+                <a href="{{ $urlFor($date, 'day') }}" class="px-3 py-1.5 {{ ! $isWeek ? 'bg-pink-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">Jour</a>
+                <a href="{{ $urlFor($date, 'week') }}" class="px-3 py-1.5 border-l {{ $isWeek ? 'bg-pink-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">Semaine</a>
+            </div>
+
+            @if($isWeek && $allPractitioners->isNotEmpty())
+                <form method="GET" class="ml-2">
+                    <input type="hidden" name="view" value="week">
+                    <input type="hidden" name="date" value="{{ $date->format('Y-m-d') }}">
+                    <select name="practitioner_id" onchange="this.form.submit()" class="border rounded-lg px-3 py-1.5 text-sm">
+                        @foreach($allPractitioners as $p)
+                            <option value="{{ $p->id }}" {{ $selectedPractitioner?->id === $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+                        @endforeach
+                    </select>
+                </form>
+            @endif
+        </div>
+
+        {{-- Titre période --}}
+        @if($isWeek)
+            <p class="text-center font-medium text-gray-700 mb-4 capitalize">
+                Semaine du {{ $weekDays->first()->locale('fr')->isoFormat('D MMMM') }} au {{ $weekDays->last()->locale('fr')->isoFormat('D MMMM YYYY') }}
+            </p>
+        @else
+            <p class="text-center font-medium text-gray-700 mb-4 capitalize">{{ $date->locale('fr')->isoFormat('dddd D MMMM YYYY') }}</p>
+        @endif
+
+        @if($allPractitioners->isEmpty())
             <div class="bg-white border border-dashed rounded-lg p-8 text-center text-gray-500">
                 Aucun praticien actif. <a href="{{ route('client.etablissement.praticiens', $etablissement) }}" class="text-pink-600 hover:underline">Ajoutez-en un</a> pour gérer l'agenda.
             </div>
+        @elseif($isWeek && ! $selectedPractitioner)
+            <div class="bg-white border border-dashed rounded-lg p-8 text-center text-gray-500">
+                Sélectionnez un praticien pour afficher la semaine.
+            </div>
         @else
-            {{-- Grille temporelle type Google Agenda --}}
+            {{-- Grille temporelle --}}
             <div class="bg-white border rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
-                    <div class="min-w-full"
-                         style="display: grid; grid-template-columns: 60px repeat({{ $practitioners->count() }}, minmax(180px, 1fr));">
+                    @if($isWeek)
+                        {{-- VUE SEMAINE : ruler + 7 jours pour le praticien sélectionné --}}
+                        <div class="min-w-full" style="display: grid; grid-template-columns: 60px repeat(7, minmax(120px, 1fr));">
 
-                        {{-- Coin haut-gauche + en-têtes praticiens --}}
-                        <div class="border-b border-r bg-gray-50"></div>
-                        @foreach($practitioners as $p)
-                            <div class="border-b border-r last:border-r-0 bg-gray-50 px-3 py-2 text-center text-sm font-semibold text-gray-700 truncate">
-                                {{ $p->name }}
+                            <div class="border-b border-r bg-gray-50"></div>
+                            @foreach($weekDays as $wd)
+                                <div class="border-b border-r last:border-r-0 px-2 py-2 text-center text-xs {{ $wd->isToday() ? 'bg-pink-50 text-pink-700 font-semibold' : 'bg-gray-50 text-gray-700' }}">
+                                    <div class="capitalize">{{ $wd->locale('fr')->isoFormat('ddd') }}</div>
+                                    <div class="font-semibold">{{ $wd->format('j') }}</div>
+                                </div>
+                            @endforeach
+
+                            <div class="border-r relative" style="height: {{ $totalMin }}px;">
+                                @foreach($hours as $h)
+                                    <div class="absolute right-2 text-xs text-gray-400" style="top: {{ ($h - $startHour) * 60 - 6 }}px;">{{ $h }}h</div>
+                                @endforeach
                             </div>
-                        @endforeach
 
-                        {{-- Règle horaire --}}
-                        <div class="border-r relative" style="height: {{ $totalMin }}px;">
-                            @foreach($hours as $h)
-                                <div class="absolute right-2 text-xs text-gray-400" style="top: {{ ($h - $startHour) * 60 - 6 }}px;">{{ $h }}h</div>
+                            @foreach($weekDays as $wd)
+                                @php
+                                    $dayKey = $wd->format('Y-m-d');
+                                    $dayStart = $wd->copy()->startOfDay();
+                                    $dayEnd = $wd->copy()->endOfDay();
+                                    $dayAppointments = $selectedPractitioner->appointments->filter(fn ($a) => $a->starts_at->format('Y-m-d') === $dayKey);
+                                    $dayTimeOffs = $selectedPractitioner->timeOffs->filter(fn ($t) => $t->starts_at->lt($dayEnd) && $t->ends_at->gt($dayStart));
+                                @endphp
+                                <div class="relative border-r last:border-r-0 cursor-pointer select-none {{ $wd->isToday() ? 'bg-pink-50/30' : '' }}"
+                                     style="height: {{ $totalMin }}px;"
+                                     @click="onColumnClick($event, {{ $selectedPractitioner->id }}, '{{ $dayKey }}')">
+
+                                    @foreach($hours as $h)
+                                        <div class="absolute left-0 right-0 border-t border-gray-100" style="top: {{ ($h - $startHour) * 60 }}px;"></div>
+                                        <div class="absolute left-0 right-0 border-t border-dashed border-gray-50" style="top: {{ ($h - $startHour) * 60 + 30 }}px;"></div>
+                                    @endforeach
+
+                                    @foreach($dayTimeOffs as $off)
+                                        @php
+                                            $offStartMin = $off->starts_at->lt($dayStart)
+                                                ? 0
+                                                : max(0, (($off->starts_at->hour - $startHour) * 60) + $off->starts_at->minute);
+                                            $offEndMin = $off->ends_at->gt($dayEnd)
+                                                ? $totalMin
+                                                : min($totalMin, (($off->ends_at->hour - $startHour) * 60) + $off->ends_at->minute);
+                                            $offHeight = max(20, $offEndMin - $offStartMin);
+                                        @endphp
+                                        <div data-timeoff-card
+                                             class="absolute left-1 right-1 bg-amber-100/80 border border-amber-300 rounded px-1.5 py-0.5 text-[10px] text-amber-800 overflow-hidden"
+                                             style="top: {{ $offStartMin }}px; height: {{ $offHeight }}px; z-index: 5;"
+                                             @click.stop>
+                                            <div class="font-medium leading-tight">Bloqué</div>
+                                            @if($off->reason)<div class="truncate text-amber-700 leading-tight">{{ $off->reason }}</div>@endif
+                                        </div>
+                                    @endforeach
+
+                                    @foreach($dayAppointments as $rdv)
+                                        @php
+                                            $top = (($rdv->starts_at->hour - $startHour) * 60) + $rdv->starts_at->minute;
+                                            $height = max(20, (int) $rdv->duration_minutes);
+                                            $color = $statusColor[$rdv->status] ?? 'bg-blue-100 border-blue-500 text-blue-900';
+                                        @endphp
+                                        <div data-appointment-card
+                                             class="absolute left-0.5 right-0.5 border-l-4 rounded px-1.5 py-0.5 text-[10px] overflow-hidden cursor-pointer transition {{ $color }}"
+                                             style="top: {{ $top }}px; height: {{ $height }}px; z-index: 10;"
+                                             @click.stop="openEdit({{ $rdv->id }})"
+                                             title="{{ $rdv->customer_name }} — {{ $rdv->service_name }}">
+                                            <div class="font-semibold whitespace-nowrap leading-tight">{{ $rdv->starts_at->format('H:i') }}</div>
+                                            <div class="truncate font-medium leading-tight">{{ $rdv->customer_name }}</div>
+                                            @if($height >= 45)
+                                                <div class="truncate opacity-75 leading-tight">{{ $rdv->service_name }}</div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
                             @endforeach
                         </div>
+                    @else
+                        {{-- VUE JOUR : ruler + N colonnes praticiens --}}
+                        <div class="min-w-full" style="display: grid; grid-template-columns: 60px repeat({{ $practitioners->count() }}, minmax(180px, 1fr));">
 
-                        {{-- Colonnes praticiens --}}
-                        @foreach($practitioners as $p)
-                            <div class="relative border-r last:border-r-0 cursor-pointer select-none"
-                                 style="height: {{ $totalMin }}px;"
-                                 @click="onColumnClick($event, {{ $p->id }})">
+                            <div class="border-b border-r bg-gray-50"></div>
+                            @foreach($practitioners as $p)
+                                <div class="border-b border-r last:border-r-0 bg-gray-50 px-3 py-2 text-center text-sm font-semibold text-gray-700 truncate">
+                                    {{ $p->name }}
+                                </div>
+                            @endforeach
 
-                                {{-- Lignes des heures --}}
+                            <div class="border-r relative" style="height: {{ $totalMin }}px;">
                                 @foreach($hours as $h)
-                                    <div class="absolute left-0 right-0 border-t border-gray-100" style="top: {{ ($h - $startHour) * 60 }}px;"></div>
-                                    <div class="absolute left-0 right-0 border-t border-dashed border-gray-50" style="top: {{ ($h - $startHour) * 60 + 30 }}px;"></div>
-                                @endforeach
-
-                                {{-- Plages bloquées --}}
-                                @foreach($p->timeOffs as $off)
-                                    @php
-                                        $offStartMin = $off->starts_at->lt($dayStart)
-                                            ? 0
-                                            : max(0, (($off->starts_at->hour - $startHour) * 60) + $off->starts_at->minute);
-                                        $offEndMin = $off->ends_at->gt($dayEnd)
-                                            ? $totalMin
-                                            : min($totalMin, (($off->ends_at->hour - $startHour) * 60) + $off->ends_at->minute);
-                                        $offHeight = max(20, $offEndMin - $offStartMin);
-                                    @endphp
-                                    <div data-timeoff-card
-                                         class="absolute left-1 right-1 bg-amber-100/80 border border-amber-300 rounded px-2 py-1 text-xs text-amber-800 overflow-hidden"
-                                         style="top: {{ $offStartMin }}px; height: {{ $offHeight }}px; z-index: 5;"
-                                         @click.stop>
-                                        <div class="flex items-start justify-between gap-1">
-                                            <div class="min-w-0">
-                                                <div class="font-medium">Bloqué {{ $off->starts_at->format('H:i') }}–{{ $off->ends_at->format('H:i') }}</div>
-                                                @if($off->reason)<div class="truncate text-amber-700">{{ $off->reason }}</div>@endif
-                                            </div>
-                                            <form method="POST" action="{{ route('client.etablissement.agenda.blocage.destroy', [$etablissement, $p, $off]) }}" onsubmit="return confirm('Débloquer cette plage ?')">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="text-amber-700 hover:text-amber-900 text-xs">✕</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                @endforeach
-
-                                {{-- RDV --}}
-                                @foreach($p->appointments as $rdv)
-                                    @php
-                                        $top = (($rdv->starts_at->hour - $startHour) * 60) + $rdv->starts_at->minute;
-                                        $height = max(20, (int) $rdv->duration_minutes);
-                                        $color = $statusColor[$rdv->status] ?? 'bg-blue-100 border-blue-500 text-blue-900';
-                                    @endphp
-                                    <div data-appointment-card
-                                         class="absolute left-1 right-1 border-l-4 rounded px-2 py-1 text-xs overflow-hidden cursor-pointer transition {{ $color }}"
-                                         style="top: {{ $top }}px; height: {{ $height }}px; z-index: 10;"
-                                         @click.stop="openEdit({{ $rdv->id }})"
-                                         title="{{ $rdv->customer_name }} — {{ $rdv->service_name }}">
-                                        <div class="font-semibold whitespace-nowrap">{{ $rdv->starts_at->format('H:i') }}–{{ $rdv->ends_at->format('H:i') }}</div>
-                                        <div class="truncate font-medium">{{ $rdv->customer_name }}</div>
-                                        @if($height >= 45)
-                                            <div class="truncate opacity-75">{{ $rdv->service_name }}</div>
-                                        @endif
-                                    </div>
+                                    <div class="absolute right-2 text-xs text-gray-400" style="top: {{ ($h - $startHour) * 60 - 6 }}px;">{{ $h }}h</div>
                                 @endforeach
                             </div>
-                        @endforeach
-                    </div>
+
+                            @foreach($practitioners as $p)
+                                @php
+                                    $dayStart = $date->copy()->startOfDay();
+                                    $dayEnd = $date->copy()->endOfDay();
+                                @endphp
+                                <div class="relative border-r last:border-r-0 cursor-pointer select-none"
+                                     style="height: {{ $totalMin }}px;"
+                                     @click="onColumnClick($event, {{ $p->id }})">
+
+                                    @foreach($hours as $h)
+                                        <div class="absolute left-0 right-0 border-t border-gray-100" style="top: {{ ($h - $startHour) * 60 }}px;"></div>
+                                        <div class="absolute left-0 right-0 border-t border-dashed border-gray-50" style="top: {{ ($h - $startHour) * 60 + 30 }}px;"></div>
+                                    @endforeach
+
+                                    @foreach($p->timeOffs as $off)
+                                        @php
+                                            $offStartMin = $off->starts_at->lt($dayStart)
+                                                ? 0
+                                                : max(0, (($off->starts_at->hour - $startHour) * 60) + $off->starts_at->minute);
+                                            $offEndMin = $off->ends_at->gt($dayEnd)
+                                                ? $totalMin
+                                                : min($totalMin, (($off->ends_at->hour - $startHour) * 60) + $off->ends_at->minute);
+                                            $offHeight = max(20, $offEndMin - $offStartMin);
+                                        @endphp
+                                        <div data-timeoff-card
+                                             class="absolute left-1 right-1 bg-amber-100/80 border border-amber-300 rounded px-2 py-1 text-xs text-amber-800 overflow-hidden"
+                                             style="top: {{ $offStartMin }}px; height: {{ $offHeight }}px; z-index: 5;"
+                                             @click.stop>
+                                            <div class="flex items-start justify-between gap-1">
+                                                <div class="min-w-0">
+                                                    <div class="font-medium">Bloqué {{ $off->starts_at->format('H:i') }}–{{ $off->ends_at->format('H:i') }}</div>
+                                                    @if($off->reason)<div class="truncate text-amber-700">{{ $off->reason }}</div>@endif
+                                                </div>
+                                                <form method="POST" action="{{ route('client.etablissement.agenda.blocage.destroy', [$etablissement, $p, $off]) }}" onsubmit="return confirm('Débloquer cette plage ?')">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="text-amber-700 hover:text-amber-900 text-xs">✕</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    @endforeach
+
+                                    @foreach($p->appointments as $rdv)
+                                        @php
+                                            $top = (($rdv->starts_at->hour - $startHour) * 60) + $rdv->starts_at->minute;
+                                            $height = max(20, (int) $rdv->duration_minutes);
+                                            $color = $statusColor[$rdv->status] ?? 'bg-blue-100 border-blue-500 text-blue-900';
+                                        @endphp
+                                        <div data-appointment-card
+                                             class="absolute left-1 right-1 border-l-4 rounded px-2 py-1 text-xs overflow-hidden cursor-pointer transition {{ $color }}"
+                                             style="top: {{ $top }}px; height: {{ $height }}px; z-index: 10;"
+                                             @click.stop="openEdit({{ $rdv->id }})"
+                                             title="{{ $rdv->customer_name }} — {{ $rdv->service_name }}">
+                                            <div class="font-semibold whitespace-nowrap">{{ $rdv->starts_at->format('H:i') }}–{{ $rdv->ends_at->format('H:i') }}</div>
+                                            <div class="truncate font-medium">{{ $rdv->customer_name }}</div>
+                                            @if($height >= 45)
+                                                <div class="truncate opacity-75">{{ $rdv->service_name }}</div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
 
-                {{-- Légende --}}
                 <div class="border-t bg-gray-50 px-4 py-2 text-xs text-gray-500 flex flex-wrap items-center gap-x-4 gap-y-1">
                     <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 bg-blue-100 border-l-2 border-blue-500 rounded-sm"></span>Confirmé</span>
                     <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 bg-emerald-100 border-l-2 border-emerald-500 rounded-sm"></span>Honoré</span>
@@ -194,7 +311,7 @@
                     <div>
                         <label class="block text-sm font-medium mb-1">Praticien</label>
                         <select name="practitioner_id" x-model="form.practitioner_id" required class="w-full border rounded-lg px-3 py-2">
-                            @foreach($practitioners as $p)<option value="{{ $p->id }}">{{ $p->name }}</option>@endforeach
+                            @foreach($allPractitioners as $p)<option value="{{ $p->id }}">{{ $p->name }}</option>@endforeach
                         </select>
                     </div>
                     <div>
@@ -273,7 +390,7 @@
             </div>
         </div>
 
-        {{-- Formulaires cachés pour statut + suppression (action calculée dynamiquement) --}}
+        {{-- Formulaires cachés pour statut + suppression --}}
         <form method="POST" :action="`${basePath}/${form.id}/statut`" class="hidden" x-ref="statusForm">
             @csrf @method('PATCH')
             <input type="hidden" name="status" x-ref="statusInput">
@@ -291,7 +408,7 @@
                     <div>
                         <label class="block text-sm font-medium mb-1">Praticien</label>
                         <select name="practitioner_id" required class="w-full border rounded-lg px-3 py-2">
-                            @foreach($practitioners as $p)<option value="{{ $p->id }}">{{ $p->name }}</option>@endforeach
+                            @foreach($allPractitioners as $p)<option value="{{ $p->id }}">{{ $p->name }}</option>@endforeach
                         </select>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
@@ -386,7 +503,9 @@
                     this.showForm = true;
                 },
 
-                onColumnClick($event, practitionerId) {
+                // En vue jour : date omise -> date courante de la page.
+                // En vue semaine : on passe la date du jour cliqué.
+                onColumnClick($event, practitionerId, date) {
                     const t = $event.target;
                     if (t.closest('[data-appointment-card]') || t.closest('[data-timeoff-card]')) return;
                     const rect = $event.currentTarget.getBoundingClientRect();
@@ -395,7 +514,7 @@
                     const hour = this.startHour + Math.floor(absMin / 60);
                     const min = absMin % 60;
                     const time = String(hour).padStart(2, '0') + ':' + String(min).padStart(2, '0');
-                    this.openCreate({ practitioner_id: practitionerId, time });
+                    this.openCreate({ practitioner_id: practitionerId, time, date: date || this.date });
                 },
 
                 onServiceChange() {
