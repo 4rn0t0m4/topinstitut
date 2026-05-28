@@ -55,6 +55,8 @@ Route::prefix('etablissement/{etablissement}')->name('etablissement.')->scopeBin
 
         Route::get('agenda', [\App\Http\Controllers\Client\AppointmentController::class, 'index'])->name('agenda');
         Route::post('agenda/manuel', [\App\Http\Controllers\Client\AppointmentController::class, 'storeManual'])->name('agenda.manuel');
+        Route::patch('agenda/{appointment}', [\App\Http\Controllers\Client\AppointmentController::class, 'update'])->name('agenda.update');
+        Route::delete('agenda/{appointment}', [\App\Http\Controllers\Client\AppointmentController::class, 'destroy'])->name('agenda.destroy');
         Route::patch('agenda/{appointment}/statut', [\App\Http\Controllers\Client\AppointmentController::class, 'updateStatus'])->name('agenda.statut');
         Route::post('agenda/blocage', [\App\Http\Controllers\Client\AppointmentController::class, 'storeTimeOff'])->name('agenda.blocage');
         Route::delete('agenda/blocage/{practitioner}/{timeOff}', [\App\Http\Controllers\Client\AppointmentController::class, 'destroyTimeOff'])->name('agenda.blocage.destroy');

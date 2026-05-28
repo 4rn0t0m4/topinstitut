@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Client\StoreManualAppointmentRequest;
 use App\Http\Requests\Client\StoreTimeOffRequest;
+use App\Http\Requests\Client\UpdateAppointmentRequest;
 use App\Http\Requests\Client\UpdateAppointmentStatusRequest;
 use App\Models\Appointment;
 use App\Models\Establishment;
@@ -66,6 +67,26 @@ class AppointmentController extends Controller
         }
 
         return back()->with('success', 'Rendez-vous ajouté.');
+    }
+
+    /** Modifier un RDV (créneau, praticien, prestation, client). */
+    public function update(UpdateAppointmentRequest $request, Establishment $etablissement, Appointment $appointment)
+    {
+        if (! $this->appointments->update($appointment, $etablissement, $request->validated())) {
+            return back()->withInput()->withErrors(['time' => 'Ce praticien a déjà un rendez-vous sur ce créneau.']);
+        }
+
+        return back()->with('success', 'Rendez-vous modifié.');
+    }
+
+    /** Suppression définitive (différent d'une annulation). */
+    public function destroy(Establishment $etablissement, Appointment $appointment)
+    {
+        $this->authorize('manage', $etablissement);
+
+        $this->appointments->delete($appointment);
+
+        return back()->with('success', 'Rendez-vous supprimé.');
     }
 
     /** Bloque une plage horaire (congé / pause). */

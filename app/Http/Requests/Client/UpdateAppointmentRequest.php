@@ -4,7 +4,7 @@ namespace App\Http\Requests\Client;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreManualAppointmentRequest extends FormRequest
+class UpdateAppointmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -24,6 +24,7 @@ class StoreManualAppointmentRequest extends FormRequest
             'customer_email' => 'nullable|email|max:255',
             'customer_phone' => 'nullable|string|max:30',
             'notes' => 'nullable|string|max:1000',
+            'notify_customer' => 'nullable|boolean',
         ];
     }
 }
