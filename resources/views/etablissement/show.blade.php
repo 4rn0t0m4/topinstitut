@@ -664,13 +664,11 @@
                   success-message="Vérifiez votre boîte email pour confirmer votre revendication."
                   submit-label="Envoyer ma demande">
         <x-honeypot />
-        @guest
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1">Votre email <span class="text-red-500">*</span></label>
-                <input type="email" name="email" required class="w-full border rounded-lg px-3 py-2" placeholder="email@exemple.fr">
-                <p class="text-xs text-gray-400 mt-1">Un email de confirmation vous sera envoyé. Si votre demande est approuvée, un compte sera créé avec cet email.</p>
-            </div>
-        @endguest
+        <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">Votre email <span class="text-red-500">*</span></label>
+            <input type="email" name="email" required value="{{ auth()->user()?->email }}" class="w-full border rounded-lg px-3 py-2" placeholder="email@exemple.fr">
+            <p class="text-xs text-gray-400 mt-1">Un email de confirmation peut vous être envoyé sur cette adresse.</p>
+        </div>
         <div class="mb-4">
             <label class="block text-sm font-medium mb-1">Nom du gérant <span class="text-red-500">*</span></label>
             <input type="text" name="manager_name" required class="w-full border rounded-lg px-3 py-2" placeholder="Prénom et nom">

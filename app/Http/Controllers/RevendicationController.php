@@ -12,20 +12,14 @@ class RevendicationController extends Controller
 {
     public function store(Request $request, Establishment $establishment)
     {
-        $rules = [
+        $validated = $request->validate([
             'manager_name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
             'siret' => 'nullable|string|max:14',
             'message' => 'nullable|string|max:2000',
-        ];
+        ]);
 
-        // Email obligatoire pour les invités
-        if (! $request->user()) {
-            $rules['email'] = 'required|email|max:255';
-        }
-
-        $validated = $request->validate($rules);
-
-        $email = $request->user()?->email ?? $validated['email'];
+        $email = $validated['email'];
 
         // Déjà propriétaire (uniquement vérifiable pour les connectés) ?
         if ($request->user() && $establishment->owners()->where('user_id', $request->user()->id)->exists()) {
@@ -40,7 +34,8 @@ class RevendicationController extends Controller
             return $this->errorResponse($request, 'Une demande pour cet établissement est déjà en cours avec cet email.');
         }
 
-        $isAuthed = (bool) $request->user();
+        // Email déjà prouvé uniquement si l'utilisateur est connecté ET utilise SON email de compte.
+        $emailAlreadyOwned = $request->user() && strcasecmp($email, $request->user()->email) === 0;
 
         $claim = Claim::create([
             'establishment_id' => $establishment->id,
@@ -50,12 +45,11 @@ class RevendicationController extends Controller
             'siret' => $validated['siret'] ?? null,
             'message' => $validated['message'] ?? null,
             'status' => 'pending',
-            // Les connectés ont déjà un email vérifié ; les invités doivent cliquer le lien.
-            'email_verified_at' => $isAuthed ? now() : null,
-            'verification_token' => $isAuthed ? null : Str::random(64),
+            'email_verified_at' => $emailAlreadyOwned ? now() : null,
+            'verification_token' => $emailAlreadyOwned ? null : Str::random(64),
         ]);
 
-        if ($isAuthed) {
+        if ($emailAlreadyOwned) {
             $this->notifyAdmin($claim, $establishment);
             $msg = 'Votre demande de propriété a été envoyée. Elle sera vérifiée par notre équipe.';
         } else {
