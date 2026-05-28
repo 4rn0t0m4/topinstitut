@@ -72,7 +72,7 @@
                             <p class="text-sm text-gray-600 mt-1">{{ Str::limit($review->content, 100) }}</p>
                             <div class="mt-3 flex justify-between items-center text-xs text-gray-400">
                                 <span>par {{ $review->reviewer_name }}</span>
-                                <a href="{{ $review->establishment->url }}" class="text-pink-600 hover:underline">{{ $review->establishment->title }}</a>
+                                <a href="{{ $review->establishment->url }}" class="text-pink-600 hover:underline truncate ml-2">{{ $review->establishment->name }}</a>
                             </div>
                         </div>
                     @endforeach
