@@ -63,8 +63,17 @@ class AppointmentController extends Controller
 
         $services = $etablissement->services()->orderBy('sort_order')->get();
 
+        // Jours d'ouverture (1=lundi … 7=dimanche). Si aucun schedule défini,
+        // on considère les 7 jours ouverts (pas de filtrage).
+        $etablissement->loadMissing('schedules');
+        $openDaysOfWeek = $etablissement->schedules->isEmpty()
+            ? [1, 2, 3, 4, 5, 6, 7]
+            : $etablissement->schedules->where('is_closed', false)->pluck('day_of_week')->map(fn ($v) => (int) $v)->all();
+
         $weekDays = $view === 'week'
             ? collect(range(0, 6))->map(fn ($i) => $rangeStart->copy()->addDays($i))
+                ->filter(fn ($d) => in_array($d->isoWeekday(), $openDaysOfWeek, true))
+                ->values()
             : collect();
 
         return view('client.etablissement.agenda', compact(

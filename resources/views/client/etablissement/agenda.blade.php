@@ -114,7 +114,7 @@
         {{-- Titre période --}}
         @if($isWeek)
             <p class="text-center font-medium text-gray-700 mb-4 capitalize">
-                Semaine du {{ $weekDays->first()->locale('fr')->isoFormat('D MMMM') }} au {{ $weekDays->last()->locale('fr')->isoFormat('D MMMM YYYY') }}
+                Semaine du {{ $date->copy()->startOfWeek()->locale('fr')->isoFormat('D MMMM') }} au {{ $date->copy()->endOfWeek()->locale('fr')->isoFormat('D MMMM YYYY') }}
             </p>
         @else
             <p class="text-center font-medium text-gray-700 mb-4 capitalize">{{ $date->locale('fr')->isoFormat('dddd D MMMM YYYY') }}</p>
@@ -128,13 +128,17 @@
             <div class="bg-white border border-dashed rounded-lg p-8 text-center text-gray-500">
                 Sélectionnez un praticien pour afficher la semaine.
             </div>
+        @elseif($isWeek && $weekDays->isEmpty())
+            <div class="bg-white border border-dashed rounded-lg p-8 text-center text-gray-500">
+                Aucun jour d'ouverture cette semaine. Vérifiez les <a href="{{ route('client.etablissement.horaires', $etablissement) }}" class="text-pink-600 hover:underline">horaires de l'établissement</a>.
+            </div>
         @else
             {{-- Grille temporelle --}}
             <div class="bg-white border rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
                     @if($isWeek)
-                        {{-- VUE SEMAINE : ruler + 7 jours pour le praticien sélectionné --}}
-                        <div class="min-w-full" style="display: grid; grid-template-columns: 60px repeat(7, minmax(120px, 1fr));">
+                        {{-- VUE SEMAINE : ruler + jours ouverts pour le praticien sélectionné --}}
+                        <div class="min-w-full" style="display: grid; grid-template-columns: 60px repeat({{ max(1, $weekDays->count()) }}, minmax(120px, 1fr));">
 
                             <div class="border-b border-r bg-gray-50"></div>
                             @foreach($weekDays as $wd)
