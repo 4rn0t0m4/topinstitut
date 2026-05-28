@@ -39,23 +39,27 @@ class AppointmentController extends Controller
             ->orderBy('name')
             ->get();
 
+        $eagerLoad = [
+            'appointments' => fn ($q) => $q->whereBetween('starts_at', [$rangeStart, $rangeEnd])
+                ->whereIn('status', ['confirmed', 'completed', 'no_show'])
+                ->orderBy('starts_at'),
+            'timeOffs' => fn ($q) => $q->where('starts_at', '<', $rangeEnd)
+                ->where('ends_at', '>', $rangeStart),
+        ];
+
         $selectedPractitioner = null;
         if ($view === 'week' && $allPractitioners->isNotEmpty()) {
             $selectedPractitioner = $request->filled('practitioner_id')
                 ? $allPractitioners->firstWhere('id', $request->integer('practitioner_id'))
                 : null;
             $selectedPractitioner ??= $allPractitioners->first();
+            $selectedPractitioner?->load($eagerLoad);
+            $practitioners = $selectedPractitioner ? collect([$selectedPractitioner]) : collect();
+        } else {
+            // Vue jour : on charge les relations sur la collection Eloquent.
+            $allPractitioners->load($eagerLoad);
+            $practitioners = $allPractitioners;
         }
-
-        // En vue jour : tous les praticiens. En vue semaine : uniquement le sélectionné.
-        $practitioners = ($view === 'week' ? collect([$selectedPractitioner])->filter() : $allPractitioners)
-            ->load([
-                'appointments' => fn ($q) => $q->whereBetween('starts_at', [$rangeStart, $rangeEnd])
-                    ->whereIn('status', ['confirmed', 'completed', 'no_show'])
-                    ->orderBy('starts_at'),
-                'timeOffs' => fn ($q) => $q->where('starts_at', '<', $rangeEnd)
-                    ->where('ends_at', '>', $rangeStart),
-            ]);
 
         $services = $etablissement->services()->orderBy('sort_order')->get();
 
