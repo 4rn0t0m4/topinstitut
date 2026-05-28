@@ -160,6 +160,49 @@ class EstablishmentService
     }
 
     /**
+     * Limite : 5 sponsorisés actifs max par département. Retourne un message
+     * d'erreur si la mise à jour dépasse la limite, sinon null.
+     *
+     * @param  array{featured_until?:?string, city_id?:?int, department_code?:?string}  $data
+     */
+    public function featuredLimitError(array $data, ?Establishment $current = null): ?string
+    {
+        if (empty($data['featured_until']) || ! \Illuminate\Support\Carbon::parse($data['featured_until'])->isFuture()) {
+            return null;
+        }
+
+        $deptCode = $this->resolveDepartmentCode($data, $current);
+        if (! $deptCode) {
+            return null;
+        }
+
+        $cityIds = City::where('department_code', $deptCode)->pluck('id');
+
+        $count = Establishment::query()
+            ->when($current, fn ($q) => $q->where('id', '!=', $current->id))
+            ->whereNotNull('featured_until')
+            ->where('featured_until', '>', now())
+            ->where(fn ($q) => $q->where('department_code', $deptCode)->orWhereIn('city_id', $cityIds))
+            ->count();
+
+        return $count >= 5
+            ? 'Limite de 5 sponsorisés actifs atteinte pour ce département. Retirez-en un avant d\'en ajouter un nouveau.'
+            : null;
+    }
+
+    private function resolveDepartmentCode(array $data, ?Establishment $current): ?string
+    {
+        if (! empty($data['city_id'])) {
+            $code = City::where('id', $data['city_id'])->value('department_code');
+            if ($code) {
+                return $code;
+            }
+        }
+
+        return $data['department_code'] ?? $current?->department_code;
+    }
+
+    /**
      * Get establishments managed by a user.
      */
     public function getByOwner(int $userId): \Illuminate\Database\Eloquent\Collection
