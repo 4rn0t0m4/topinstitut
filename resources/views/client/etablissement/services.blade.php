@@ -68,7 +68,7 @@
 
                 <div class="space-y-6">
                     <template x-for="(cat, ci) in categories" :key="cat.cid">
-                        <div class="bg-pink-50/40 rounded-lg p-4">
+                        <div class="bg-pink-100/70 rounded-lg p-4">
                             <input type="hidden" :name="`categories[${ci}][cid]`" :value="cat.cid">
                             <input type="hidden" :name="`categories[${ci}][id]`" :value="cat.id">
 
