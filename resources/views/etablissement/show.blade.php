@@ -664,6 +664,15 @@
                   success-message="Vérifiez votre boîte email pour confirmer votre revendication."
                   submit-label="Envoyer ma demande">
         <x-honeypot />
+
+        <div class="mb-5 bg-gradient-to-r from-pink-50 to-amber-50 border border-pink-200 rounded-lg p-3 flex items-start gap-3">
+            <span class="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-fuchsia-500 text-white flex items-center justify-center font-bold">🎁</span>
+            <div class="text-sm">
+                <p class="font-semibold text-gray-900">1 mois Premium offert</p>
+                <p class="text-gray-600 text-xs mt-0.5">Dès l'acceptation de votre demande, sans engagement et sans carte bancaire. Vous pouvez tout tester (agenda, prise de RDV en ligne, badge vérifié, photos illimitées…) avant de décider.</p>
+            </div>
+        </div>
+
         <div class="mb-4">
             <label class="block text-sm font-medium mb-1">Votre email <span class="text-red-500">*</span></label>
             <input type="email" name="email" required value="{{ auth()->user()?->email }}" class="w-full border rounded-lg px-3 py-2" placeholder="email@exemple.fr">
