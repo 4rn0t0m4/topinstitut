@@ -26,6 +26,7 @@ class RevendicationController extends Controller
     public function moderer(Request $request, Claim $revendication)
     {
         $request->validate(['action' => 'required|in:approuver,refuser']);
+        \Illuminate\Support\Facades\Cache::forget('admin_pending_claims');
 
         if ($request->action === 'refuser') {
             $revendication->update(['status' => 'rejected']);

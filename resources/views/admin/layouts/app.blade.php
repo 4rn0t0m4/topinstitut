@@ -43,6 +43,15 @@
                 <a href="{{ route('admin.guides.index') }}" class="block px-4 py-2 text-sm hover:bg-gray-800 {{ request()->routeIs('admin.guides.*') ? 'bg-gray-800 text-pink-400' : '' }}">
                     Guides
                 </a>
+                @php
+                    $pendingClaims = \Illuminate\Support\Facades\Cache::remember('admin_pending_claims', 60, fn () => \App\Models\Claim::where('status', 'pending')->whereNotNull('email_verified_at')->count());
+                @endphp
+                <a href="{{ route('admin.revendications.index') }}" class="flex items-center justify-between px-4 py-2 text-sm hover:bg-gray-800 {{ request()->routeIs('admin.revendications.*') ? 'bg-gray-800 text-pink-400' : '' }}">
+                    <span>Revendications</span>
+                    @if($pendingClaims > 0)
+                        <span class="ml-2 bg-pink-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $pendingClaims }}</span>
+                    @endif
+                </a>
                 <a href="{{ route('admin.abonnements.index') }}" class="block px-4 py-2 text-sm hover:bg-gray-800 {{ request()->routeIs('admin.abonnements.*') ? 'bg-gray-800 text-pink-400' : '' }}">
                     Abonnements
                 </a>
