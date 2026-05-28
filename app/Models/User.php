@@ -15,7 +15,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'email', 'password', 'username', 'last_name', 'first_name', 'gender',
+        'email', 'email_verified_at', 'password', 'username', 'last_name', 'first_name', 'gender',
         'address', 'postal_code', 'city', 'department_code', 'city_id',
         'longitude', 'latitude', 'phone', 'mobile',
         'date_of_birth', 'photo', 'is_admin', 'stripe_customer_id',

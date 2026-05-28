@@ -45,7 +45,7 @@ class SlotService
      * Premier jour (à partir d'aujourd'hui) avec au moins un créneau libre,
      * et ses créneaux. Retourne ['date' => Carbon|null, 'slots' => string[]].
      *
-     * @return array{date: ?\Illuminate\Support\Carbon, slots: array<int, string>}
+     * @return array{date: ?Carbon, slots: array<int, string>}
      */
     public function nextAvailability(Establishment $establishment, Service $service, ?int $practitionerId = null, int $maxDays = 60): array
     {
@@ -196,7 +196,8 @@ class SlotService
                 'end' => $t->ends_at->gt($dayEnd) ? 24 * 60 : $t->ends_at->hour * 60 + $t->ends_at->minute,
             ]);
 
-        return $appointments->merge($timeOffs)->all();
+        // Eloquent\Collection::merge appelle getKey() — incompatible avec des tableaux.
+        return array_merge($appointments->all(), $timeOffs->all());
     }
 
     private function overlapsAny(int $start, int $end, array $intervals): bool
