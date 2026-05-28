@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Concerns\RespondsJsonOrBack;
 use App\Models\Claim;
 use App\Models\Establishment;
 use Illuminate\Http\Request;
@@ -10,6 +11,8 @@ use Illuminate\Support\Str;
 
 class RevendicationController extends Controller
 {
+    use RespondsJsonOrBack;
+
     public function store(Request $request, Establishment $establishment)
     {
         $validated = $request->validate([
@@ -23,7 +26,7 @@ class RevendicationController extends Controller
 
         // Déjà propriétaire (uniquement vérifiable pour les connectés) ?
         if ($request->user() && $establishment->owners()->where('user_id', $request->user()->id)->exists()) {
-            return $this->errorResponse($request, 'Vous êtes déjà propriétaire de cet établissement.');
+            return $this->errorJsonOrBack($request, ['email' => 'Vous êtes déjà propriétaire de cet établissement.']);
         }
 
         // Demande déjà en cours pour ce couple email/établissement ?
@@ -31,7 +34,7 @@ class RevendicationController extends Controller
             ->where('email', $email)
             ->where('status', 'pending')
             ->exists()) {
-            return $this->errorResponse($request, 'Une demande pour cet établissement est déjà en cours avec cet email.');
+            return $this->errorJsonOrBack($request, ['email' => 'Une demande pour cet établissement est déjà en cours avec cet email.']);
         }
 
         // Email déjà prouvé uniquement si l'utilisateur est connecté ET utilise SON email de compte.
@@ -57,11 +60,7 @@ class RevendicationController extends Controller
             $msg = 'Un email de confirmation vient d\'être envoyé à '.$email.'. Cliquez sur le lien pour valider votre revendication.';
         }
 
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => $msg]);
-        }
-
-        return back()->with('success', $msg);
+        return $this->successJsonOrBack($request, $msg);
     }
 
     public function confirmEmail(string $token)
@@ -113,12 +112,4 @@ class RevendicationController extends Controller
         );
     }
 
-    private function errorResponse(Request $request, string $message)
-    {
-        if ($request->expectsJson()) {
-            return response()->json(['error' => $message], 422);
-        }
-
-        return back()->with('error', $message);
-    }
 }

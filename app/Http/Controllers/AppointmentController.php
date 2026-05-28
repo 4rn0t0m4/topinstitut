@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Concerns\RespondsJsonOrBack;
 use App\Http\Requests\Booking\SlotsRequest;
 use App\Http\Requests\Booking\StoreAppointmentRequest;
 use App\Models\Appointment;
@@ -9,11 +10,12 @@ use App\Models\Establishment;
 use App\Services\AppointmentService;
 use App\Services\SlotService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class AppointmentController extends Controller
 {
+    use RespondsJsonOrBack;
+
     public function __construct(private SlotService $slots, private AppointmentService $appointments) {}
 
     /** Page de prise de rendez-vous. */
@@ -66,7 +68,7 @@ class AppointmentController extends Controller
         $start = Carbon::createFromFormat('Y-m-d H:i', $request->input('date').' '.$request->input('time'));
 
         if ($start->isPast() || $start->gt(now()->addDays(60))) {
-            return $this->slotError($request, 'Ce créneau n\'est plus disponible.');
+            return $this->errorJsonOrBack($request, ['time' => 'Ce créneau n\'est plus disponible.']);
         }
 
         $appointment = $this->appointments->book(
@@ -79,7 +81,7 @@ class AppointmentController extends Controller
         );
 
         if (! $appointment) {
-            return $this->slotError($request, 'Désolé, ce créneau vient d\'être réservé. Merci d\'en choisir un autre.');
+            return $this->errorJsonOrBack($request, ['time' => 'Désolé, ce créneau vient d\'être réservé. Merci d\'en choisir un autre.']);
         }
 
         $this->appointments->notifyConfirmed($appointment);
@@ -101,15 +103,6 @@ class AppointmentController extends Controller
         }
 
         return redirect()->route('rdv.confirmation', [$establishment, $appointment]);
-    }
-
-    private function slotError(Request $request, string $message)
-    {
-        if ($request->expectsJson()) {
-            return response()->json(['message' => $message, 'errors' => ['time' => [$message]]], 422);
-        }
-
-        return back()->withInput()->withErrors(['time' => $message]);
     }
 
     public function confirmation(Establishment $establishment, Appointment $appointment)
