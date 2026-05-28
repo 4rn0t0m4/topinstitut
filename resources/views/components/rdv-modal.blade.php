@@ -7,6 +7,7 @@
      })"
      x-show="$store.rdvModal.open"
      @keydown.escape.window="$store.rdvModal.open = false"
+     @rdv-start.window="startWithService($event.detail.serviceId)"
      x-cloak
      class="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="fixed inset-0 bg-black/50" @click="$store.rdvModal.open = false"></div>
@@ -180,6 +181,21 @@
 
                 goStep(n) { if (n < this.step) this.step = n; },
                 selectService(s) { this.selectedService = s; this.step = 2; },
+
+                // Ouvre la modale directement à l'étape Praticien avec la prestation pré-sélectionnée.
+                startWithService(id) {
+                    const service = this.services.find((s) => s.id === id);
+                    if (!service) return;
+                    this.confirmed = null;
+                    this.submitError = '';
+                    this.selectedService = service;
+                    this.selectedPractitioner = null;
+                    this.date = '';
+                    this.time = '';
+                    this.slots = [];
+                    this.step = 2;
+                    Alpine.store('rdvModal').open = true;
+                },
                 selectPractitioner(id) { this.selectedPractitioner = id; this.step = 3; this.slots = []; this.date = ''; this.loadSlots(); },
                 selectSlot(slot) { this.time = slot; this.step = 4; },
 

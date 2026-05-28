@@ -270,9 +270,18 @@
                                             @endif
                                             <div class="text-xs text-gray-400 mt-1">{{ $service->duration_label }}</div>
                                         </div>
-                                        @if($service->price_label)
-                                            <div class="flex-shrink-0 text-pink-600 font-semibold whitespace-nowrap">{{ $service->price_label }}</div>
-                                        @endif
+                                        <div class="flex-shrink-0 flex items-center gap-3">
+                                            @if($service->price_label)
+                                                <span class="text-pink-600 font-semibold whitespace-nowrap">{{ $service->price_label }}</span>
+                                            @endif
+                                            @if($establishment->accepts_bookings && $service->is_bookable)
+                                                <button type="button"
+                                                        @click="$dispatch('rdv-start', { serviceId: {{ $service->id }} })"
+                                                        class="bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap cursor-pointer transition">
+                                                    Réserver
+                                                </button>
+                                            @endif
+                                        </div>
                                     </div>
                                 @endforeach
                             @endforeach
