@@ -52,11 +52,16 @@
 
         {{-- Grille photos existantes --}}
         @if($photos->isNotEmpty())
-            <h2 class="text-sm font-semibold text-gray-700 mb-2">{{ count($photos) }} photo{{ count($photos) > 1 ? 's' : '' }}</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-sm font-semibold text-gray-700">{{ count($photos) }} photo{{ count($photos) > 1 ? 's' : '' }}</h2>
+                <span x-show="reorderState" x-cloak class="text-xs text-gray-400" x-text="reorderState"></span>
+            </div>
+            <div id="photos-grid"
+                 x-init="initSortable($el)"
+                 class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                 @foreach($photos as $photo)
-                    <div class="relative group aspect-square">
-                        <img src="{{ $photo->url }}" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover rounded-lg">
+                    <div data-id="{{ $photo->id }}" class="relative group aspect-square cursor-move">
+                        <img src="{{ $photo->url }}" alt="" loading="lazy" draggable="false" class="absolute inset-0 w-full h-full object-cover rounded-lg pointer-events-none">
                         <form action="{{ route('client.etablissement.photos.destroy', [$etablissement, $photo]) }}" method="POST" class="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition" onsubmit="return confirm('Supprimer cette photo ?')">
                             @csrf @method('DELETE')
                             <button type="submit" title="Supprimer" class="bg-white/95 hover:bg-red-50 text-red-600 w-7 h-7 rounded-full shadow flex items-center justify-center cursor-pointer">
@@ -66,18 +71,48 @@
                     </div>
                 @endforeach
             </div>
+            <p class="text-xs text-gray-400 mt-2">Astuce : glissez-déposez les photos pour modifier l'ordre.</p>
         @else
             <p class="text-sm text-gray-500 italic">Aucune photo pour l'instant.</p>
         @endif
     </div>
 
     @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15/Sortable.min.js" defer></script>
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('photoUploader', (cfg) => ({
                 queue: [],
                 dragging: false,
                 nextId: 1,
+                reorderState: '',
+
+                initSortable(el) {
+                    const start = () => {
+                        if (typeof Sortable === 'undefined') { setTimeout(start, 80); return; }
+                        Sortable.create(el, {
+                            animation: 150,
+                            ghostClass: 'opacity-40',
+                            onEnd: () => this.saveOrder(el),
+                        });
+                    };
+                    start();
+                },
+                async saveOrder(el) {
+                    const order = Array.from(el.querySelectorAll('[data-id]')).map((n) => Number(n.dataset.id));
+                    this.reorderState = 'Enregistrement…';
+                    try {
+                        const res = await fetch('{{ route('client.etablissement.photos.reorder', $etablissement) }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': cfg.csrf },
+                            body: JSON.stringify({ order }),
+                        });
+                        this.reorderState = res.ok ? '✓ Ordre enregistré' : '⚠ Échec de la sauvegarde';
+                    } catch (e) {
+                        this.reorderState = '⚠ Échec de la sauvegarde';
+                    }
+                    setTimeout(() => { this.reorderState = ''; }, 1800);
+                },
 
                 onFiles(fileList) {
                     Array.from(fileList).forEach((file) => {
