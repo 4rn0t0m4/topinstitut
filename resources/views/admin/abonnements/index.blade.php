@@ -162,4 +162,56 @@
             </div>
         </section>
     @endif
+
+    {{-- Établissements revendiqués mais hors Premium --}}
+    @if($gratuits->isNotEmpty())
+        <section class="bg-white rounded-lg shadow-sm border mt-8">
+            <header class="px-4 py-3 border-b">
+                <h2 class="font-semibold text-gray-700">Revendiqués hors Premium ({{ $gratuits->count() }})</h2>
+                <p class="text-xs text-gray-500">Forfait gratuit ou essai terminé — prospects à relancer.</p>
+            </header>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 text-left text-xs uppercase text-gray-500">
+                        <tr>
+                            <th class="px-4 py-2">Établissement</th>
+                            <th class="px-4 py-2">Ville</th>
+                            <th class="px-4 py-2">Propriétaire</th>
+                            <th class="px-4 py-2">Statut</th>
+                            <th class="px-4 py-2"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        @foreach($gratuits as $etab)
+                            <tr>
+                                <td class="px-4 py-2">
+                                    <a href="{{ $etab->url }}" target="_blank" class="text-pink-600 hover:underline">{{ $etab->name }}</a>
+                                </td>
+                                <td class="px-4 py-2 text-gray-600">{{ $etab->city }}</td>
+                                <td class="px-4 py-2 text-gray-600">
+                                    @forelse($etab->owners as $owner)
+                                        <a href="mailto:{{ $owner->email }}" class="text-pink-600 hover:underline">{{ $owner->email }}</a>@if(!$loop->last), @endif
+                                    @empty
+                                        <span class="text-gray-400">—</span>
+                                    @endforelse
+                                </td>
+                                <td class="px-4 py-2 text-xs">
+                                    @if($etab->trial_started_at && $etab->subscription_ends_at && $etab->subscription_ends_at->isPast())
+                                        <span class="text-red-600">Essai terminé le {{ $etab->subscription_ends_at->format('d/m/Y') }}</span>
+                                    @elseif(! $etab->trial_started_at)
+                                        <span class="text-gray-500">Forfait gratuit — pas d'essai consommé</span>
+                                    @else
+                                        <span class="text-gray-500">Gratuit</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-2 text-right">
+                                    <a href="{{ route('admin.etablissements.edit', $etab) }}" class="text-pink-600 hover:underline text-xs">Modifier</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    @endif
 @endsection

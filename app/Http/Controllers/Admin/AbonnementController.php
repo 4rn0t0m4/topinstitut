@@ -31,6 +31,14 @@ class AbonnementController extends Controller
             ->limit(50)
             ->get();
 
+        // Établissements revendiqués (au moins un propriétaire) actuellement hors Premium.
+        $gratuits = Establishment::has('owners')
+            ->where(fn ($q) => $q->where('subscription_tier', '!=', 'premium')
+                ->orWhere(fn ($q2) => $q2->whereNotNull('subscription_ends_at')->where('subscription_ends_at', '<=', $now)))
+            ->with('owners')
+            ->orderBy('name')
+            ->get();
+
         // Sponsorisé = tout compris (19,90 €) : on ne compte pas son Premium en plus.
         $sponsoriseCount = $sponsorisesActifs->count();
         $premiumSeulCount = max($premiumActifs->count() - $sponsoriseCount, 0);
@@ -41,9 +49,10 @@ class AbonnementController extends Controller
             'mrr_premium' => $premiumSeulCount * 9.90,
             'mrr_sponsorise' => $sponsoriseCount * 19.90,
             'expires_count' => $expires->count(),
+            'gratuits_count' => $gratuits->count(),
         ];
         $stats['mrr_total'] = $stats['mrr_premium'] + $stats['mrr_sponsorise'];
 
-        return view('admin.abonnements.index', compact('premiumActifs', 'sponsorisesActifs', 'expires', 'stats'));
+        return view('admin.abonnements.index', compact('premiumActifs', 'sponsorisesActifs', 'expires', 'gratuits', 'stats'));
     }
 }
