@@ -56,7 +56,7 @@
             <section class="bg-white rounded-lg shadow-sm border p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-semibold">Catégories & prestations</h2>
-                    <button type="button" @click="addCategory()" class="inline-flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700 cursor-pointer">
+                    <button type="button" @click="addCategory()" class="inline-flex items-center gap-1.5 text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 px-3 py-1.5 rounded-lg cursor-pointer transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                         Ajouter une catégorie
                     </button>
@@ -102,7 +102,7 @@
 
                             <p x-show="servicesForCategory(cat.cid).length === 0" class="text-xs text-gray-400 italic mt-2">Aucune prestation pour le moment.</p>
 
-                            <button type="button" @click="addService(cat.cid)" class="mt-3 inline-flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700 cursor-pointer">
+                            <button type="button" @click="addService(cat.cid)" class="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-pink-700 bg-white border border-pink-300 hover:bg-pink-50 hover:border-pink-500 px-3 py-1.5 rounded-lg cursor-pointer transition">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                 Ajouter une prestation
                             </button>
