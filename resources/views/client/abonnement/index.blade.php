@@ -44,7 +44,14 @@
                                 <p class="text-sm text-gray-500">{{ $etab->type_label }} · {{ $etab->city }}</p>
 
                                 <div class="mt-3 flex items-center gap-2 flex-wrap">
-                                    @if($etab->is_premium)
+                                    @if($etab->is_in_trial)
+                                        <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-0.5 rounded-full">Essai gratuit</span>
+                                        <span class="text-xs text-gray-500">
+                                            @if($etab->trial_days_left > 0)
+                                                {{ $etab->trial_days_left }} jour{{ $etab->trial_days_left > 1 ? 's' : '' }} restant{{ $etab->trial_days_left > 1 ? 's' : '' }} · prend fin le {{ $etab->subscription_ends_at->format('d/m/Y') }}
+                                            @endif
+                                        </span>
+                                    @elseif($etab->is_premium)
                                         <span class="bg-pink-100 text-pink-700 text-xs font-semibold px-2 py-0.5 rounded-full">Premium actif</span>
                                         @if($etab->subscription_ends_at)
                                             <span class="text-xs text-gray-500">jusqu'au {{ $etab->subscription_ends_at->format('d/m/Y') }}</span>
@@ -60,7 +67,13 @@
                             </div>
 
                             <div class="flex flex-col gap-2 shrink-0">
-                                @if(! $etab->is_premium)
+                                @if($etab->is_in_trial)
+                                    <form action="{{ route('client.abonnement.checkout', $etab) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="bg-pink-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-pink-700">Activer mon abonnement — 9,90€/mois</button>
+                                    </form>
+                                    <span class="text-[11px] text-gray-400 text-right">Évitez l'interruption à la fin de l'essai</span>
+                                @elseif(! $etab->is_premium)
                                     <form action="{{ route('client.abonnement.checkout', $etab) }}" method="POST">
                                         @csrf
                                         <button type="submit" class="bg-pink-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-pink-700">Passer Premium — 9,90€/mois</button>

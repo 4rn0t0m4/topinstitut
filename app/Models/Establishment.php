@@ -67,7 +67,7 @@ class Establishment extends Model
         'siret', 'photo', 'tagline', 'is_active', 'rating', 'review_count', 'view_count',
         'features',
         'subscription_tier', 'subscription_ends_at', 'is_verified_owner', 'featured_until',
-        'stripe_subscription_id',
+        'stripe_subscription_id', 'trial_started_at',
         'google_place_id', 'google_rating', 'google_review_count', 'google_reviews',
         'google_photos_checked_at', 'google_reviews_checked_at',
     ];
@@ -87,6 +87,7 @@ class Establishment extends Model
             'is_verified_owner' => 'boolean',
             'subscription_ends_at' => 'datetime',
             'featured_until' => 'datetime',
+            'trial_started_at' => 'datetime',
         ];
     }
 
@@ -144,6 +145,7 @@ class Establishment extends Model
                     if ($openMinutes > $minutes) {
                         return "Ouvre à $formatted";
                     }
+
                     continue;
                 }
 
@@ -188,6 +190,46 @@ class Establishment extends Model
         }
 
         return $this->subscription_ends_at === null || $this->subscription_ends_at->isFuture();
+    }
+
+    /**
+     * Période d'essai active : trial démarré, pas encore expirée, et pas de paiement Stripe.
+     */
+    public function getIsInTrialAttribute(): bool
+    {
+        return $this->trial_started_at !== null
+            && empty($this->stripe_subscription_id)
+            && $this->is_premium;
+    }
+
+    /**
+     * Jours restants dans l'essai (0 si expiré ou pas en essai).
+     */
+    public function getTrialDaysLeftAttribute(): int
+    {
+        if (! $this->is_in_trial || ! $this->subscription_ends_at) {
+            return 0;
+        }
+
+        return max(0, (int) ceil(now()->diffInDays($this->subscription_ends_at, false)));
+    }
+
+    /**
+     * Démarre la période d'essai (1 mois) si l'établissement n'en a jamais eu et n'est pas Premium.
+     */
+    public function startTrialIfEligible(): bool
+    {
+        if ($this->trial_started_at || $this->is_premium) {
+            return false;
+        }
+
+        $this->update([
+            'subscription_tier' => 'premium',
+            'subscription_ends_at' => now()->addMonth(),
+            'trial_started_at' => now(),
+        ]);
+
+        return true;
     }
 
     /**

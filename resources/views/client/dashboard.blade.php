@@ -91,7 +91,16 @@
                                 {{ mb_strtoupper(mb_substr($etab->name, 0, 1)) }}
                             </div>
                             <div class="min-w-0">
-                                <h3 class="font-semibold text-gray-900 truncate">{{ $etab->name }}</h3>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="font-semibold text-gray-900 truncate">{{ $etab->name }}</h3>
+                                    @if($etab->is_in_trial)
+                                        <a href="{{ route('client.abonnement.index') }}" class="bg-amber-100 text-amber-800 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full hover:bg-amber-200">
+                                            Essai · {{ $etab->trial_days_left }}j
+                                        </a>
+                                    @elseif($etab->is_premium)
+                                        <span class="bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full">Premium</span>
+                                    @endif
+                                </div>
                                 <p class="text-sm text-gray-500">{{ $etab->type_label }} · {{ $etab->city }} · {{ $etab->reviews_count ?? 0 }} avis</p>
                             </div>
                         </div>

@@ -126,4 +126,22 @@ class ClientAuthorizationTest extends TestCase
             ->get('/espace-client/etablissement/'.$establishment->id.'/prestations')
             ->assertRedirect('/espace-client/abonnement');
     }
+
+    public function test_start_trial_grants_one_month_premium(): void
+    {
+        $establishment = Establishment::factory()->create(['subscription_tier' => 'free']);
+
+        $this->assertFalse($establishment->is_premium);
+        $this->assertTrue($establishment->startTrialIfEligible());
+
+        $establishment->refresh();
+        $this->assertTrue($establishment->is_premium);
+        $this->assertTrue($establishment->is_in_trial);
+        $this->assertNotNull($establishment->trial_started_at);
+        $this->assertGreaterThan(now()->addDays(28), $establishment->subscription_ends_at);
+        $this->assertLessThan(now()->addDays(32), $establishment->subscription_ends_at);
+
+        // Pas de second essai
+        $this->assertFalse($establishment->fresh()->startTrialIfEligible());
+    }
 }

@@ -47,8 +47,9 @@ class InscriptionEtablissementController extends Controller
 
         if (Auth::check()) {
             $establishment->owners()->attach(Auth::id());
+            $establishment->startTrialIfEligible();
         }
 
-        return redirect()->route('home')->with('success', 'Votre établissement a été enregistré et sera validé prochainement.');
+        return redirect()->route('home')->with('success', 'Votre établissement a été enregistré et sera validé prochainement. Vous bénéficiez d\'un mois d\'essai Premium gratuit.');
     }
 }

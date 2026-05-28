@@ -58,9 +58,11 @@ class RevendicationController extends Controller
         }
 
         $revendication->update(['status' => 'approved']);
-        $revendication->establishment->owners()->syncWithoutDetaching([$userId]);
+        $establishment = $revendication->establishment;
+        $establishment->owners()->syncWithoutDetaching([$userId]);
+        $establishment->startTrialIfEligible();
 
-        return redirect()->route('admin.revendications.index')->with('success', 'Demande approuvée — propriétaire ajouté.');
+        return redirect()->route('admin.revendications.index')->with('success', 'Demande approuvée — propriétaire ajouté avec un mois d\'essai Premium.');
     }
 
     /**
