@@ -34,7 +34,6 @@ class FaqController extends Controller
     public function update(Request $request, Establishment $etablissement, Faq $faq)
     {
         $this->authorize('manage', $etablissement);
-        abort_unless($faq->establishment_id === $etablissement->id, 403);
 
         $faq->update($request->validate([
             'question' => 'required|string|max:255',
@@ -47,7 +46,6 @@ class FaqController extends Controller
     public function destroy(Establishment $etablissement, Faq $faq)
     {
         $this->authorize('manage', $etablissement);
-        abort_unless($faq->establishment_id === $etablissement->id, 403);
 
         $faq->delete();
 

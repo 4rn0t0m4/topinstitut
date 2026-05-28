@@ -36,7 +36,6 @@ class PhotoController extends Controller
     public function destroy(Establishment $etablissement, Photo $photo)
     {
         $this->authorize('manage', $etablissement);
-        abort_unless($photo->establishment_id === $etablissement->id, 403);
 
         $this->photos->delete($photo);
 

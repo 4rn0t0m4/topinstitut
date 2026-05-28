@@ -41,7 +41,6 @@ class AppointmentController extends Controller
     public function updateStatus(Request $request, Establishment $etablissement, Appointment $appointment)
     {
         $this->authorize('manage', $etablissement);
-        abort_unless($appointment->establishment_id === $etablissement->id, 403);
 
         $validated = $request->validate([
             'status' => 'required|in:confirmed,cancelled,completed,no_show',
@@ -133,7 +132,6 @@ class AppointmentController extends Controller
     public function destroyTimeOff(Establishment $etablissement, Practitioner $practitioner, TimeOff $timeOff)
     {
         $this->authorize('manage', $etablissement);
-        abort_unless($practitioner->establishment_id === $etablissement->id && $timeOff->practitioner_id === $practitioner->id, 403);
 
         $timeOff->delete();
 

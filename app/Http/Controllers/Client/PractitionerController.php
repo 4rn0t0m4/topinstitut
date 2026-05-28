@@ -34,7 +34,6 @@ class PractitionerController extends Controller
     public function update(Request $request, Establishment $etablissement, Practitioner $practitioner)
     {
         $this->authorize('manage', $etablissement);
-        abort_unless($practitioner->establishment_id === $etablissement->id, 403);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -52,7 +51,6 @@ class PractitionerController extends Controller
     public function destroy(Establishment $etablissement, Practitioner $practitioner)
     {
         $this->authorize('manage', $etablissement);
-        abort_unless($practitioner->establishment_id === $etablissement->id, 403);
 
         $practitioner->delete();
 
@@ -62,7 +60,6 @@ class PractitionerController extends Controller
     public function editSchedules(Establishment $etablissement, Practitioner $practitioner)
     {
         $this->authorize('manage', $etablissement);
-        abort_unless($practitioner->establishment_id === $etablissement->id, 403);
 
         $schedules = $practitioner->schedules->groupBy('day_of_week');
 
@@ -72,7 +69,6 @@ class PractitionerController extends Controller
     public function updateSchedules(Request $request, Establishment $etablissement, Practitioner $practitioner)
     {
         $this->authorize('manage', $etablissement);
-        abort_unless($practitioner->establishment_id === $etablissement->id, 403);
 
         $request->validate([
             'days' => 'array',

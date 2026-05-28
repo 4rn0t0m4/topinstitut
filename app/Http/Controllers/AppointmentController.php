@@ -173,16 +173,12 @@ class AppointmentController extends Controller
 
     public function confirmation(Establishment $establishment, Appointment $appointment)
     {
-        abort_unless($appointment->establishment_id === $establishment->id, 404);
-
         return view('rdv.confirmation', compact('establishment', 'appointment'));
     }
 
     /** Annulation via lien signé envoyé par email. */
     public function cancel(Establishment $establishment, Appointment $appointment)
     {
-        abort_unless($appointment->establishment_id === $establishment->id, 404);
-
         $cancellable = $appointment->status !== 'cancelled' && $appointment->starts_at->isFuture();
 
         if ($cancellable) {

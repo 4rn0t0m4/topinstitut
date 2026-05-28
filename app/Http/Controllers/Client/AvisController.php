@@ -17,20 +17,22 @@ class AvisController extends Controller
         return view('client.avis.index', compact('etablissement', 'avis'));
     }
 
-    public function repondre(Establishment $etablissement, Review $avis)
+    public function repondre(Establishment $etablissement, Review $review)
     {
         $this->authorize('manage', $etablissement);
+
+        $avis = $review; // alias pour la vue
 
         return view('client.avis.repondre', compact('etablissement', 'avis'));
     }
 
-    public function storeReponse(Request $request, Establishment $etablissement, Review $avis)
+    public function storeReponse(Request $request, Establishment $etablissement, Review $review)
     {
         $this->authorize('manage', $etablissement);
 
         $request->validate(['reply' => 'required|string|max:5000']);
 
-        $avis->update([
+        $review->update([
             'reply' => $request->reply,
             'replied_at' => now(),
         ]);

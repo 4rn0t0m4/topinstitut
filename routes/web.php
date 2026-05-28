@@ -98,8 +98,8 @@ Route::post('/rdv/{establishment}', [\App\Http\Controllers\BookingController::cl
 Route::get('/rdv/{establishment}/reserver', [\App\Http\Controllers\AppointmentController::class, 'create'])->name('rdv.create');
 Route::get('/rdv/{establishment}/creneaux', [\App\Http\Controllers\AppointmentController::class, 'slots'])->name('rdv.slots');
 Route::post('/rdv/{establishment}/reserver', [\App\Http\Controllers\AppointmentController::class, 'store'])->middleware(['bot', 'throttle:10,1'])->name('rdv.store');
-Route::get('/rdv/{establishment}/confirmation/{appointment}', [\App\Http\Controllers\AppointmentController::class, 'confirmation'])->name('rdv.confirmation');
-Route::get('/rdv/{establishment}/annuler/{appointment}', [\App\Http\Controllers\AppointmentController::class, 'cancel'])->middleware('signed')->name('rdv.cancel');
+Route::get('/rdv/{establishment}/confirmation/{appointment}', [\App\Http\Controllers\AppointmentController::class, 'confirmation'])->scopeBindings()->name('rdv.confirmation');
+Route::get('/rdv/{establishment}/annuler/{appointment}', [\App\Http\Controllers\AppointmentController::class, 'cancel'])->middleware('signed')->scopeBindings()->name('rdv.cancel');
 
 // Favorites
 Route::post('/ajax/favorites/{establishment}', [\App\Http\Controllers\FavoriteController::class, 'toggle'])->name('favorites.toggle');

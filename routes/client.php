@@ -14,7 +14,7 @@ Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('profil', [ProfilController::class, 'edit'])->name('profil.edit');
 Route::put('profil', [ProfilController::class, 'update'])->name('profil.update');
 
-Route::prefix('etablissement/{etablissement}')->name('etablissement.')->group(function () {
+Route::prefix('etablissement/{etablissement}')->name('etablissement.')->scopeBindings()->group(function () {
     Route::get('/', [EtablissementController::class, 'edit'])->name('edit');
     Route::put('/', [EtablissementController::class, 'update'])->name('update');
     Route::get('presentation', [EtablissementController::class, 'editPresentation'])->name('presentation');
@@ -33,8 +33,8 @@ Route::prefix('etablissement/{etablissement}')->name('etablissement.')->group(fu
     Route::put('actualite', [ActualiteController::class, 'update'])->name('actualite.update');
 
     Route::get('avis', [AvisController::class, 'index'])->name('avis');
-    Route::get('avis/{avis}/repondre', [AvisController::class, 'repondre'])->name('avis.repondre');
-    Route::post('avis/{avis}/repondre', [AvisController::class, 'storeReponse'])->name('avis.reponse');
+    Route::get('avis/{review}/repondre', [AvisController::class, 'repondre'])->name('avis.repondre');
+    Route::post('avis/{review}/repondre', [AvisController::class, 'storeReponse'])->name('avis.reponse');
 
     Route::get('faq', [\App\Http\Controllers\Client\FaqController::class, 'index'])->name('faq');
     Route::post('faq', [\App\Http\Controllers\Client\FaqController::class, 'store'])->name('faq.store');
