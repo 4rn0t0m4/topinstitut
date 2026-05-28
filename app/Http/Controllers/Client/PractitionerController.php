@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Client\UpdatePractitionerSchedulesRequest;
 use App\Models\Establishment;
 use App\Models\Practitioner;
 use Illuminate\Http\Request;
@@ -66,38 +67,9 @@ class PractitionerController extends Controller
         return view('client.etablissement.praticiens.horaires', compact('etablissement', 'practitioner', 'schedules'));
     }
 
-    public function updateSchedules(Request $request, Establishment $etablissement, Practitioner $practitioner)
+    public function updateSchedules(UpdatePractitionerSchedulesRequest $request, Establishment $etablissement, Practitioner $practitioner)
     {
-        $this->authorize('manage', $etablissement);
-
-        $request->validate([
-            'days' => 'array',
-            'days.*.am_start' => 'nullable|date_format:H:i',
-            'days.*.am_end' => 'nullable|date_format:H:i',
-            'days.*.pm_start' => 'nullable|date_format:H:i',
-            'days.*.pm_end' => 'nullable|date_format:H:i',
-        ]);
-
-        $practitioner->schedules()->delete();
-
-        foreach ($request->input('days', []) as $day => $ranges) {
-            $day = (int) $day;
-            if ($day < 1 || $day > 7) {
-                continue;
-            }
-
-            foreach ([['am_start', 'am_end'], ['pm_start', 'pm_end']] as [$startKey, $endKey]) {
-                $start = $ranges[$startKey] ?? null;
-                $end = $ranges[$endKey] ?? null;
-                if ($start && $end && $start < $end) {
-                    $practitioner->schedules()->create([
-                        'day_of_week' => $day,
-                        'start_time' => $start,
-                        'end_time' => $end,
-                    ]);
-                }
-            }
-        }
+        $practitioner->syncSchedules($request->input('days', []));
 
         return back()->with('success', 'Horaires de travail mis à jour.');
     }

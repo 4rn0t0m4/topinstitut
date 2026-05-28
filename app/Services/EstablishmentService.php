@@ -5,9 +5,100 @@ namespace App\Services;
 use App\Models\City;
 use App\Models\Establishment;
 use App\Models\Schedule;
+use Illuminate\Support\Facades\DB;
 
 class EstablishmentService
 {
+    /**
+     * Upsert le catalogue catégories + prestations d'un établissement en une
+     * transaction. Les cid (client) côté formulaire permettent de rattacher
+     * les nouvelles prestations à de nouvelles catégories non encore persistées.
+     *
+     * @param  array<int, array{cid:string, id?:int|null, name:string, description?:?string}>  $categories
+     * @param  array<int, array{id?:int|null, name:string, category_cid?:?string, duration_minutes:int|string, price?:?string, description?:?string, is_bookable?:bool}>  $services
+     */
+    public function syncServiceCatalog(Establishment $establishment, array $categories, array $services): void
+    {
+        DB::transaction(function () use ($establishment, $categories, $services) {
+            $cidToId = $this->syncCategories($establishment, $categories);
+            $this->syncServices($establishment, $services, $cidToId);
+        });
+    }
+
+    /**
+     * @return array<string, int>  cid (client) → id réel
+     */
+    private function syncCategories(Establishment $establishment, array $categories): array
+    {
+        $existingIds = $establishment->serviceCategories()->pluck('id')->all();
+        $keptIds = [];
+        $cidToId = [];
+
+        foreach (array_values($categories) as $i => $c) {
+            if (! filled($c['name'] ?? null)) {
+                continue;
+            }
+
+            $attrs = [
+                'name' => trim($c['name']),
+                'description' => filled($c['description'] ?? null) ? trim($c['description']) : null,
+                'sort_order' => $i,
+            ];
+
+            $id = (isset($c['id']) && in_array((int) $c['id'], $existingIds)) ? (int) $c['id'] : null;
+            if ($id) {
+                $establishment->serviceCategories()->whereKey($id)->update($attrs);
+            } else {
+                $id = $establishment->serviceCategories()->create($attrs)->id;
+            }
+
+            $keptIds[] = $id;
+            $cidToId[$c['cid']] = $id;
+        }
+
+        // Catégories retirées : la FK nullOnDelete remet service_category_id à null
+        // sur les prestations rattachées (elles deviennent « Sans catégorie »).
+        $establishment->serviceCategories()->whereNotIn('id', $keptIds)->delete();
+
+        return $cidToId;
+    }
+
+    /**
+     * @param  array<string, int>  $cidToId
+     */
+    private function syncServices(Establishment $establishment, array $services, array $cidToId): void
+    {
+        $existingIds = $establishment->services()->pluck('id')->all();
+        $keptIds = [];
+
+        foreach (array_values($services) as $i => $s) {
+            if (! filled($s['name'] ?? null)) {
+                continue;
+            }
+
+            $attrs = [
+                'service_category_id' => $cidToId[$s['category_cid'] ?? ''] ?? null,
+                'name' => trim($s['name']),
+                'description' => filled($s['description'] ?? null) ? trim($s['description']) : null,
+                'duration_minutes' => (int) $s['duration_minutes'],
+                'price' => filled($s['price'] ?? null) ? trim($s['price']) : null,
+                'is_bookable' => (bool) ($s['is_bookable'] ?? false),
+                'sort_order' => $i,
+            ];
+
+            $id = (isset($s['id']) && in_array((int) $s['id'], $existingIds)) ? (int) $s['id'] : null;
+            if ($id) {
+                $establishment->services()->whereKey($id)->update($attrs);
+            } else {
+                $id = $establishment->services()->create($attrs)->id;
+            }
+
+            $keptIds[] = $id;
+        }
+
+        $establishment->services()->whereNotIn('id', $keptIds)->delete();
+    }
+
     /**
      * Update basic information for an establishment.
      */
