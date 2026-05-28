@@ -28,7 +28,11 @@ class PhotoController extends Controller
 
         $request->validate(['photo' => 'required|image|max:5120']);
 
-        $this->photos->upload($etablissement, $request->file('photo'));
+        $photo = $this->photos->upload($etablissement, $request->file('photo'));
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'id' => $photo->id, 'url' => $photo->url]);
+        }
 
         return back()->with('success', 'Photo ajoutée.');
     }
