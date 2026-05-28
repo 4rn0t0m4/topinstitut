@@ -70,7 +70,7 @@
                     <template x-for="(cat, ci) in categories" :key="cat.cid">
                         <div class="border rounded-lg overflow-hidden">
                             {{-- En-tête de catégorie --}}
-                            <div class="bg-gray-50 border-b p-4">
+                            <div class="bg-gradient-to-r from-pink-50 to-pink-50/40 border-b-2 border-pink-200 p-4">
                                 <div class="flex items-start gap-2">
                                     <div class="flex flex-col pt-2 flex-shrink-0">
                                         <button type="button" @click="moveCategory(ci, -1)" :disabled="ci === 0" class="text-gray-300 hover:text-gray-600 disabled:opacity-30 leading-none cursor-pointer" title="Monter">▲</button>
