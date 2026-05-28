@@ -19,6 +19,18 @@ class EstablishmentService
      */
     public function syncServiceCatalog(Establishment $establishment, array $categories, array $services): void
     {
+        // Vérifie en amont que chaque prestation pointe vers une catégorie présente
+        // dans le payload (sinon = catégorie supprimée mais prestation conservée).
+        $submittedCids = collect($categories)->pluck('cid')->filter()->all();
+        foreach ($services as $i => $svc) {
+            $cid = $svc['category_cid'] ?? null;
+            if (! $cid || ! in_array($cid, $submittedCids, true)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "services.$i.category_cid" => 'Cette prestation n\'est rattachée à aucune catégorie existante.',
+                ]);
+            }
+        }
+
         DB::transaction(function () use ($establishment, $categories, $services) {
             $cidToId = $this->syncCategories($establishment, $categories);
             $this->syncServices($establishment, $services, $cidToId);

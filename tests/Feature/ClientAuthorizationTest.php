@@ -60,7 +60,8 @@ class ClientAuthorizationTest extends TestCase
 
         $this->actingAs($owner)
             ->put('/espace-client/etablissement/'.$establishment->id.'/prestations', [
-                'services' => [['name' => 'Manucure', 'price' => '25€', 'duration_minutes' => 30]],
+                'categories' => [['cid' => 'c1', 'id' => null, 'name' => 'Soins']],
+                'services' => [['name' => 'Manucure', 'price' => '25€', 'duration_minutes' => 30, 'category_cid' => 'c1']],
             ])
             ->assertRedirect();
 
@@ -125,6 +126,21 @@ class ClientAuthorizationTest extends TestCase
         $this->actingAs($owner)
             ->get('/espace-client/etablissement/'.$establishment->id.'/prestations')
             ->assertRedirect('/espace-client/abonnement');
+    }
+
+    public function test_service_without_category_is_rejected(): void
+    {
+        $owner = User::factory()->create();
+        $establishment = $this->premiumEstablishment();
+        $owner->establishments()->attach($establishment->id);
+
+        $this->actingAs($owner)
+            ->put('/espace-client/etablissement/'.$establishment->id.'/prestations', [
+                'services' => [['name' => 'Sans cat', 'duration_minutes' => 30, 'category_cid' => '']],
+            ])
+            ->assertSessionHasErrors('services.0.category_cid');
+
+        $this->assertSame(0, $establishment->fresh()->services()->count());
     }
 
     public function test_start_trial_grants_one_month_premium(): void

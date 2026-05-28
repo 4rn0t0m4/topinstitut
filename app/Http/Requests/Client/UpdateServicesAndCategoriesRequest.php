@@ -11,6 +11,13 @@ class UpdateServicesAndCategoriesRequest extends FormRequest
         return $this->user()->can('manage', $this->route('etablissement'));
     }
 
+    public function messages(): array
+    {
+        return [
+            'services.*.category_cid.required' => 'Chaque prestation doit être rattachée à une catégorie.',
+        ];
+    }
+
     public function rules(): array
     {
         return [
@@ -22,7 +29,7 @@ class UpdateServicesAndCategoriesRequest extends FormRequest
             'services' => 'array|max:200',
             'services.*.id' => 'nullable|integer',
             'services.*.name' => 'required|string|max:255',
-            'services.*.category_cid' => 'nullable|string|max:20',
+            'services.*.category_cid' => 'required|string|max:20',
             'services.*.duration_minutes' => 'required|integer|min:5|max:600',
             'services.*.price' => 'nullable|string|max:50',
             'services.*.description' => 'nullable|string|max:500',
