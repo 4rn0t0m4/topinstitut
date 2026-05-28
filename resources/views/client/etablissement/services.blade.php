@@ -46,103 +46,103 @@
                 <h2 class="font-semibold mb-1">Catégories</h2>
                 <p class="text-sm text-gray-500 mb-4">Regroupez vos prestations (ex. Épilation, Soins du visage). L'ordre est celui affiché aux clients.</p>
 
-                <div class="space-y-2">
+                <div class="space-y-3">
                     <template x-for="(cat, i) in categories" :key="cat.cid">
-                        <div class="flex items-start gap-2">
-                            <div class="flex flex-col pt-2">
-                                <button type="button" @click="moveCategory(i, -1)" :disabled="i === 0" class="text-gray-300 hover:text-gray-600 disabled:opacity-30 leading-none" title="Monter">▲</button>
-                                <button type="button" @click="moveCategory(i, 1)" :disabled="i === categories.length - 1" class="text-gray-300 hover:text-gray-600 disabled:opacity-30 leading-none" title="Descendre">▼</button>
+                        <div class="flex items-start gap-2 border-b last:border-0 pb-3 last:pb-0">
+                            <div class="flex flex-col pt-2 flex-shrink-0">
+                                <button type="button" @click="moveCategory(i, -1)" :disabled="i === 0" class="text-gray-300 hover:text-gray-600 disabled:opacity-30 leading-none cursor-pointer" title="Monter">▲</button>
+                                <button type="button" @click="moveCategory(i, 1)" :disabled="i === categories.length - 1" class="text-gray-300 hover:text-gray-600 disabled:opacity-30 leading-none cursor-pointer" title="Descendre">▼</button>
                             </div>
                             <input type="hidden" :name="`categories[${i}][cid]`" :value="cat.cid">
                             <input type="hidden" :name="`categories[${i}][id]`" :value="cat.id">
-                            <div class="flex-1 grid sm:grid-cols-2 gap-2">
-                                <input type="text" :name="`categories[${i}][name]`" x-model="cat.name" placeholder="Nom de la catégorie" required class="border rounded-lg px-3 py-2 text-sm">
-                                <input type="text" :name="`categories[${i}][description]`" x-model="cat.description" placeholder="Description (optionnel)" class="border rounded-lg px-3 py-2 text-sm">
+                            <div class="flex-1 space-y-2">
+                                <input type="text" :name="`categories[${i}][name]`" x-model="cat.name" placeholder="Nom de la catégorie" required class="w-full border rounded-lg px-3 py-2 text-sm">
+                                <textarea :name="`categories[${i}][description]`" x-model="cat.description" placeholder="Description (optionnel) — affichée sous le nom de la catégorie" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm"></textarea>
                             </div>
-                            <span class="text-xs text-gray-400 w-16 text-right pt-2" x-show="cat.id" x-text="(cat.services_count || 0) + ' presta.'"></span>
-                            <button type="button" @click="removeCategory(i)" title="Supprimer" class="text-red-400 hover:text-red-600 flex-shrink-0 pt-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                            </button>
+                            <div class="flex flex-col items-end gap-1 flex-shrink-0 pt-2">
+                                <span class="text-xs text-gray-400" x-show="cat.id" x-text="(cat.services_count || 0) + ' presta.'"></span>
+                                <button type="button" @click="removeCategory(i)" title="Supprimer la catégorie" class="text-red-400 hover:text-red-600 cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
                         </div>
                     </template>
                 </div>
 
-                <p x-show="categories.length === 0" class="text-sm text-gray-500 italic">Aucune catégorie.</p>
+                <p x-show="categories.length === 0" class="text-sm text-gray-500 italic mt-2">Aucune catégorie.</p>
 
-                <button type="button" @click="addCategory()" class="mt-3 inline-flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700">
+                <button type="button" @click="addCategory()" class="mt-3 inline-flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                     Ajouter une catégorie
                 </button>
                 <p class="text-xs text-gray-400 mt-3">Supprimer une catégorie ne supprime pas ses prestations : elles deviennent « sans catégorie ».</p>
             </section>
 
-            {{-- ───── Prestations ───── --}}
+            {{-- ───── Prestations regroupées par catégorie ───── --}}
             <section class="bg-white rounded-lg shadow-sm border p-6">
                 <h2 class="font-semibold mb-4">Prestations</h2>
 
-                <div class="hidden sm:grid grid-cols-12 gap-2 text-xs text-gray-500 mb-2 px-1">
-                    <span class="col-span-3">Prestation</span>
-                    <span class="col-span-2">Catégorie</span>
-                    <span class="col-span-2 text-center">Durée (min)</span>
-                    <span class="col-span-2 text-center">Prix</span>
-                    <span class="col-span-2">Description</span>
-                    <span class="col-span-1 text-center">Résa</span>
-                </div>
-
-                <div class="space-y-3">
-                    <template x-for="(svc, i) in services" :key="i">
-                        <div class="grid grid-cols-12 gap-2 items-center border-b sm:border-0 pb-3 sm:pb-0">
-                            <input type="hidden" :name="`services[${i}][id]`" :value="svc.id">
-                            <div class="col-span-12 sm:col-span-3">
-                                <input type="text" :name="`services[${i}][name]`" x-model="svc.name" placeholder="Nom (Manucure...)" class="w-full border rounded-lg px-3 py-2 text-sm" required>
-                            </div>
-                            <div class="col-span-6 sm:col-span-2">
-                                <select :name="`services[${i}][category_cid]`" x-model="svc.category_cid"
-                                        x-init="$nextTick(() => $el.value = svc.category_cid)"
-                                        class="w-full border rounded-lg px-3 py-2 text-sm">
-                                    <option value="">— Sans catégorie —</option>
-                                    <template x-for="cat in categories" :key="cat.cid">
-                                        <option :value="cat.cid" x-text="cat.name || '(sans nom)'"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <div class="col-span-3 sm:col-span-2">
-                                <input type="number" min="5" max="600" step="5" :name="`services[${i}][duration_minutes]`" x-model.number="svc.duration_minutes" placeholder="min" class="w-full border rounded-lg px-3 py-2 text-sm text-center" required>
-                            </div>
-                            <div class="col-span-3 sm:col-span-2">
-                                <input type="text" :name="`services[${i}][price]`" x-model="svc.price" placeholder="45€" class="w-full border rounded-lg px-3 py-2 text-sm">
-                            </div>
-                            <div class="col-span-12 sm:col-span-2">
-                                <input type="text" :name="`services[${i}][description]`" x-model="svc.description" placeholder="Description (optionnel)" class="w-full border rounded-lg px-3 py-2 text-sm">
-                            </div>
-                            <div class="col-span-1 hidden sm:flex items-center justify-center gap-2">
-                                <input type="hidden" :name="`services[${i}][is_bookable]`" value="0">
-                                <input type="checkbox" :name="`services[${i}][is_bookable]`" value="1" x-model="svc.is_bookable" title="Réservable en ligne" class="rounded">
-                                <button type="button" @click="services.splice(i, 1)" title="Supprimer" class="text-red-400 hover:text-red-600">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                                </button>
-                            </div>
-                            <label class="col-span-12 sm:hidden flex items-center gap-2 text-sm">
-                                <input type="hidden" :name="`services[${i}][is_bookable]`" value="0">
-                                <input type="checkbox" :name="`services[${i}][is_bookable]`" value="1" x-model="svc.is_bookable" class="rounded">
-                                Réservable en ligne
-                                <button type="button" @click="services.splice(i, 1)" class="ml-auto text-red-500 hover:text-red-700">Supprimer</button>
-                            </label>
+                <template x-for="group in groupedServices" :key="group.cid">
+                    <div class="mb-6 last:mb-0">
+                        <div class="flex items-center justify-between gap-2 mb-3 pb-2 border-b">
+                            <h3 class="text-sm font-semibold text-gray-700">
+                                <span x-text="group.name"></span>
+                                <span class="text-xs font-normal text-gray-400 ml-1" x-text="'(' + group.items.length + ')'"></span>
+                            </h3>
+                            <button type="button" @click="addService(group.cid)" class="text-xs text-pink-600 hover:text-pink-700 cursor-pointer flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                Ajouter
+                            </button>
                         </div>
-                    </template>
 
-                    <p x-show="services.length === 0" class="text-sm text-gray-500 italic">Aucune prestation pour l'instant.</p>
+                        <p x-show="group.items.length === 0" class="text-xs text-gray-400 italic">Aucune prestation dans cette catégorie.</p>
 
-                    <button type="button" @click="addService()" class="mt-2 inline-flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                        Ajouter une prestation
-                    </button>
-                </div>
+                        <div class="space-y-3">
+                            <template x-for="item in group.items" :key="item.index">
+                                <div class="border rounded-lg p-3 bg-gray-50/50">
+                                    <input type="hidden" :name="`services[${item.index}][id]`" :value="item.svc.id">
+                                    <div class="grid grid-cols-12 gap-2 items-center">
+                                        <div class="col-span-12 sm:col-span-4">
+                                            <input type="text" :name="`services[${item.index}][name]`" x-model="item.svc.name" placeholder="Nom (Manucure...)" class="w-full border rounded-lg px-3 py-2 text-sm bg-white" required>
+                                        </div>
+                                        <div class="col-span-6 sm:col-span-3">
+                                            <select :name="`services[${item.index}][category_cid]`" x-model="item.svc.category_cid"
+                                                    x-init="$nextTick(() => $el.value = item.svc.category_cid)"
+                                                    class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
+                                                <option value="">— Sans catégorie —</option>
+                                                <template x-for="cat in categories" :key="cat.cid">
+                                                    <option :value="cat.cid" x-text="cat.name || '(sans nom)'"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                        <div class="col-span-3 sm:col-span-2">
+                                            <input type="number" min="5" max="600" step="5" :name="`services[${item.index}][duration_minutes]`" x-model.number="item.svc.duration_minutes" placeholder="min" title="Durée en minutes" class="w-full border rounded-lg px-3 py-2 text-sm text-center bg-white" required>
+                                        </div>
+                                        <div class="col-span-3 sm:col-span-2">
+                                            <input type="text" :name="`services[${item.index}][price]`" x-model="item.svc.price" placeholder="45€" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
+                                        </div>
+                                        <div class="col-span-12 sm:col-span-1 flex items-center justify-end sm:justify-center gap-3">
+                                            <label class="flex items-center gap-1 text-xs text-gray-500" title="Réservable en ligne">
+                                                <input type="hidden" :name="`services[${item.index}][is_bookable]`" value="0">
+                                                <input type="checkbox" :name="`services[${item.index}][is_bookable]`" value="1" x-model="item.svc.is_bookable" class="rounded">
+                                                <span class="sm:hidden">Réservable</span>
+                                            </label>
+                                            <button type="button" @click="removeService(item.index)" title="Supprimer la prestation" class="text-red-400 hover:text-red-600 cursor-pointer">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <textarea :name="`services[${item.index}][description]`" x-model="item.svc.description" placeholder="Description (optionnel) — détails affichés sous le nom de la prestation" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm bg-white mt-2"></textarea>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
 
-                <p class="text-xs text-gray-400 mt-4">La case « Résa » rend la prestation réservable en ligne (durée utilisée pour calculer les créneaux).</p>
+                <p class="text-xs text-gray-400 mt-4">La case à cocher rend la prestation réservable en ligne (durée utilisée pour calculer les créneaux).</p>
             </section>
 
-            <button type="submit" class="mt-6 bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700">Enregistrer</button>
+            <button type="submit" class="mt-6 bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 cursor-pointer">Enregistrer</button>
         </form>
     </div>
 
@@ -153,6 +153,21 @@
                 categories: cfg.categories,
                 services: cfg.services,
                 nextCid: 1,
+
+                // Regroupe les prestations par catégorie. Toujours inclut une rubrique
+                // « Sans catégorie » à la fin (même vide) pour permettre d'y ajouter.
+                get groupedServices() {
+                    const buckets = new Map();
+                    this.categories.forEach((cat) => {
+                        buckets.set(cat.cid, { cid: cat.cid, name: cat.name || '(sans nom)', items: [] });
+                    });
+                    const sansCat = { cid: '', name: 'Sans catégorie', items: [] };
+                    this.services.forEach((svc, index) => {
+                        const bucket = buckets.get(svc.category_cid) || sansCat;
+                        bucket.items.push({ svc, index });
+                    });
+                    return [...buckets.values(), sansCat];
+                },
 
                 addCategory() {
                     this.categories.push({ cid: 'new' + (this.nextCid++), id: null, name: '', description: '', services_count: 0 });
@@ -167,8 +182,11 @@
                     if (j < 0 || j >= this.categories.length) return;
                     [this.categories[i], this.categories[j]] = [this.categories[j], this.categories[i]];
                 },
-                addService() {
-                    this.services.push({ id: null, name: '', category_cid: '', duration_minutes: 30, price: '', description: '', is_bookable: true });
+                addService(categoryCid = '') {
+                    this.services.push({ id: null, name: '', category_cid: categoryCid, duration_minutes: 30, price: '', description: '', is_bookable: true });
+                },
+                removeService(index) {
+                    this.services.splice(index, 1);
                 },
             }));
         });
