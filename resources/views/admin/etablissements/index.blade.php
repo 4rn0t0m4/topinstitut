@@ -42,7 +42,7 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-center text-gray-500">{{ $etab->review_count }}</td>
-                        <td class="px-4 py-3 text-right">
+                        <td class="px-4 py-3 text-right whitespace-nowrap">
                             <a href="{{ route('admin.etablissements.edit', $etab) }}" class="text-pink-600 hover:underline">Modifier</a>
                             @unless($etab->is_active)
                                 <form action="{{ route('admin.etablissements.valider', $etab) }}" method="POST" class="inline ml-2">
@@ -50,6 +50,11 @@
                                     <button type="submit" class="text-green-600 hover:underline">Valider</button>
                                 </form>
                             @endunless
+                            <form action="{{ route('admin.etablissements.destroy', $etab) }}" method="POST" class="inline ml-2"
+                                  onsubmit="return confirm('Supprimer définitivement « {{ addslashes($etab->name) }} » ? Cette action est irréversible.')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-red-500 hover:underline">Supprimer</button>
+                            </form>
                         </td>
                     </tr>
                 @empty

@@ -159,7 +159,13 @@ class EtablissementController extends Controller
 
     public function destroy(Establishment $etablissement)
     {
-        $etablissement->delete();
+        try {
+            $etablissement->delete();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Suppression établissement #'.$etablissement->id.' échouée : '.$e->getMessage());
+
+            return back()->withErrors(['delete' => 'Suppression impossible : '.$e->getMessage()]);
+        }
 
         return redirect()->route('admin.etablissements.index')->with('success', 'Établissement supprimé.');
     }

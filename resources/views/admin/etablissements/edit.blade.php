@@ -168,11 +168,22 @@
             @endif
         </div>
 
-        <div class="flex gap-3 mt-6">
+        <div class="flex gap-3 mt-6 items-center">
             <button type="submit" class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700">Enregistrer</button>
             <a href="{{ route('admin.etablissements.index') }}" class="text-gray-500 px-6 py-2">Annuler</a>
         </div>
     </form>
+
+    @if($etablissement->exists)
+        <form action="{{ route('admin.etablissements.destroy', $etablissement) }}" method="POST" class="mt-8 pt-6 border-t border-red-100"
+              onsubmit="return confirm('Supprimer définitivement « {{ addslashes($etablissement->name) }} » ?\n\nCette action est irréversible et supprimera aussi ses avis, photos, RDV, prestations et praticiens.')">
+            @csrf @method('DELETE')
+            <p class="text-sm text-gray-500 mb-2">Zone de suppression</p>
+            <button type="submit" class="bg-white border border-red-300 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 text-sm">
+                Supprimer cet établissement
+            </button>
+        </form>
+    @endif
 @endsection
 
 @push('scripts')
