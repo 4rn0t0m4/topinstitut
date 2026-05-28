@@ -14,6 +14,13 @@
             </div>
         @endif
 
+        @if(session('premium_required'))
+            <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg mb-6 flex items-start gap-2">
+                <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h.586l1.707 1.707a1 1 0 001.414 0L9.414 9H10a2 2 0 002-2V5a2 2 0 00-2-2H5zm9 6a4 4 0 11-8 0 4 4 0 018 0z M10 5a1 1 0 100 2 1 1 0 000-2z"/></svg>
+                <span>{{ session('premium_required') }}</span>
+            </div>
+        @endif
+
         @if($errors->any())
             <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm">
                 @foreach($errors->all() as $e) <p>{{ $e }}</p> @endforeach

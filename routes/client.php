@@ -36,27 +36,29 @@ Route::prefix('etablissement/{etablissement}')->name('etablissement.')->group(fu
     Route::get('avis/{avis}/repondre', [AvisController::class, 'repondre'])->name('avis.repondre');
     Route::post('avis/{avis}/repondre', [AvisController::class, 'storeReponse'])->name('avis.reponse');
 
-    Route::get('prestations', [\App\Http\Controllers\Client\ServicesController::class, 'edit'])->name('prestations');
-    Route::put('prestations', [\App\Http\Controllers\Client\ServicesController::class, 'update'])->name('prestations.update');
-
-    Route::get('praticiens', [\App\Http\Controllers\Client\PractitionerController::class, 'index'])->name('praticiens');
-    Route::post('praticiens', [\App\Http\Controllers\Client\PractitionerController::class, 'store'])->name('praticiens.store');
-    Route::put('praticiens/{practitioner}', [\App\Http\Controllers\Client\PractitionerController::class, 'update'])->name('praticiens.update');
-    Route::delete('praticiens/{practitioner}', [\App\Http\Controllers\Client\PractitionerController::class, 'destroy'])->name('praticiens.destroy');
-    Route::get('praticiens/{practitioner}/horaires', [\App\Http\Controllers\Client\PractitionerController::class, 'editSchedules'])->name('praticiens.horaires');
-    Route::put('praticiens/{practitioner}/horaires', [\App\Http\Controllers\Client\PractitionerController::class, 'updateSchedules'])->name('praticiens.horaires.update');
-
     Route::get('faq', [\App\Http\Controllers\Client\FaqController::class, 'index'])->name('faq');
     Route::post('faq', [\App\Http\Controllers\Client\FaqController::class, 'store'])->name('faq.store');
     Route::put('faq/{faq}', [\App\Http\Controllers\Client\FaqController::class, 'update'])->name('faq.update');
     Route::delete('faq/{faq}', [\App\Http\Controllers\Client\FaqController::class, 'destroy'])->name('faq.destroy');
 
-    // Agenda (rendez-vous en ligne)
-    Route::get('agenda', [\App\Http\Controllers\Client\AppointmentController::class, 'index'])->name('agenda');
-    Route::post('agenda/manuel', [\App\Http\Controllers\Client\AppointmentController::class, 'storeManual'])->name('agenda.manuel');
-    Route::patch('agenda/{appointment}/statut', [\App\Http\Controllers\Client\AppointmentController::class, 'updateStatus'])->name('agenda.statut');
-    Route::post('agenda/blocage', [\App\Http\Controllers\Client\AppointmentController::class, 'storeTimeOff'])->name('agenda.blocage');
-    Route::delete('agenda/blocage/{practitioner}/{timeOff}', [\App\Http\Controllers\Client\AppointmentController::class, 'destroyTimeOff'])->name('agenda.blocage.destroy');
+    // Réservation en ligne — réservé aux établissements Premium
+    Route::middleware('premium-establishment')->group(function () {
+        Route::get('prestations', [\App\Http\Controllers\Client\ServicesController::class, 'edit'])->name('prestations');
+        Route::put('prestations', [\App\Http\Controllers\Client\ServicesController::class, 'update'])->name('prestations.update');
+
+        Route::get('praticiens', [\App\Http\Controllers\Client\PractitionerController::class, 'index'])->name('praticiens');
+        Route::post('praticiens', [\App\Http\Controllers\Client\PractitionerController::class, 'store'])->name('praticiens.store');
+        Route::put('praticiens/{practitioner}', [\App\Http\Controllers\Client\PractitionerController::class, 'update'])->name('praticiens.update');
+        Route::delete('praticiens/{practitioner}', [\App\Http\Controllers\Client\PractitionerController::class, 'destroy'])->name('praticiens.destroy');
+        Route::get('praticiens/{practitioner}/horaires', [\App\Http\Controllers\Client\PractitionerController::class, 'editSchedules'])->name('praticiens.horaires');
+        Route::put('praticiens/{practitioner}/horaires', [\App\Http\Controllers\Client\PractitionerController::class, 'updateSchedules'])->name('praticiens.horaires.update');
+
+        Route::get('agenda', [\App\Http\Controllers\Client\AppointmentController::class, 'index'])->name('agenda');
+        Route::post('agenda/manuel', [\App\Http\Controllers\Client\AppointmentController::class, 'storeManual'])->name('agenda.manuel');
+        Route::patch('agenda/{appointment}/statut', [\App\Http\Controllers\Client\AppointmentController::class, 'updateStatus'])->name('agenda.statut');
+        Route::post('agenda/blocage', [\App\Http\Controllers\Client\AppointmentController::class, 'storeTimeOff'])->name('agenda.blocage');
+        Route::delete('agenda/blocage/{practitioner}/{timeOff}', [\App\Http\Controllers\Client\AppointmentController::class, 'destroyTimeOff'])->name('agenda.blocage.destroy');
+    });
 });
 
 Route::get('mes-avis', [AvisController::class, 'mesAvis'])->name('mes-avis');

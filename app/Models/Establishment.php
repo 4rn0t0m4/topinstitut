@@ -337,7 +337,8 @@ class Establishment extends Model
 
     public function getAcceptsBookingsAttribute(): bool
     {
-        return $this->practitioners->where('is_active', true)->isNotEmpty()
+        return $this->is_premium
+            && $this->practitioners->where('is_active', true)->isNotEmpty()
             && $this->services->where('is_bookable', true)->isNotEmpty();
     }
 

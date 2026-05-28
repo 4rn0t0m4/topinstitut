@@ -112,12 +112,25 @@
                     {{-- Actions groupées --}}
                     <div class="mt-5 space-y-5">
                         @foreach($actionGroups as $groupLabel => $actions)
-                            @php $theme = $groupThemes[$groupLabel] ?? $groupThemes['Fiche']; @endphp
+                            @php
+                                $theme = $groupThemes[$groupLabel] ?? $groupThemes['Fiche'];
+                                $isReservation = $groupLabel === 'Réservation';
+                                $needsPremium = $isReservation && ! $etab->is_premium;
+                            @endphp
                             <div>
                                 <div class="flex items-center gap-2 mb-2.5">
                                     <span class="w-1.5 h-1.5 rounded-full {{ $theme['dot'] }}"></span>
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">{{ $groupLabel }}</span>
+                                    @if($isReservation)
+                                        <span class="text-[10px] font-bold uppercase tracking-wide bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white px-2 py-0.5 rounded-full">Premium</span>
+                                    @endif
                                 </div>
+                                @if($needsPremium)
+                                    <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
+                                        🔒 Activez l'abonnement Premium pour gérer votre planning et vos réservations en ligne.
+                                        <a href="{{ route('client.abonnement.index') }}" class="font-semibold underline hover:no-underline">En savoir plus</a>
+                                    </p>
+                                @endif
                                 <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2.5">
                                     @foreach($actions as [$routeName, $label, $iconPath])
                                         <a href="{{ route('client.etablissement.'.$routeName, $etab) }}"

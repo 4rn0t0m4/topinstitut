@@ -11,10 +11,18 @@ class ClientAuthorizationTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function premiumEstablishment(): Establishment
+    {
+        return Establishment::factory()->create([
+            'subscription_tier' => 'premium',
+            'subscription_ends_at' => null,
+        ]);
+    }
+
     public function test_non_owner_cannot_access_prestations_edit(): void
     {
         $user = User::factory()->create();
-        $establishment = Establishment::factory()->create();
+        $establishment = $this->premiumEstablishment();
 
         $this->actingAs($user)
             ->get('/espace-client/etablissement/'.$establishment->id.'/prestations')
@@ -24,7 +32,7 @@ class ClientAuthorizationTest extends TestCase
     public function test_owner_can_access_prestations_edit(): void
     {
         $owner = User::factory()->create();
-        $establishment = Establishment::factory()->create();
+        $establishment = $this->premiumEstablishment();
         $owner->establishments()->attach($establishment->id);
 
         $this->actingAs($owner)
@@ -35,7 +43,7 @@ class ClientAuthorizationTest extends TestCase
     public function test_non_owner_cannot_update_services(): void
     {
         $user = User::factory()->create();
-        $establishment = Establishment::factory()->create();
+        $establishment = $this->premiumEstablishment();
 
         $this->actingAs($user)
             ->put('/espace-client/etablissement/'.$establishment->id.'/prestations', [
@@ -47,7 +55,7 @@ class ClientAuthorizationTest extends TestCase
     public function test_owner_can_update_services(): void
     {
         $owner = User::factory()->create();
-        $establishment = Establishment::factory()->create();
+        $establishment = $this->premiumEstablishment();
         $owner->establishments()->attach($establishment->id);
 
         $this->actingAs($owner)
@@ -64,7 +72,7 @@ class ClientAuthorizationTest extends TestCase
     public function test_owner_can_create_category_and_assign_service(): void
     {
         $owner = User::factory()->create();
-        $establishment = Establishment::factory()->create();
+        $establishment = $this->premiumEstablishment();
         $owner->establishments()->attach($establishment->id);
 
         $this->actingAs($owner)
@@ -91,7 +99,7 @@ class ClientAuthorizationTest extends TestCase
     public function test_empty_string_ids_like_real_form(): void
     {
         $owner = User::factory()->create();
-        $establishment = Establishment::factory()->create();
+        $establishment = $this->premiumEstablishment();
         $owner->establishments()->attach($establishment->id);
 
         $resp = $this->actingAs($owner)
@@ -106,5 +114,16 @@ class ClientAuthorizationTest extends TestCase
         $resp->assertSessionHasNoErrors();
         $resp->assertRedirect();
         $this->assertSame('Épilation', $establishment->fresh()->serviceCategories->first()?->name);
+    }
+
+    public function test_non_premium_owner_is_redirected_to_subscription(): void
+    {
+        $owner = User::factory()->create();
+        $establishment = Establishment::factory()->create(['subscription_tier' => 'free']);
+        $owner->establishments()->attach($establishment->id);
+
+        $this->actingAs($owner)
+            ->get('/espace-client/etablissement/'.$establishment->id.'/prestations')
+            ->assertRedirect('/espace-client/abonnement');
     }
 }

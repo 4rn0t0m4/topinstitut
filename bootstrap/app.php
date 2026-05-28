@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\BotProtection;
+use App\Http\Middleware\RequirePremiumEstablishment;
 use App\Models\Establishment;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => AdminMiddleware::class,
             'bot' => BotProtection::class,
+            'premium-establishment' => RequirePremiumEstablishment::class,
         ]);
 
         // Stripe webhook : signature vérifiée, pas besoin de CSRF
