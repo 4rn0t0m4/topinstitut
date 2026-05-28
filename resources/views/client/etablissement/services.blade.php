@@ -66,47 +66,45 @@
                     Aucune catégorie. Créez-en une pour commencer à ajouter des prestations.
                 </p>
 
-                <div class="space-y-5">
+                <div class="space-y-6">
                     <template x-for="(cat, ci) in categories" :key="cat.cid">
-                        <div class="border rounded-lg overflow-hidden">
-                            {{-- En-tête de catégorie --}}
-                            <div class="bg-gradient-to-r from-pink-50 to-pink-50/40 border-b-2 border-pink-200 p-4">
-                                <div class="flex items-start gap-2">
-                                    <div class="flex flex-col pt-2 flex-shrink-0">
-                                        <button type="button" @click="moveCategory(ci, -1)" :disabled="ci === 0" class="text-gray-300 hover:text-gray-600 disabled:opacity-30 leading-none cursor-pointer" title="Monter">▲</button>
-                                        <button type="button" @click="moveCategory(ci, 1)" :disabled="ci === categories.length - 1" class="text-gray-300 hover:text-gray-600 disabled:opacity-30 leading-none cursor-pointer" title="Descendre">▼</button>
-                                    </div>
-                                    <input type="hidden" :name="`categories[${ci}][cid]`" :value="cat.cid">
-                                    <input type="hidden" :name="`categories[${ci}][id]`" :value="cat.id">
-                                    <div class="flex-1 space-y-2">
-                                        <input type="text" :name="`categories[${ci}][name]`" x-model="cat.name" placeholder="Nom de la catégorie (Épilation, Soins du visage...)" required class="w-full border rounded-lg px-3 py-2 text-sm font-medium bg-white">
-                                        <textarea :name="`categories[${ci}][description]`" x-model="cat.description" placeholder="Description (optionnel) — affichée sous le nom de la catégorie" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm bg-white"></textarea>
-                                    </div>
-                                    <div class="flex-shrink-0 pt-2">
-                                        <button type="button"
-                                                @click="removeCategory(ci)"
-                                                :disabled="serviceCountForCategory(cat.cid) > 0"
-                                                :title="serviceCountForCategory(cat.cid) > 0 ? 'Impossible : la catégorie contient encore des prestations' : 'Supprimer la catégorie'"
-                                                :class="serviceCountForCategory(cat.cid) > 0 ? 'text-gray-300 cursor-not-allowed' : 'text-red-400 hover:text-red-600 cursor-pointer'">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                    </div>
+                        <div class="bg-pink-50/40 rounded-lg p-4">
+                            {{-- En-tête de catégorie : juste les champs, pas de cadre supplémentaire --}}
+                            <div class="flex items-start gap-2 mb-4">
+                                <div class="flex flex-col pt-2 flex-shrink-0">
+                                    <button type="button" @click="moveCategory(ci, -1)" :disabled="ci === 0" class="text-gray-300 hover:text-gray-600 disabled:opacity-30 leading-none cursor-pointer" title="Monter">▲</button>
+                                    <button type="button" @click="moveCategory(ci, 1)" :disabled="ci === categories.length - 1" class="text-gray-300 hover:text-gray-600 disabled:opacity-30 leading-none cursor-pointer" title="Descendre">▼</button>
+                                </div>
+                                <input type="hidden" :name="`categories[${ci}][cid]`" :value="cat.cid">
+                                <input type="hidden" :name="`categories[${ci}][id]`" :value="cat.id">
+                                <div class="flex-1 space-y-2">
+                                    <input type="text" :name="`categories[${ci}][name]`" x-model="cat.name" placeholder="Nom de la catégorie (Épilation, Soins du visage...)" required class="w-full border-0 bg-white rounded-lg px-3 py-2 text-base font-semibold focus:ring-2 focus:ring-pink-200">
+                                    <textarea :name="`categories[${ci}][description]`" x-model="cat.description" placeholder="Description (optionnel)" rows="2" class="w-full border-0 bg-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-pink-200"></textarea>
+                                </div>
+                                <div class="flex-shrink-0 pt-2">
+                                    <button type="button"
+                                            @click="removeCategory(ci)"
+                                            :disabled="serviceCountForCategory(cat.cid) > 0"
+                                            :title="serviceCountForCategory(cat.cid) > 0 ? 'Impossible : la catégorie contient encore des prestations' : 'Supprimer la catégorie'"
+                                            :class="serviceCountForCategory(cat.cid) > 0 ? 'text-gray-300 cursor-not-allowed' : 'text-red-400 hover:text-red-600 cursor-pointer'">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
                                 </div>
                             </div>
 
-                            {{-- Prestations de cette catégorie --}}
-                            <div class="p-4 space-y-3">
+                            {{-- Prestations : séparées par des hairlines, pas de cadres individuels --}}
+                            <div class="bg-white rounded-lg divide-y">
                                 <template x-for="item in servicesForCategory(cat.cid)" :key="item.index">
                                     <x-services-row />
                                 </template>
-
-                                <p x-show="servicesForCategory(cat.cid).length === 0" class="text-xs text-gray-400 italic">Aucune prestation pour le moment.</p>
-
-                                <button type="button" @click="addService(cat.cid)" class="inline-flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700 cursor-pointer">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                                    Ajouter une prestation
-                                </button>
                             </div>
+
+                            <p x-show="servicesForCategory(cat.cid).length === 0" class="text-xs text-gray-400 italic mt-2">Aucune prestation pour le moment.</p>
+
+                            <button type="button" @click="addService(cat.cid)" class="mt-3 inline-flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700 cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                Ajouter une prestation
+                            </button>
                         </div>
                     </template>
                 </div>

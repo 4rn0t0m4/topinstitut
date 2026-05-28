@@ -1,5 +1,5 @@
 {{-- Doit être utilisé dans un <template x-for="item in ..." :key="item.index"> où item = { svc, index }. --}}
-<div class="border rounded-lg p-3 bg-white">
+<div class="p-3">
     <input type="hidden" :name="`services[${item.index}][id]`" :value="item.svc.id">
     <div class="grid grid-cols-12 gap-2 items-start">
         <div class="col-span-12 sm:col-span-4">
