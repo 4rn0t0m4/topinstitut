@@ -14,7 +14,7 @@
      @keydown.escape.window="$store.rdvModal.open = false"
      @rdv-start.window="startWithService($event.detail.serviceId)"
      x-cloak
-     class="fixed inset-0 z-50 flex items-center justify-center p-4">
+     class="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[5vh] sm:pt-[8vh]">
     <div class="fixed inset-0 bg-black/50" @click="$store.rdvModal.open = false"></div>
 
     <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg z-10 max-h-[90vh] overflow-y-auto" @click.stop>
@@ -93,7 +93,7 @@
             </div>
 
             {{-- Étape 3 : date + créneaux --}}
-            <div x-show="step === 3" x-cloak>
+            <div x-show="step === 3" x-cloak class="min-h-[460px]">
                 {{-- Sélecteur de jour : flèches + bande de boutons --}}
                 <div x-show="allDays.length > 0" class="mb-4">
                     <div class="text-center text-sm font-medium text-gray-700 mb-2 capitalize" x-text="windowMonthRange"></div>
@@ -118,13 +118,16 @@
                     </div>
                 </div>
 
-                <div x-show="loading" class="text-sm text-gray-500">Recherche des disponibilités…</div>
-                <div x-show="!loading && slots.length === 0 && date" class="text-sm text-gray-500">Aucun créneau disponible ce jour-là. Essayez une autre date.</div>
-                <div x-show="!loading && allDays.length === 0" class="text-sm text-gray-500">Aucun jour d'ouverture configuré.</div>
-                <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    <template x-for="slot in slots" :key="slot">
-                        <button type="button" @click="selectSlot(slot)" class="border rounded-lg py-2 text-sm hover:border-pink-400 hover:bg-pink-50 cursor-pointer transition" x-text="slot"></button>
-                    </template>
+                {{-- Zone créneaux : min-height pour éviter que la modale change de taille en switchant de jour. --}}
+                <div class="min-h-[320px]">
+                    <div x-show="loading" class="text-sm text-gray-500">Recherche des disponibilités…</div>
+                    <div x-show="!loading && slots.length === 0 && date" class="text-sm text-gray-500">Aucun créneau disponible ce jour-là. Essayez une autre date.</div>
+                    <div x-show="!loading && allDays.length === 0" class="text-sm text-gray-500">Aucun jour d'ouverture configuré.</div>
+                    <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                        <template x-for="slot in slots" :key="slot">
+                            <button type="button" @click="selectSlot(slot)" class="border rounded-lg py-2 text-sm hover:border-pink-400 hover:bg-pink-50 cursor-pointer transition" x-text="slot"></button>
+                        </template>
+                    </div>
                 </div>
                 <button type="button" @click="step = 2" class="mt-4 text-sm text-gray-500 hover:underline">&larr; Retour</button>
             </div>
