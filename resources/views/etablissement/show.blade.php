@@ -94,7 +94,7 @@
 
     <div class="max-w-7xl mx-auto px-4 py-8">
         @if(! $establishment->is_active)
-            <div class="mb-6 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-4 py-3 text-sm">
+            <div class="mb-6 bg-amber-50 border border-amber-200 text-amber-800 rounded-md px-4 py-3 text-sm">
                 <strong>Aperçu :</strong> cette fiche est en attente de validation par notre équipe. Elle n'est pas encore visible publiquement.
             </div>
         @endif
@@ -180,7 +180,7 @@
                         @foreach($visiblePhotos as $i => $photo)
                             <button type="button"
                                     @click="$store.lightbox.show(@js($photoUrls), {{ $i }}); window.trackEtablissementEvent?.({{ $establishment->id }}, 'gallery_open')"
-                                    class="block group relative w-full min-w-0 overflow-hidden rounded-lg cursor-pointer">
+                                    class="block group relative w-full min-w-0 overflow-hidden rounded-md cursor-pointer">
                                 <img src="{{ $photo->url }}"
                                      alt="{{ $establishment->name }}"
                                      width="400" height="300"
@@ -244,17 +244,17 @@
 
                             <div class="pt-2 space-y-2">
                                 @if($establishment->accepts_bookings)
-                                    <button @click="$store.rdvModal.open = true; window.trackEtablissementEvent?.({{ $establishment->id }}, 'booking_modal_open')" type="button" class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 px-5 rounded-lg hover:bg-pink-700 transition cursor-pointer">
+                                    <button @click="$store.rdvModal.open = true; window.trackEtablissementEvent?.({{ $establishment->id }}, 'booking_modal_open')" type="button" class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 px-5 rounded-md hover:bg-pink-700 transition cursor-pointer">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0V10.5h18v8.25"/></svg>
                                         Prendre rendez-vous
                                     </button>
                                 @else
-                                    <button @click="$store.bookingModal.open = true; window.trackEtablissementEvent?.({{ $establishment->id }}, 'booking_modal_open')" type="button" class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 px-5 rounded-lg hover:bg-pink-700 transition cursor-pointer">
+                                    <button @click="$store.bookingModal.open = true; window.trackEtablissementEvent?.({{ $establishment->id }}, 'booking_modal_open')" type="button" class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 px-5 rounded-md hover:bg-pink-700 transition cursor-pointer">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0V10.5h18v8.25"/></svg>
                                         Prendre RDV
                                     </button>
                                 @endif
-                                <button @click="$store.contactModal.open = true" type="button" class="w-full flex items-center justify-center gap-2 bg-white border border-pink-600 text-pink-600 font-semibold py-3 px-5 rounded-lg hover:bg-pink-50 transition cursor-pointer">
+                                <button @click="$store.contactModal.open = true" type="button" class="w-full flex items-center justify-center gap-2 bg-white border border-pink-600 text-pink-600 font-semibold py-3 px-5 rounded-md hover:bg-pink-50 transition cursor-pointer">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
                                     Contacter
                                 </button>
@@ -277,7 +277,7 @@
                                         @if($directionsUrl)
                                             <a href="{{ $directionsUrl }}" target="_blank" rel="noopener nofollow"
                                                @click="window.trackEtablissementEvent?.({{ $establishment->id }}, 'directions_click')"
-                                               class="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 font-medium py-2.5 px-3 rounded-lg hover:bg-gray-50 hover:border-gray-400 text-sm transition cursor-pointer">
+                                               class="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 font-medium py-2.5 px-3 rounded-md hover:bg-gray-50 hover:border-gray-400 text-sm transition cursor-pointer">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
                                                 Itinéraire
                                             </a>
@@ -285,7 +285,7 @@
                                         @if($websiteUrl)
                                             <a href="{{ $websiteUrl }}" target="_blank" rel="noopener nofollow"
                                                @click="window.trackEtablissementEvent?.({{ $establishment->id }}, 'website_click')"
-                                               class="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 font-medium py-2.5 px-3 rounded-lg hover:bg-gray-50 hover:border-gray-400 text-sm transition cursor-pointer">
+                                               class="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 font-medium py-2.5 px-3 rounded-md hover:bg-gray-50 hover:border-gray-400 text-sm transition cursor-pointer">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/></svg>
                                                 Site web
                                             </a>
@@ -303,7 +303,7 @@
                         </div>
 
                         @if($establishment->latitude && $establishment->longitude)
-                            <div class="rounded-lg overflow-hidden border" id="map" style="min-height: 220px;"></div>
+                            <div class="rounded-md overflow-hidden border" id="map" style="min-height: 220px;"></div>
                         @endif
                     </div>
                 </div>
@@ -347,7 +347,7 @@
                                                     @if($establishment->accepts_bookings && $service->is_bookable)
                                                         <button type="button"
                                                                 @click="$dispatch('rdv-start', { serviceId: {{ $service->id }} }); window.trackEtablissementEvent?.({{ $establishment->id }}, 'booking_modal_open')"
-                                                                class="bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap cursor-pointer transition">
+                                                                class="bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium px-3 py-1.5 rounded-md whitespace-nowrap cursor-pointer transition">
                                                             Réserver
                                                         </button>
                                                     @endif
@@ -403,7 +403,7 @@
                 @if($establishment->faqs->isNotEmpty())
                     <div class="mt-8 scroll-mt-20" id="faq" data-fiche-section x-data="{ open: null }">
                         <h2 class="text-xl font-semibold mb-3">Questions fréquentes</h2>
-                        <div class="bg-white border rounded-lg divide-y">
+                        <div class="bg-white border rounded-md divide-y">
                             @foreach($establishment->faqs as $i => $faq)
                                 <div>
                                     <button type="button" @click="open = open === {{ $i }} ? null : {{ $i }}" class="w-full flex items-center justify-between gap-4 px-4 py-3 text-left hover:bg-gray-50 transition">
@@ -436,7 +436,7 @@
                     <div class="mt-8 scroll-mt-20" id="actualites" data-fiche-section>
                         <h2 class="text-xl font-semibold mb-3">Actualités</h2>
                         @foreach($establishment->news as $item)
-                            <div class="bg-pink-50 border border-pink-100 rounded-lg p-4 mb-3">
+                            <div class="bg-pink-50 rounded-md p-4 mb-3">
                                 <h3 class="font-semibold text-pink-700">{{ $item->title }}</h3>
                                 @if($item->content)
                                     <p class="text-sm text-gray-700 mt-1">{{ $item->content }}</p>
@@ -459,24 +459,32 @@
                                 <span class="text-gray-500">({{ $establishment->google_review_count }})</span>
                             </span>
                         </h2>
-                        <div class="space-y-3">
+                        <div>
                             @foreach($establishment->google_reviews as $gr)
-                                <div class="bg-white border rounded-lg p-4">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div class="flex items-center gap-2">
-                                            @if(!empty($gr['photo']))
-                                                <img src="{{ $gr['photo'] }}" alt="" class="w-8 h-8 rounded-full" referrerpolicy="no-referrer">
-                                            @endif
-                                            <span class="font-semibold text-sm">{{ $gr['author'] }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <x-star-rating :rating="$gr['rating']" size="w-4 h-4" />
-                                            @if(!empty($gr['date']))
-                                                <span class="text-xs text-gray-400 ml-2">{{ \Carbon\Carbon::parse($gr['date'])->format('d/m/Y') }}</span>
-                                            @endif
+                                <div class="border-b border-gray-200 py-5">
+                                    <div class="flex items-start gap-3">
+                                        @if(!empty($gr['photo']))
+                                            <img src="{{ $gr['photo'] }}" alt="" class="w-11 h-11 rounded-full flex-shrink-0" referrerpolicy="no-referrer">
+                                        @else
+                                            <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                                                {{ mb_strtoupper(mb_substr($gr['author'] ?? '?', 0, 1)) }}
+                                            </div>
+                                        @endif
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex justify-between items-start gap-2">
+                                                <div>
+                                                    <div class="font-semibold text-gray-900">{{ $gr['author'] }}</div>
+                                                    @if(!empty($gr['date']))
+                                                        <div class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($gr['date'])->locale('fr')->isoFormat('D MMMM YYYY') }}</div>
+                                                    @endif
+                                                </div>
+                                                <div class="flex items-center gap-1 flex-shrink-0">
+                                                    <x-star-rating :rating="$gr['rating']" size="w-4 h-4" />
+                                                </div>
+                                            </div>
+                                            <p class="text-sm text-gray-700 mt-2">{{ $gr['text'] }}</p>
                                         </div>
                                     </div>
-                                    <p class="text-sm text-gray-700">{{ $gr['text'] }}</p>
                                 </div>
                             @endforeach
                         </div>
@@ -488,20 +496,25 @@
                     <h2 class="text-xl font-semibold mb-3">Avis des utilisateurs ({{ $establishment->approvedReviews->count() }})</h2>
 
                     @foreach($establishment->approvedReviews as $review)
-                        <div class="bg-white border rounded-lg p-4 mb-4" id="avis-{{ $review->id }}">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <span class="font-semibold">{{ $review->reviewer_name }}</span>
-                                    <span class="text-sm text-gray-400 ml-2">{{ $review->created_at->format('d/m/Y') }}</span>
+                        <div class="border-b border-gray-200 py-5" id="avis-{{ $review->id }}">
+                            <div class="flex items-start gap-3">
+                                <div class="w-11 h-11 rounded-full bg-pink-100 text-pink-700 flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                                    {{ mb_strtoupper(mb_substr($review->reviewer_name, 0, 1)) }}
                                 </div>
-                                <div class="flex items-center gap-1">
-                                    <x-star-rating :rating="$review->average_rating" size="w-4 h-4" />
-                                    <span class="text-sm font-semibold">{{ number_format($review->average_rating, 1, ',', '') }}</span>
-                                </div>
-                            </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-start gap-2">
+                                        <div>
+                                            <div class="font-semibold text-gray-900">{{ $review->reviewer_name }}</div>
+                                            <div class="text-xs text-gray-400">{{ $review->created_at->locale('fr')->isoFormat('D MMMM YYYY') }}</div>
+                                        </div>
+                                        <div class="flex items-center gap-1 flex-shrink-0">
+                                            <x-star-rating :rating="$review->average_rating" size="w-4 h-4" />
+                                            <span class="text-sm font-semibold text-gray-700">{{ number_format($review->average_rating, 1, ',', '') }}</span>
+                                        </div>
+                                    </div>
 
-                            <h3 class="font-medium mt-2">{{ $review->title }}</h3>
-                            <p class="text-sm text-gray-700 mt-1">{{ $review->content }}</p>
+                                    <h3 class="font-medium mt-2 text-gray-900">{{ $review->title }}</h3>
+                                    <p class="text-sm text-gray-700 mt-1">{{ $review->content }}</p>
 
                             @if($review->photos->isNotEmpty())
                                 @php $reviewPhotoUrls = $review->photos->pluck('url')->values()->all(); @endphp
@@ -526,16 +539,18 @@
                             </div>
 
                             @if($review->reply)
-                                <div class="bg-gray-50 rounded-lg p-3 mt-3 text-sm">
+                                <div class="bg-gray-50 rounded-md p-3 mt-3 text-sm">
                                     <span class="font-medium text-pink-600">Réponse de l'établissement :</span>
                                     <p class="text-gray-700 mt-1">{{ $review->reply }}</p>
                                 </div>
                             @endif
+                                </div>{{-- /.flex-1 contenu --}}
+                            </div>{{-- /.flex avatar+contenu --}}
                         </div>
                     @endforeach
 
                     {{-- Review form --}}
-                    <div class="bg-white border rounded-lg p-6 mt-6" x-data="{ submitError: '' }">
+                    <div class="bg-white border rounded-md p-6 mt-6" x-data="{ submitError: '' }">
                         <h3 class="text-lg font-semibold mb-4">Donner votre avis</h3>
                         <form action="{{ route('avis.store') }}" method="POST" enctype="multipart/form-data" @submit="
                             const ratings = ['rating_welcome','rating_quality','rating_variety','rating_price','rating_ambiance','rating_cleanliness'];
@@ -551,11 +566,11 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                                     <div>
                                         <label class="block text-sm font-medium mb-1">Votre pseudo <span class="text-red-500">*</span></label>
-                                        <input type="text" name="author_name" required class="w-full border rounded-lg px-3 py-2" value="{{ old('author_name') }}" placeholder="Ex: Marie75">
+                                        <input type="text" name="author_name" required class="w-full border rounded-md px-3 py-2" value="{{ old('author_name') }}" placeholder="Ex: Marie75">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium mb-1">Votre email <span class="text-red-500">*</span></label>
-                                        <input type="email" name="author_email" required class="w-full border rounded-lg px-3 py-2" value="{{ old('author_email') }}" placeholder="Pour confirmer votre avis">
+                                        <input type="email" name="author_email" required class="w-full border rounded-md px-3 py-2" value="{{ old('author_email') }}" placeholder="Pour confirmer votre avis">
                                         <p class="text-xs text-gray-400 mt-1">Un email de confirmation vous sera envoyé. Votre adresse ne sera pas publiée.</p>
                                     </div>
                                 </div>
@@ -563,12 +578,12 @@
 
                             <div class="mb-4">
                                 <label class="block text-sm font-medium mb-1">Titre <span class="text-red-500">*</span></label>
-                                <input type="text" name="title" required class="w-full border rounded-lg px-3 py-2" value="{{ old('title') }}">
+                                <input type="text" name="title" required class="w-full border rounded-md px-3 py-2" value="{{ old('title') }}">
                             </div>
 
                             <div class="mb-4">
                                 <label class="block text-sm font-medium mb-1">Votre avis <span class="text-red-500">*</span></label>
-                                <textarea name="content" rows="4" required class="w-full border rounded-lg px-3 py-2">{{ old('content') }}</textarea>
+                                <textarea name="content" rows="4" required class="w-full border rounded-md px-3 py-2">{{ old('content') }}</textarea>
                             </div>
 
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
@@ -589,7 +604,7 @@
                                                r.readAsDataURL(f);
                                            });
                                        "
-                                       class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-pink-100 file:text-pink-700 file:py-1.5 file:px-3 file:cursor-pointer hover:file:bg-pink-200">
+                                       class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-pink-100 file:text-pink-700 file:py-1.5 file:px-3 file:cursor-pointer hover:file:bg-pink-200">
                                 <div class="flex gap-2 mt-2" x-show="previews.length" x-cloak>
                                     <template x-for="(src, i) in previews" :key="i">
                                         <img :src="src" class="w-20 h-20 object-cover rounded border" alt="">
@@ -598,7 +613,7 @@
                             </div>
 
                             <p x-show="submitError" x-text="submitError" class="text-red-500 text-sm mb-3" x-cloak></p>
-                            <button type="submit" class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700">Envoyer mon avis</button>
+                            <button type="submit" class="bg-pink-600 text-white px-6 py-2 rounded-md hover:bg-pink-700">Envoyer mon avis</button>
                         </form>
                     </div>
                 </div>
@@ -641,15 +656,15 @@
                   submit-label="Envoyer le message">
         <div class="mb-4">
             <label class="block text-sm font-medium mb-1">Votre nom</label>
-            <input type="text" name="name" value="{{ auth()->user()?->username }}" class="w-full border rounded-lg px-3 py-2">
+            <input type="text" name="name" value="{{ auth()->user()?->username }}" class="w-full border rounded-md px-3 py-2">
         </div>
         <div class="mb-4">
             <label class="block text-sm font-medium mb-1">Votre email <span class="text-red-500">*</span></label>
-            <input type="email" name="email" value="{{ auth()->user()?->email }}" required class="w-full border rounded-lg px-3 py-2">
+            <input type="email" name="email" value="{{ auth()->user()?->email }}" required class="w-full border rounded-md px-3 py-2">
         </div>
         <div class="mb-4">
             <label class="block text-sm font-medium mb-1">Message <span class="text-red-500">*</span></label>
-            <textarea name="content" rows="5" required class="w-full border rounded-lg px-3 py-2" placeholder="Votre message..."></textarea>
+            <textarea name="content" rows="5" required class="w-full border rounded-md px-3 py-2" placeholder="Votre message..."></textarea>
         </div>
     </x-ajax-modal>
 
@@ -670,25 +685,25 @@
         <div class="grid grid-cols-2 gap-3 mb-3">
             <div>
                 <label class="block text-sm font-medium mb-1">Nom <span class="text-red-500">*</span></label>
-                <input type="text" name="name" required value="{{ auth()->user()?->username }}" class="w-full border rounded-lg px-3 py-2 text-sm">
+                <input type="text" name="name" required value="{{ auth()->user()?->username }}" class="w-full border rounded-md px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-sm font-medium mb-1">Téléphone</label>
-                <input type="tel" name="phone" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="06...">
+                <input type="tel" name="phone" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="06...">
             </div>
         </div>
         <div class="mb-3">
             <label class="block text-sm font-medium mb-1">Email <span class="text-red-500">*</span></label>
-            <input type="email" name="email" required value="{{ auth()->user()?->email }}" class="w-full border rounded-lg px-3 py-2 text-sm">
+            <input type="email" name="email" required value="{{ auth()->user()?->email }}" class="w-full border rounded-md px-3 py-2 text-sm">
         </div>
         <div class="grid grid-cols-2 gap-3 mb-3">
             <div>
                 <label class="block text-sm font-medium mb-1">Date souhaitée <span class="text-red-500">*</span></label>
-                <input type="date" name="requested_date" required min="{{ now()->format('Y-m-d') }}" class="w-full border rounded-lg px-3 py-2 text-sm">
+                <input type="date" name="requested_date" required min="{{ now()->format('Y-m-d') }}" class="w-full border rounded-md px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-sm font-medium mb-1">Horaire <span class="text-red-500">*</span></label>
-                <select name="requested_time" required class="w-full border rounded-lg px-3 py-2 text-sm">
+                <select name="requested_time" required class="w-full border rounded-md px-3 py-2 text-sm">
                     <option value="">Choisir...</option>
                     <option value="matin">Matin</option>
                     <option value="midi">Midi</option>
@@ -700,7 +715,7 @@
         @if($establishment->categories->isNotEmpty())
             <div class="mb-3">
                 <label class="block text-sm font-medium mb-1">Prestation</label>
-                <select name="requested_service" class="w-full border rounded-lg px-3 py-2 text-sm">
+                <select name="requested_service" class="w-full border rounded-md px-3 py-2 text-sm">
                     <option value="">À préciser</option>
                     @foreach($establishment->categories as $cat)
                         <option value="{{ $cat->name }}">{{ $cat->name }}</option>
@@ -710,7 +725,7 @@
         @endif
         <div class="mb-3">
             <label class="block text-sm font-medium mb-1">Message (optionnel)</label>
-            <textarea name="content" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Précisions..."></textarea>
+            <textarea name="content" rows="3" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="Précisions..."></textarea>
         </div>
     </x-ajax-modal>
 
@@ -755,7 +770,7 @@
                   submit-label="Envoyer ma demande">
         <x-honeypot />
 
-        <div class="mb-5 bg-gradient-to-r from-pink-50 to-amber-50 border border-pink-200 rounded-lg p-3 flex items-start gap-3">
+        <div class="mb-5 bg-gradient-to-r from-pink-50 to-amber-50 border border-pink-200 rounded-md p-3 flex items-start gap-3">
             <span class="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-fuchsia-500 text-white flex items-center justify-center font-bold">🎁</span>
             <div class="text-sm">
                 <p class="font-semibold text-gray-900">1 mois Premium offert</p>
@@ -765,20 +780,20 @@
 
         <div class="mb-4">
             <label class="block text-sm font-medium mb-1">Votre email <span class="text-red-500">*</span></label>
-            <input type="email" name="email" required value="{{ auth()->user()?->email }}" class="w-full border rounded-lg px-3 py-2" placeholder="email@exemple.fr">
+            <input type="email" name="email" required value="{{ auth()->user()?->email }}" class="w-full border rounded-md px-3 py-2" placeholder="email@exemple.fr">
             <p class="text-xs text-gray-400 mt-1">Un email de confirmation peut vous être envoyé sur cette adresse.</p>
         </div>
         <div class="mb-4">
             <label class="block text-sm font-medium mb-1">Nom du gérant <span class="text-red-500">*</span></label>
-            <input type="text" name="manager_name" required class="w-full border rounded-lg px-3 py-2" placeholder="Prénom et nom">
+            <input type="text" name="manager_name" required class="w-full border rounded-md px-3 py-2" placeholder="Prénom et nom">
         </div>
         <div class="mb-4">
             <label class="block text-sm font-medium mb-1">N° SIRET</label>
-            <input type="text" name="siret" maxlength="14" class="w-full border rounded-lg px-3 py-2" placeholder="14 chiffres (facultatif)">
+            <input type="text" name="siret" maxlength="14" class="w-full border rounded-md px-3 py-2" placeholder="14 chiffres (facultatif)">
         </div>
         <div class="mb-4">
             <label class="block text-sm font-medium mb-1">Message complémentaire</label>
-            <textarea name="message" rows="3" class="w-full border rounded-lg px-3 py-2" placeholder="Informations supplémentaires..."></textarea>
+            <textarea name="message" rows="3" class="w-full border rounded-md px-3 py-2" placeholder="Informations supplémentaires..."></textarea>
         </div>
         <p class="text-xs text-gray-400 mb-4">Les demandes de propriété sont systématiquement vérifiées par notre équipe de modérateurs.</p>
     </x-ajax-modal>
