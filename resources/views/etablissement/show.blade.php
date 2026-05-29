@@ -256,34 +256,48 @@
                 @if($establishment->services->isNotEmpty())
                     <div class="mt-8">
                         <h2 class="text-xl font-semibold mb-3">Prestations & tarifs</h2>
-                        <div class="bg-white border rounded-lg divide-y">
-                            @foreach($establishment->services->sortBy(fn($s) => sprintf('%05d-%05d', $s->category?->sort_order ?? 99999, $s->sort_order))->groupBy(fn($s) => $s->category?->name ?: '') as $cat => $items)
-                                @if($cat)
-                                    <div class="px-4 py-2 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">{{ $cat }}</div>
-                                @endif
-                                @foreach($items as $service)
-                                    <div class="flex items-center justify-between gap-4 px-4 py-3">
-                                        <div class="min-w-0 flex-1">
-                                            <div class="font-medium text-gray-900">{{ $service->name }}</div>
-                                            @if($service->description)
-                                                <div class="text-sm text-gray-500 mt-0.5">{{ $service->description }}</div>
-                                            @endif
-                                            <div class="text-xs text-gray-400 mt-1">{{ $service->duration_label }}</div>
-                                        </div>
-                                        <div class="flex-shrink-0 flex items-center gap-3">
-                                            @if($service->price_label)
-                                                <span class="text-pink-600 font-semibold whitespace-nowrap">{{ $service->price_label }}</span>
-                                            @endif
-                                            @if($establishment->accepts_bookings && $service->is_bookable)
-                                                <button type="button"
-                                                        @click="$dispatch('rdv-start', { serviceId: {{ $service->id }} })"
-                                                        class="bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap cursor-pointer transition">
-                                                    Réserver
-                                                </button>
-                                            @endif
-                                        </div>
+                        <div class="space-y-6">
+                            @foreach($establishment->services->sortBy(fn($s) => sprintf('%05d-%05d', $s->category?->sort_order ?? 99999, $s->sort_order))->groupBy(fn($s) => $s->service_category_id ?: 0) as $categoryId => $items)
+                                @php $category = $items->first()->category; @endphp
+                                <div x-data="{ open: false }">
+                                    @if($category)
+                                        <h3 class="text-base font-semibold text-gray-900">{{ $category->name }}</h3>
+                                        @if($category->description)
+                                            <p class="text-sm text-gray-500 mt-0.5 mb-2">{{ $category->description }}</p>
+                                        @endif
+                                    @endif
+                                    <div class="divide-y divide-gray-100">
+                                        @foreach($items as $index => $service)
+                                            <div @if($index >= 3) x-show="open" x-cloak @endif class="flex items-center justify-between gap-4 py-3">
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="font-medium text-gray-900">{{ $service->name }}</div>
+                                                    @if($service->description)
+                                                        <div class="text-sm text-gray-500 mt-0.5">{{ $service->description }}</div>
+                                                    @endif
+                                                    <div class="text-xs text-gray-400 mt-1">{{ $service->duration_label }}</div>
+                                                </div>
+                                                <div class="flex-shrink-0 flex items-center gap-3">
+                                                    @if($service->price_label)
+                                                        <span class="text-pink-600 font-semibold whitespace-nowrap">{{ $service->price_label }}</span>
+                                                    @endif
+                                                    @if($establishment->accepts_bookings && $service->is_bookable)
+                                                        <button type="button"
+                                                                @click="$dispatch('rdv-start', { serviceId: {{ $service->id }} })"
+                                                                class="bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap cursor-pointer transition">
+                                                            Réserver
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
-                                @endforeach
+                                    @if($items->count() > 3)
+                                        <button type="button" @click="open = !open" class="mt-2 text-sm text-pink-600 hover:text-pink-700 font-medium cursor-pointer">
+                                            <span x-show="!open">Voir les {{ $items->count() - 3 }} autres prestations</span>
+                                            <span x-show="open" x-cloak>Réduire</span>
+                                        </button>
+                                    @endif
+                                </div>
                             @endforeach
                         </div>
                     </div>

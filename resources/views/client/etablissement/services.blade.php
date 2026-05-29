@@ -144,7 +144,7 @@
                 },
 
                 addCategory() {
-                    this.categories.push({ cid: 'new' + (this.nextCid++), id: null, name: '', description: '', services_count: 0 });
+                    this.categories.unshift({ cid: 'new' + (this.nextCid++), id: null, name: '', description: '', services_count: 0 });
                 },
                 removeCategory(i) {
                     if (this.serviceCountForCategory(this.categories[i].cid) > 0) return;
