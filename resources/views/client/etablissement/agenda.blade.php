@@ -48,7 +48,7 @@
         };
     @endphp
 
-    <div class="max-w-7xl mx-auto px-4 py-6"
+    <div class="py-6"
          x-data="agenda({
              services: {{ \Illuminate\Support\Js::from($servicesJs) }},
              appointments: {{ \Illuminate\Support\Js::from($appointmentsJs) }},

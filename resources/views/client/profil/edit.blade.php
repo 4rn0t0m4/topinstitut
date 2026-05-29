@@ -1,5 +1,5 @@
 <x-layouts.app :noindex="true" title="Modifier mon profil - TopInstitut">
-    <div class="max-w-2xl mx-auto px-4 py-8">
+    <div class="py-8">
         <h1 class="text-2xl font-bold mb-6">Modifier mon profil</h1>
 
         <form method="POST" action="{{ route('client.profil.update') }}" class="bg-white rounded-lg shadow-sm border p-6">

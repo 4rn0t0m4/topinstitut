@@ -1,5 +1,5 @@
 <x-layouts.app :noindex="true" :title="'FAQ - ' . $etablissement->name">
-    <div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="py-8">
         <h1 class="text-2xl font-bold mb-1">Questions fréquentes</h1>
         <p class="text-sm text-gray-500 mb-6">{{ $etablissement->name }}</p>
 

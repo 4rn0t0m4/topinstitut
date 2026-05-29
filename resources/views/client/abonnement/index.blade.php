@@ -1,5 +1,5 @@
 <x-layouts.app :noindex="true" title="Mes abonnements - TopInstitut">
-    <div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="py-8">
         <div class="flex items-center justify-between mb-6">
             <div>
                 <h1 class="text-2xl font-bold">Mes abonnements</h1>

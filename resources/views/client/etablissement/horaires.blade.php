@@ -26,7 +26,7 @@
         }
     @endphp
 
-    <div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="py-8">
         <h1 class="text-2xl font-bold mb-2">Horaires - {{ $etablissement->name }}</h1>
         <p class="text-sm text-gray-500 mb-6">Laissez <strong>« — »</strong> sur une demi-journée pour indiquer qu'elle est fermée (ex. ouvert le matin uniquement).</p>
 

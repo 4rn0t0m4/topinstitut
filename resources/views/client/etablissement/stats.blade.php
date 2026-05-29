@@ -21,7 +21,7 @@
         $modalOpens = (int) ($summary['events']['booking_modal_open'] ?? 0);
     @endphp
 
-    <div class="max-w-7xl mx-auto px-4 py-6">
+    <div class="py-6">
         <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
             <div>
                 <h1 class="text-2xl font-bold">Statistiques</h1>

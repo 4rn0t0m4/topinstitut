@@ -25,7 +25,7 @@
         }
     @endphp
 
-    <div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="py-8">
         <a href="{{ route('client.etablissement.praticiens', $etablissement) }}" class="text-sm text-pink-600 hover:underline">&larr; Retour aux praticiens</a>
         <h1 class="text-2xl font-bold mt-2 mb-1">Horaires de travail</h1>
         <p class="text-sm text-gray-500 mb-2">{{ $practitioner->name }} — {{ $etablissement->name }}</p>

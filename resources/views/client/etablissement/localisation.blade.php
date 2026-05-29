@@ -3,7 +3,7 @@
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css">
     @endpush
 
-    <div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="py-8">
         <h1 class="text-2xl font-bold mb-2">Localisation - {{ $etablissement->name }}</h1>
         <p class="text-gray-600 mb-6">Placez le marqueur sur la position exacte de votre établissement.</p>
 
