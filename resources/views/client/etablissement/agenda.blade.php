@@ -200,7 +200,8 @@
                                              class="absolute left-0.5 right-0.5 border-l-4 rounded px-1.5 py-0.5 text-[10px] overflow-hidden cursor-pointer transition {{ $color }}"
                                              style="top: {{ $top }}px; height: {{ $height }}px; z-index: 10;"
                                              @click.stop="openEdit({{ $rdv->id }})"
-                                             title="{{ $rdv->customer_name }} — {{ $rdv->service_name }}">
+                                             @mouseenter="showTooltip({{ $rdv->id }}, $event)"
+                                             @mouseleave="hideTooltip()">
                                             <div class="font-semibold whitespace-nowrap leading-tight">{{ $rdv->starts_at->format('H:i') }}</div>
                                             <div class="truncate font-medium leading-tight">{{ $rdv->customer_name }}</div>
                                             @if($height >= 45)
@@ -279,7 +280,8 @@
                                              class="absolute left-1 right-1 border-l-4 rounded px-2 py-1 text-xs overflow-hidden cursor-pointer transition {{ $color }}"
                                              style="top: {{ $top }}px; height: {{ $height }}px; z-index: 10;"
                                              @click.stop="openEdit({{ $rdv->id }})"
-                                             title="{{ $rdv->customer_name }} — {{ $rdv->service_name }}">
+                                             @mouseenter="showTooltip({{ $rdv->id }}, $event)"
+                                             @mouseleave="hideTooltip()">
                                             <div class="font-semibold whitespace-nowrap">{{ $rdv->starts_at->format('H:i') }}–{{ $rdv->ends_at->format('H:i') }}</div>
                                             <div class="truncate font-medium">{{ $rdv->customer_name }}</div>
                                             @if($height >= 45)
@@ -302,6 +304,48 @@
                 </div>
             </div>
         @endif
+
+        {{-- Tooltip enrichi au survol des RDV --}}
+        <div x-show="tooltipFor !== null && appointments[tooltipFor]" x-cloak
+             :style="`top: ${tooltipPos.y}px; left: ${tooltipPos.x}px;`"
+             class="fixed z-50 w-72 bg-white border border-gray-200 rounded-md shadow-lg p-3 text-sm pointer-events-none transition-opacity">
+            <template x-if="tooltipFor !== null && appointments[tooltipFor]">
+                <div>
+                    <div class="flex items-start justify-between gap-2 mb-1">
+                        <div class="font-semibold text-gray-900 truncate" x-text="appointments[tooltipFor].customer_name || 'Client'"></div>
+                        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap"
+                              :class="statusBadgeClass(appointments[tooltipFor].status)"
+                              x-text="statusLabel(appointments[tooltipFor].status)"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-2">
+                        <span x-text="appointments[tooltipFor].time"></span>
+                        – <span x-text="endTime(appointments[tooltipFor])"></span>
+                        · <span x-text="appointments[tooltipFor].duration_minutes + ' min'"></span>
+                    </div>
+                    <div class="text-sm text-gray-800 mb-2" x-text="appointments[tooltipFor].service_name"></div>
+                    <div class="space-y-0.5 text-xs">
+                        <template x-if="appointments[tooltipFor].customer_phone">
+                            <div class="flex items-center gap-1.5 text-gray-600">
+                                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 010 1.414L9.414 8.414a11.042 11.042 0 005.516 5.516l1.293-1.293a1 1 0 011.414 0l2.414 2.414a1 1 0 01.293.707V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                                <span x-text="appointments[tooltipFor].customer_phone"></span>
+                            </div>
+                        </template>
+                        <template x-if="appointments[tooltipFor].customer_email">
+                            <div class="flex items-center gap-1.5 text-gray-600 truncate">
+                                <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                <span class="truncate" x-text="appointments[tooltipFor].customer_email"></span>
+                            </div>
+                        </template>
+                    </div>
+                    <template x-if="appointments[tooltipFor].notes">
+                        <div class="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-600 italic line-clamp-3" x-text="appointments[tooltipFor].notes"></div>
+                    </template>
+                    <div class="mt-2 pt-2 border-t border-gray-100 text-[10px] text-gray-400">
+                        Cliquez pour modifier
+                    </div>
+                </div>
+            </template>
+        </div>
 
         {{-- Modal créer/modifier RDV --}}
         <div x-show="showForm" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="showForm = false">
@@ -453,6 +497,11 @@
                 showBlock: false,
                 form: {},
 
+                // Tooltip enrichi au survol des cards RDV.
+                tooltipFor: null,
+                tooltipPos: { x: 0, y: 0 },
+                tooltipTimer: null,
+
                 statusActions: {
                     completed: 'Marquer honoré',
                     no_show: 'Marquer absent',
@@ -537,6 +586,48 @@
 
                 statusLabel(st) {
                     return ({ confirmed: 'Confirmé', completed: 'Honoré', no_show: 'Absent', cancelled: 'Annulé' })[st] || st;
+                },
+
+                statusBadgeClass(st) {
+                    return ({
+                        confirmed: 'bg-blue-100 text-blue-800',
+                        completed: 'bg-emerald-100 text-emerald-800',
+                        no_show: 'bg-gray-200 text-gray-600',
+                        cancelled: 'bg-red-100 text-red-700',
+                    })[st] || 'bg-gray-100 text-gray-700';
+                },
+
+                // Heure de fin d'un RDV (time + duration_minutes), format HH:mm.
+                endTime(a) {
+                    if (!a?.time) return '';
+                    const [h, m] = a.time.split(':').map(Number);
+                    const total = h * 60 + m + (a.duration_minutes || 0);
+                    const eh = Math.floor(total / 60) % 24;
+                    const em = total % 60;
+                    return String(eh).padStart(2, '0') + ':' + String(em).padStart(2, '0');
+                },
+
+                // Tooltip : placé à droite du RDV si possible, sinon à gauche.
+                // Léger délai à l'apparition pour ne pas pop pendant un déplacement rapide.
+                showTooltip(id, $event) {
+                    clearTimeout(this.tooltipTimer);
+                    const card = $event.currentTarget;
+                    const rect = card.getBoundingClientRect();
+                    const W = 288; // largeur tooltip ~ w-72
+                    const H = 220; // estimation max hauteur
+                    let x = rect.right + 8;
+                    if (x + W > window.innerWidth - 8) x = rect.left - W - 8;
+                    if (x < 8) x = 8;
+                    let y = rect.top;
+                    if (y + H > window.innerHeight - 8) y = window.innerHeight - H - 8;
+                    if (y < 8) y = 8;
+                    this.tooltipPos = { x, y };
+                    this.tooltipTimer = setTimeout(() => { this.tooltipFor = id; }, 120);
+                },
+
+                hideTooltip() {
+                    clearTimeout(this.tooltipTimer);
+                    this.tooltipFor = null;
                 },
 
                 changeStatus(status) {
