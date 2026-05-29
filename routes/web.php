@@ -6,6 +6,7 @@ use App\Http\Controllers\CategorieAutocompleteController;
 use App\Http\Controllers\ComparerController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DepartementController;
+use App\Http\Controllers\EstablishmentEventController;
 use App\Http\Controllers\EtablissementController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\HomeController;
@@ -103,6 +104,12 @@ Route::get('/rdv/{establishment}/annuler/{appointment}', [\App\Http\Controllers\
 
 // Favorites
 Route::post('/ajax/favorites/{establishment}', [\App\Http\Controllers\FavoriteController::class, 'toggle'])->name('favorites.toggle');
+
+// Tracking évènements fiche (clics téléphone/itinéraire/site/galerie/modale).
+// Throttle généreux : un visiteur peut générer plusieurs évènements par seconde.
+Route::post('/etablissements/{etablissement}/event', [EstablishmentEventController::class, 'track'])
+    ->middleware('throttle:60,1')
+    ->name('etablissement.event');
 
 // Legacy .html redirects — MUST be before the establishment detail routes
 // (otherwise /spa/xxx.html would match /spa/{slug} with slug="xxx.html")

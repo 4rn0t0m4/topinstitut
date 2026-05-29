@@ -41,6 +41,11 @@ Route::prefix('etablissement/{etablissement}')->name('etablissement.')->scopeBin
     Route::put('faq/{faq}', [\App\Http\Controllers\Client\FaqController::class, 'update'])->name('faq.update');
     Route::delete('faq/{faq}', [\App\Http\Controllers\Client\FaqController::class, 'destroy'])->name('faq.destroy');
 
+    // Statistiques — réservé aux établissements Premium
+    Route::middleware('premium-establishment')->group(function () {
+        Route::get('stats', [\App\Http\Controllers\Client\StatsController::class, 'show'])->name('stats');
+    });
+
     // Réservation en ligne — réservé aux établissements Premium
     Route::middleware('premium-establishment')->group(function () {
         Route::get('prestations', [\App\Http\Controllers\Client\ServicesController::class, 'edit'])->name('prestations');

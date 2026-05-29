@@ -8,6 +8,7 @@ use App\Http\Requests\Booking\StoreAppointmentRequest;
 use App\Models\Appointment;
 use App\Models\Establishment;
 use App\Services\AppointmentService;
+use App\Services\EstablishmentStatsService;
 use App\Services\SlotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
@@ -16,7 +17,11 @@ class AppointmentController extends Controller
 {
     use RespondsJsonOrBack;
 
-    public function __construct(private SlotService $slots, private AppointmentService $appointments) {}
+    public function __construct(
+        private SlotService $slots,
+        private AppointmentService $appointments,
+        private EstablishmentStatsService $stats,
+    ) {}
 
     /** Page de prise de rendez-vous. */
     public function create(Establishment $establishment)
@@ -85,6 +90,11 @@ class AppointmentController extends Controller
         }
 
         $this->appointments->notifyConfirmed($appointment);
+
+        // Stat de conversion : RDV pris depuis le site public.
+        if ($this->stats->shouldTrack($request, $establishment)) {
+            $this->stats->recordEvent($establishment, 'booking_completed');
+        }
 
         if ($request->expectsJson()) {
             $appointment->loadMissing('practitioner');

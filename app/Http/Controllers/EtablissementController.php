@@ -6,6 +6,7 @@ use App\Models\City;
 use App\Models\Department;
 use App\Models\Establishment;
 use App\Models\EstablishmentSlug;
+use App\Services\EstablishmentStatsService;
 use App\Services\GeoSearchService;
 
 class EtablissementController extends Controller
@@ -103,11 +104,17 @@ class EtablissementController extends Controller
 
     private function render(Establishment $establishment, GeoSearchService $geoService)
     {
-        // Compteur de vues : 1 par session toutes les 30 min
+        // Compteur de vues "lifetime" : 1 par session toutes les 30 min.
         $cacheKey = 'view_'.$establishment->id.'_'.session()->getId();
         if (! cache()->has($cacheKey)) {
             $establishment->increment('view_count');
             cache()->put($cacheKey, true, now()->addMinutes(30));
+        }
+
+        // Stats journalières (Premium) : compte chaque page view, skip bots & owners.
+        $stats = app(EstablishmentStatsService::class);
+        if ($stats->shouldTrack(request(), $establishment)) {
+            $stats->recordView($establishment);
         }
 
         $establishment->load(['approvedReviews.user', 'approvedReviews.photos', 'photos', 'schedules', 'services.category', 'practitioners', 'categories', 'news', 'faqs', 'cityRelation.department', 'owners']);

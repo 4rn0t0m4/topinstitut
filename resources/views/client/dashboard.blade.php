@@ -15,14 +15,20 @@
                 ['praticiens',    'Praticiens',   'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z'],
                 ['horaires',      'Horaires',     'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
             ],
+            'Performance' => [
+                ['stats',         'Statistiques', 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z'],
+            ],
             'Avis' => [
                 ['avis',          'Avis',         'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.05 9.771c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z'],
             ],
         ];
+        // Groupes réservés au plan Premium.
+        $premiumGroups = ['Réservation', 'Performance'];
         // Thèmes de couleur par groupe (classes littérales pour la compilation Tailwind).
         $groupThemes = [
             'Fiche'       => ['dot' => 'bg-rose-400',   'icon' => 'bg-rose-50 text-rose-600 group-hover:bg-rose-100',       'hover' => 'hover:border-rose-300 hover:shadow-rose-100'],
             'Réservation' => ['dot' => 'bg-violet-400', 'icon' => 'bg-violet-50 text-violet-600 group-hover:bg-violet-100', 'hover' => 'hover:border-violet-300 hover:shadow-violet-100'],
+            'Performance' => ['dot' => 'bg-sky-400',    'icon' => 'bg-sky-50 text-sky-600 group-hover:bg-sky-100',          'hover' => 'hover:border-sky-300 hover:shadow-sky-100'],
             'Avis'        => ['dot' => 'bg-amber-400',  'icon' => 'bg-amber-50 text-amber-600 group-hover:bg-amber-100',    'hover' => 'hover:border-amber-300 hover:shadow-amber-100'],
         ];
     @endphp
@@ -123,20 +129,23 @@
                         @foreach($actionGroups as $groupLabel => $actions)
                             @php
                                 $theme = $groupThemes[$groupLabel] ?? $groupThemes['Fiche'];
-                                $isReservation = $groupLabel === 'Réservation';
-                                $needsPremium = $isReservation && ! $etab->is_premium;
+                                $isPremiumGroup = in_array($groupLabel, $premiumGroups, true);
+                                $needsPremium = $isPremiumGroup && ! $etab->is_premium;
+                                $premiumMsg = $groupLabel === 'Performance'
+                                    ? '🔒 Passez en Premium pour suivre vos visites, clics et conversions.'
+                                    : '🔒 Activez l\'abonnement Premium pour gérer votre planning et vos réservations en ligne.';
                             @endphp
                             <div>
                                 <div class="flex items-center gap-2 mb-2.5">
                                     <span class="w-1.5 h-1.5 rounded-full {{ $theme['dot'] }}"></span>
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">{{ $groupLabel }}</span>
-                                    @if($isReservation)
+                                    @if($isPremiumGroup)
                                         <span class="text-[10px] font-bold uppercase tracking-wide bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white px-2 py-0.5 rounded-full">Premium</span>
                                     @endif
                                 </div>
                                 @if($needsPremium)
                                     <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
-                                        🔒 Activez l'abonnement Premium pour gérer votre planning et vos réservations en ligne.
+                                        {!! $premiumMsg !!}
                                         <a href="{{ route('client.abonnement.index') }}" class="font-semibold underline hover:no-underline">En savoir plus</a>
                                     </p>
                                 @endif

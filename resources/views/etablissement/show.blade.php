@@ -179,7 +179,7 @@
                     <div class="mt-6 grid grid-cols-2 md:grid-cols-3 gap-2">
                         @foreach($visiblePhotos as $i => $photo)
                             <button type="button"
-                                    @click="$store.lightbox.show(@js($photoUrls), {{ $i }})"
+                                    @click="$store.lightbox.show(@js($photoUrls), {{ $i }}); window.trackEtablissementEvent?.({{ $establishment->id }}, 'gallery_open')"
                                     class="block group relative w-full min-w-0 overflow-hidden rounded-lg cursor-pointer">
                                 <img src="{{ $photo->url }}"
                                      alt="{{ $establishment->name }}"
@@ -214,12 +214,12 @@
 
                             <div class="pt-2 space-y-2">
                                 @if($establishment->accepts_bookings)
-                                    <button @click="$store.rdvModal.open = true" type="button" class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 px-5 rounded-lg hover:bg-pink-700 transition cursor-pointer">
+                                    <button @click="$store.rdvModal.open = true; window.trackEtablissementEvent?.({{ $establishment->id }}, 'booking_modal_open')" type="button" class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 px-5 rounded-lg hover:bg-pink-700 transition cursor-pointer">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0V10.5h18v8.25"/></svg>
                                         Prendre rendez-vous
                                     </button>
                                 @else
-                                    <button @click="$store.bookingModal.open = true" type="button" class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 px-5 rounded-lg hover:bg-pink-700 transition cursor-pointer">
+                                    <button @click="$store.bookingModal.open = true; window.trackEtablissementEvent?.({{ $establishment->id }}, 'booking_modal_open')" type="button" class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 px-5 rounded-lg hover:bg-pink-700 transition cursor-pointer">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0V10.5h18v8.25"/></svg>
                                         Prendre RDV
                                     </button>
@@ -282,7 +282,7 @@
                                                     @endif
                                                     @if($establishment->accepts_bookings && $service->is_bookable)
                                                         <button type="button"
-                                                                @click="$dispatch('rdv-start', { serviceId: {{ $service->id }} })"
+                                                                @click="$dispatch('rdv-start', { serviceId: {{ $service->id }} }); window.trackEtablissementEvent?.({{ $establishment->id }}, 'booking_modal_open')"
                                                                 class="bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap cursor-pointer transition">
                                                             Réserver
                                                         </button>

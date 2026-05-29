@@ -9,6 +9,25 @@ Alpine.store('claimModal', { open: false });
 Alpine.store('bookingModal', { open: false });
 Alpine.store('rdvModal', { open: false });
 
+// Tracking évènement fiche (clic téléphone, ouverture galerie, modale RDV…).
+// Fire-and-forget : ne bloque jamais l'UX, l'erreur est silencieuse.
+window.trackEtablissementEvent = (etablissementId, eventType) => {
+    if (!etablissementId || !eventType) return;
+    const token = document.querySelector('meta[name="csrf-token"]')?.content;
+    try {
+        fetch('/etablissements/' + etablissementId + '/event', {
+            method: 'POST',
+            keepalive: true,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ event_type: eventType }),
+        }).catch(() => {});
+    } catch (e) { /* noop */ }
+};
+
 Alpine.store('favorites', {
     ids: (function () {
         const auth = document.querySelector('meta[name="auth-favorites"]')?.content;
@@ -104,6 +123,8 @@ Alpine.data('phoneReveal', (encoded, etablissementId) => ({
 
     async reveal() {
         this.loading = true;
+        // Stat clic téléphone (intent fort, on track au moment de la révélation).
+        window.trackEtablissementEvent?.(etablissementId, 'phone_click');
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.content;
             const res = await fetch('/ajax/phone', {
