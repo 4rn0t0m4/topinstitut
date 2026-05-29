@@ -228,6 +228,40 @@
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
                                     Contacter
                                 </button>
+
+                                {{-- Liens secondaires : itinéraire + site web (tracking pour stats) --}}
+                                @php
+                                    $directionsDest = $establishment->latitude && $establishment->longitude
+                                        ? $establishment->latitude.','.$establishment->longitude
+                                        : trim(($establishment->address ? $establishment->address.', ' : '').$establishment->postal_code.' '.$establishment->city);
+                                    $directionsUrl = $directionsDest
+                                        ? 'https://www.google.com/maps/dir/?api=1&destination='.urlencode($directionsDest)
+                                        : null;
+                                    $websiteUrl = $establishment->website;
+                                    if ($websiteUrl && ! preg_match('#^https?://#i', $websiteUrl)) {
+                                        $websiteUrl = 'https://'.ltrim($websiteUrl, '/');
+                                    }
+                                @endphp
+                                @if($directionsUrl || $websiteUrl)
+                                    <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                                        @if($directionsUrl)
+                                            <a href="{{ $directionsUrl }}" target="_blank" rel="noopener nofollow"
+                                               @click="window.trackEtablissementEvent?.({{ $establishment->id }}, 'directions_click')"
+                                               class="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 font-medium py-2.5 px-3 rounded-lg hover:bg-gray-50 hover:border-gray-400 text-sm transition cursor-pointer">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                                                Itinéraire
+                                            </a>
+                                        @endif
+                                        @if($websiteUrl)
+                                            <a href="{{ $websiteUrl }}" target="_blank" rel="noopener nofollow"
+                                               @click="window.trackEtablissementEvent?.({{ $establishment->id }}, 'website_click')"
+                                               class="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 font-medium py-2.5 px-3 rounded-lg hover:bg-gray-50 hover:border-gray-400 text-sm transition cursor-pointer">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/></svg>
+                                                Site web
+                                            </a>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                             @if(!$establishment->owners->contains(auth()->id()))
                                 <div class="pt-1">
