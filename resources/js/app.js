@@ -188,8 +188,26 @@ Alpine.data('ficheNav', () => ({
         if (!el) return;
         this.active = id;
         const y = el.getBoundingClientRect().top + window.scrollY - this.navOffset + 1;
-        window.scrollTo({ top: y, behavior: 'smooth' });
+        this.smoothScrollTo(y);
         if (history.replaceState) history.replaceState(null, '', '#' + id);
+    },
+
+    // Scroll custom : easeInOutQuart + durée proportionnelle à la distance
+    // (cap 400/900ms) — plus doux que le `behavior: 'smooth'` natif.
+    smoothScrollTo(targetY) {
+        const startY = window.scrollY;
+        const diff = targetY - startY;
+        const distance = Math.abs(diff);
+        if (distance < 4) return; // déjà sur place
+        const duration = Math.min(900, Math.max(400, distance * 0.5));
+        const start = performance.now();
+        const ease = (t) => t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
+        const step = (now) => {
+            const t = Math.min(1, (now - start) / duration);
+            window.scrollTo(0, startY + diff * ease(t));
+            if (t < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
     },
 }));
 
