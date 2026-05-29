@@ -158,6 +158,41 @@ Alpine.data('phoneReveal', (encoded, etablissementId) => ({
     },
 }));
 
+// Sous-menu d'ancres sticky sur la fiche établissement : highlight de la
+// section actuellement à l'écran + scroll doux au clic. Pas d'IntersectionObserver
+// pour rester prédictible avec la marge de la barre.
+Alpine.data('ficheNav', () => ({
+    active: '',
+    sections: [],
+    navOffset: 64,
+
+    init() {
+        this.sections = Array.from(document.querySelectorAll('[data-fiche-section]'));
+        if (!this.sections.length) return;
+        this.active = this.sections[0].id;
+        const onScroll = () => {
+            const y = window.scrollY + this.navOffset + 4;
+            let current = this.sections[0].id;
+            for (const s of this.sections) {
+                if (s.offsetTop <= y) current = s.id;
+                else break;
+            }
+            if (current !== this.active) this.active = current;
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+    },
+
+    goto(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        this.active = id;
+        const y = el.getBoundingClientRect().top + window.scrollY - this.navOffset + 1;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        if (history.replaceState) history.replaceState(null, '', '#' + id);
+    },
+}));
+
 Alpine.data('villeAutocomplete', villeAutocomplete);
 
 Alpine.data('prestationAutocomplete', () => ({

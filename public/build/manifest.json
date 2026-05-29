@@ -4,7 +4,7 @@
     "name": "ville-autocomplete"
   },
   "resources/css/admin.css": {
-    "file": "assets/admin-AMw9e4HQ.css",
+    "file": "assets/admin-D62n4Z9F.css",
     "name": "admin",
     "names": [
       "admin.css"
@@ -13,7 +13,7 @@
     "isEntry": true
   },
   "resources/css/app.css": {
-    "file": "assets/app-Cb0POgYp.css",
+    "file": "assets/app-CxyoepFk.css",
     "name": "app",
     "names": [
       "app.css"
@@ -31,7 +31,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DPoyCPI8.js",
+    "file": "assets/app-Be-qt9Xf.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

@@ -124,7 +124,7 @@
                 <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 break-words flex items-start gap-2">
                     <span>{{ $establishment->name }}</span>
                     @if($establishment->is_verified_owner)
-                        <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-medium px-2 py-1 rounded-full border border-blue-200" title="Établissement vérifié par son propriétaire">
+                        <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-medium px-2 py-1 rounded-full" title="Établissement vérifié par son propriétaire">
                             <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                             Vérifié
                         </span>
@@ -191,8 +191,38 @@
                     </div>
                 @endif
 
+                {{-- Sous-menu d'ancres (sticky) --}}
+                @php
+                    $hasGoogleReviews = ! empty($establishment->google_reviews);
+                    $hasUserReviews = $establishment->approvedReviews->isNotEmpty();
+                    $navSections = [['id' => 'coordonnees', 'label' => 'Coordonnées']];
+                    if ($establishment->description) $navSections[] = ['id' => 'presentation', 'label' => 'Présentation'];
+                    if ($establishment->services->isNotEmpty() || $establishment->pricing) {
+                        $navSections[] = ['id' => 'prestations', 'label' => $establishment->services->isNotEmpty() ? 'Prestations' : 'Tarifs'];
+                    }
+                    if ($establishment->schedules->isNotEmpty()) $navSections[] = ['id' => 'horaires', 'label' => 'Horaires'];
+                    if ($establishment->faqs->isNotEmpty()) $navSections[] = ['id' => 'faq', 'label' => 'FAQ'];
+                    if ($establishment->news->isNotEmpty()) $navSections[] = ['id' => 'actualites', 'label' => 'Actualités'];
+                    if ($hasGoogleReviews || $hasUserReviews) $navSections[] = ['id' => 'avis', 'label' => 'Avis'];
+                @endphp
+                <nav class="sticky top-0 z-30 mt-8 -mx-4 sm:mx-0 bg-white/90 backdrop-blur border-y sm:border-x border-gray-200 sm:rounded-md"
+                     x-data="ficheNav()" x-init="init()">
+                    <div class="overflow-x-auto">
+                        <div class="flex gap-1 px-3 py-2 min-w-max">
+                            @foreach($navSections as $s)
+                                <a href="#{{ $s['id'] }}"
+                                   @click.prevent="goto('{{ $s['id'] }}')"
+                                   :class="active === '{{ $s['id'] }}' ? 'text-pink-700 bg-pink-50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'"
+                                   class="px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap transition">
+                                    {{ $s['label'] }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </nav>
+
                 {{-- Coordonnées & carte --}}
-                <div class="mt-8 bg-white border rounded-lg p-6">
+                <div class="mt-8 scroll-mt-20" id="coordonnees" data-fiche-section>
                     <h2 class="text-xl font-semibold mb-4">Coordonnées</h2>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -224,7 +254,7 @@
                                         Prendre RDV
                                     </button>
                                 @endif
-                                <button @click="$store.contactModal.open = true" type="button" class="w-full flex items-center justify-center gap-2 bg-white border-2 border-pink-600 text-pink-600 font-semibold py-3 px-5 rounded-lg hover:bg-pink-50 transition cursor-pointer">
+                                <button @click="$store.contactModal.open = true" type="button" class="w-full flex items-center justify-center gap-2 bg-white border border-pink-600 text-pink-600 font-semibold py-3 px-5 rounded-lg hover:bg-pink-50 transition cursor-pointer">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
                                     Contacter
                                 </button>
@@ -280,7 +310,7 @@
 
                 {{-- Description --}}
                 @if($establishment->description)
-                    <div class="mt-8">
+                    <div class="mt-8 scroll-mt-20" id="presentation" data-fiche-section>
                         <h2 class="text-xl font-semibold mb-3">Présentation</h2>
                         <div class="prose max-w-none text-gray-700 break-words">{!! nl2br(e($establishment->description)) !!}</div>
                     </div>
@@ -288,7 +318,7 @@
 
                 {{-- Prestations & tarifs --}}
                 @if($establishment->services->isNotEmpty())
-                    <div class="mt-8">
+                    <div class="mt-8 scroll-mt-20" id="prestations" data-fiche-section>
                         <h2 class="text-xl font-semibold mb-3">Prestations & tarifs</h2>
                         <div class="space-y-6">
                             @foreach($establishment->services->sortBy(fn($s) => sprintf('%05d-%05d', $s->category?->sort_order ?? 99999, $s->sort_order))->groupBy(fn($s) => $s->service_category_id ?: 0) as $categoryId => $items)
@@ -336,7 +366,7 @@
                         </div>
                     </div>
                 @elseif($establishment->pricing)
-                    <div class="mt-8">
+                    <div class="mt-8 scroll-mt-20" id="prestations" data-fiche-section>
                         <h2 class="text-xl font-semibold mb-3">Tarifs</h2>
                         <div class="prose max-w-none text-gray-700 break-words">{!! nl2br(e($establishment->pricing)) !!}</div>
                     </div>
@@ -347,7 +377,7 @@
                     @php
                         $dayLabels = [1 => 'Lundi', 2 => 'Mardi', 3 => 'Mercredi', 4 => 'Jeudi', 5 => 'Vendredi', 6 => 'Samedi', 7 => 'Dimanche'];
                     @endphp
-                    <div class="mt-8">
+                    <div class="mt-8 scroll-mt-20" id="horaires" data-fiche-section>
                         <h2 class="text-xl font-semibold mb-3">Horaires</h2>
                         <table class="w-full text-sm">
                             @foreach($establishment->schedules as $s)
@@ -371,7 +401,7 @@
 
                 {{-- FAQ --}}
                 @if($establishment->faqs->isNotEmpty())
-                    <div class="mt-8" x-data="{ open: null }">
+                    <div class="mt-8 scroll-mt-20" id="faq" data-fiche-section x-data="{ open: null }">
                         <h2 class="text-xl font-semibold mb-3">Questions fréquentes</h2>
                         <div class="bg-white border rounded-lg divide-y">
                             @foreach($establishment->faqs as $i => $faq)
@@ -403,7 +433,7 @@
 
                 {{-- Actualités --}}
                 @if($establishment->news->isNotEmpty())
-                    <div class="mt-8">
+                    <div class="mt-8 scroll-mt-20" id="actualites" data-fiche-section>
                         <h2 class="text-xl font-semibold mb-3">Actualités</h2>
                         @foreach($establishment->news as $item)
                             <div class="bg-pink-50 border border-pink-100 rounded-lg p-4 mb-3">
@@ -416,6 +446,8 @@
                     </div>
                 @endif
 
+                {{-- Avis (Google + utilisateurs sous un même ancrage) --}}
+                <div id="avis" class="scroll-mt-20" data-fiche-section>
                 {{-- Google Reviews --}}
                 @if(!empty($establishment->google_reviews))
                     <div class="mt-8">
@@ -570,14 +602,15 @@
                         </form>
                     </div>
                 </div>
+                </div>{{-- /#avis --}}
             </div>
 
             {{-- Sidebar --}}
             <div>
                 {{-- Categories --}}
                 @if($establishment->categories->isNotEmpty())
-                    <div class="bg-white rounded-lg shadow-sm border p-6 sticky top-4">
-                        <h2 class="font-semibold text-lg mb-3">Prestations</h2>
+                    <div class="sticky top-20">
+                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Prestations</h3>
                         <div class="flex flex-wrap gap-1.5">
                             @foreach($establishment->categories as $cat)
                                 <span class="text-xs bg-pink-50 text-pink-700 px-2 py-1 rounded">{{ $cat->name }}</span>
