@@ -59,7 +59,7 @@
         @endif
     @endproduction
 </head>
-<body class="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden" x-data="{ mobileMenu: false }">
+<body class="min-h-screen {{ $bodyClass ?? 'bg-gray-50' }} flex flex-col overflow-x-hidden" x-data="{ mobileMenu: false }">
     {{-- Header --}}
     <header class="bg-white shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

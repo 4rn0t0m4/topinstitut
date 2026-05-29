@@ -1,6 +1,7 @@
 <x-layouts.app
     :title="$establishment->name . ' - ' . $establishment->type_label . ' à ' . $establishment->city . ' - TopInstitut'"
     :description="$establishment->name . ', ' . strtolower($establishment->type_label) . ' à ' . $establishment->city . ($establishment->review_count > 0 ? '. Note : ' . number_format($establishment->rating, 1, ',', '') . '/5 (' . $establishment->review_count . ' avis)' : '') . '. Adresse, horaires, avis et coordonnées.'"
+    body-class="bg-white"
 >
     @php
         $cityRel = $establishment->cityRelation;
@@ -130,8 +131,14 @@
                         </span>
                     @endif
                 </h1>
-                <div class="flex items-center gap-3 mt-1 flex-wrap">
-                    <span class="text-pink-600">{{ $establishment->type_label }}</span>
+                @if($establishment->address || $establishment->city)
+                    <p class="text-sm text-gray-600 mt-1">
+                        @if($establishment->address){{ $establishment->address }},@endif {{ $establishment->postal_code }} {{ $establishment->city }}
+                    </p>
+                @endif
+                <div class="flex items-center gap-x-3 gap-y-1 mt-2 flex-wrap text-sm">
+                    <span class="text-pink-600 font-medium">{{ $establishment->type_label }}</span>
+                    <span class="text-gray-300">·</span>
                     <x-statut-ouverture :etablissement="$establishment" />
                     @if($establishment->is_featured)
                         <span class="bg-amber-400 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Sponsorisé</span>
@@ -838,4 +845,27 @@
             });
         </script>
     @endif
+
+    {{-- CTA sticky bas mobile (style Booksy) : reste accroché en bas de l'écran
+         pendant tout le scroll, masqué dès lg pour ne pas dupliquer le CTA hero. --}}
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 px-4 py-2.5 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+        @if($establishment->accepts_bookings)
+            <button @click="$store.rdvModal.open = true; window.trackEtablissementEvent?.({{ $establishment->id }}, 'booking_modal_open')"
+                    type="button"
+                    class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 rounded-md hover:bg-pink-700 transition cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0V10.5h18v8.25"/></svg>
+                Prendre rendez-vous
+            </button>
+        @else
+            <button @click="$store.bookingModal.open = true; window.trackEtablissementEvent?.({{ $establishment->id }}, 'booking_modal_open')"
+                    type="button"
+                    class="w-full flex items-center justify-center gap-2 bg-pink-600 text-white font-semibold py-3 rounded-md hover:bg-pink-700 transition cursor-pointer">
+                Prendre RDV
+            </button>
+        @endif
+    </div>
+
+    {{-- Espace en bas du document pour que le sticky CTA ne masque pas le footer
+         sur mobile (≈ hauteur du bouton + padding). --}}
+    <div class="lg:hidden h-20" aria-hidden="true"></div>
 </x-layouts.app>
