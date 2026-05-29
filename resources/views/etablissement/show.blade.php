@@ -261,12 +261,12 @@
                                 @php $category = $items->first()->category; @endphp
                                 <div x-data="{ open: false }">
                                     @if($category)
-                                        <h3 class="text-base font-semibold text-gray-900">{{ $category->name }}</h3>
+                                        <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ $category->name }}</h3>
                                         @if($category->description)
-                                            <p class="text-sm text-gray-500 mt-0.5 mb-2">{{ $category->description }}</p>
+                                            <p class="text-sm text-gray-500 mb-3">{{ $category->description }}</p>
                                         @endif
                                     @endif
-                                    <div class="divide-y divide-gray-100">
+                                    <div class="border-t border-gray-300 divide-y divide-gray-300">
                                         @foreach($items as $index => $service)
                                             <div @if($index >= 3) x-show="open" x-cloak @endif class="flex items-center justify-between gap-4 py-3">
                                                 <div class="min-w-0 flex-1">

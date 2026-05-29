@@ -123,26 +123,28 @@
         </div>
     </header>
 
-    {{-- Flash messages --}}
-    @if(session('success'))
-        <div class="max-w-7xl mx-auto px-4 mt-4">
-            <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-                {{ session('success') }}
+    {{-- Flash messages (pages publiques uniquement — les pages espace-client gèrent leur propre affichage sous le titre) --}}
+    @unless(Request::is('espace-client*'))
+        @if(session('success'))
+            <div class="max-w-7xl mx-auto px-4 mt-4">
+                <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                    {{ session('success') }}
+                </div>
             </div>
-        </div>
-    @endif
+        @endif
 
-    @if(isset($errors) && $errors->any())
-        <div class="max-w-7xl mx-auto px-4 mt-4">
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                <ul class="list-disc list-inside">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+        @if(isset($errors) && $errors->any())
+            <div class="max-w-7xl mx-auto px-4 mt-4">
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    <ul class="list-disc list-inside">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
-        </div>
-    @endif
+        @endif
+    @endunless
 
     {{-- Content --}}
     <main class="flex-1">
