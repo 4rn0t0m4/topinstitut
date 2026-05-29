@@ -4,6 +4,11 @@
          services: {{ Illuminate\Support\Js::from($establishment->services->where('is_bookable', true)->sortBy(fn($s) => sprintf('%05d-%05d', $s->category?->sort_order ?? 99999, $s->sort_order))->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'category' => $s->category?->name, 'duration_label' => $s->duration_label, 'price' => $s->price_label])->values()) }},
          practitioners: {{ Illuminate\Support\Js::from($establishment->practitioners->where('is_active', true)->map(fn($p) => ['id' => $p->id, 'name' => $p->name])->values()) }},
          slotsUrl: '{{ route('rdv.slots', $establishment) }}',
+         openDays: {{ Illuminate\Support\Js::from(
+             $establishment->schedules->isEmpty()
+                 ? [1,2,3,4,5,6,7]
+                 : $establishment->schedules->where('is_closed', false)->pluck('day_of_week')->map(fn($v) => (int) $v)->values()->all()
+         ) }},
      })"
      x-show="$store.rdvModal.open"
      @keydown.escape.window="$store.rdvModal.open = false"
@@ -89,10 +94,33 @@
 
             {{-- Étape 3 : date + créneaux --}}
             <div x-show="step === 3" x-cloak>
-                <input type="date" x-model="date" :min="minDate" :max="maxDate" @change="loadSlots()" class="border rounded-lg px-3 py-2 mb-4">
+                {{-- Sélecteur de jour : flèches + bande de boutons --}}
+                <div x-show="allDays.length > 0" class="mb-4">
+                    <div class="text-center text-sm font-medium text-gray-700 mb-2 capitalize" x-text="windowMonthRange"></div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="prevDays()" :disabled="dayWindowStart === 0"
+                                class="shrink-0 w-9 h-9 flex items-center justify-center border rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                            &larr;
+                        </button>
+                        <div class="flex-1 grid gap-2" :style="`grid-template-columns: repeat(${visibleDays.length}, minmax(0, 1fr))`">
+                            <template x-for="d in visibleDays" :key="d.iso">
+                                <button type="button" @click="selectDay(d.iso)"
+                                        :class="d.iso === date ? 'bg-pink-600 text-white border-pink-600' : 'bg-white border-gray-300 hover:border-pink-400 hover:bg-pink-50/40 text-gray-700'"
+                                        class="border rounded-lg py-2 px-1 text-sm font-medium cursor-pointer transition capitalize whitespace-nowrap">
+                                    <span x-text="d.weekday"></span> <span x-text="d.day"></span>
+                                </button>
+                            </template>
+                        </div>
+                        <button type="button" @click="nextDays()" :disabled="dayWindowStart + dayWindowSize >= allDays.length"
+                                class="shrink-0 w-9 h-9 flex items-center justify-center border rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                            &rarr;
+                        </button>
+                    </div>
+                </div>
+
                 <div x-show="loading" class="text-sm text-gray-500">Recherche des disponibilités…</div>
                 <div x-show="!loading && slots.length === 0 && date" class="text-sm text-gray-500">Aucun créneau disponible ce jour-là. Essayez une autre date.</div>
-                <div x-show="!loading && slots.length === 0 && !date" class="text-sm text-gray-500">Aucune disponibilité dans les 60 prochains jours.</div>
+                <div x-show="!loading && allDays.length === 0" class="text-sm text-gray-500">Aucun jour d'ouverture configuré.</div>
                 <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     <template x-for="slot in slots" :key="slot">
                         <button type="button" @click="selectSlot(slot)" class="border rounded-lg py-2 text-sm hover:border-pink-400 hover:bg-pink-50 cursor-pointer transition" x-text="slot"></button>
@@ -156,6 +184,7 @@
                 services: cfg.services,
                 practitioners: cfg.practitioners,
                 slotsUrl: cfg.slotsUrl,
+                openDays: cfg.openDays || [1,2,3,4,5,6,7],
                 selectedService: null,
                 selectedPractitioner: null,
                 date: '',
@@ -165,8 +194,74 @@
                 submitting: false,
                 submitError: '',
                 confirmed: null,
-                minDate: new Date().toISOString().slice(0, 10),
-                maxDate: new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10),
+
+                // Sélecteur de jour : bande de boutons jour par jour, jours fermés filtrés.
+                allDays: [],
+                dayWindowStart: 0,
+                dayWindowSize: 5,
+
+                init() {
+                    this.buildDays();
+                },
+
+                buildDays() {
+                    const days = [];
+                    const start = new Date();
+                    start.setHours(0, 0, 0, 0);
+                    for (let i = 0; i < 60; i++) {
+                        const d = new Date(start);
+                        d.setDate(start.getDate() + i);
+                        // Carbon isoWeekday : 1=lundi … 7=dimanche.
+                        const iso = d.getDay() === 0 ? 7 : d.getDay();
+                        if (!this.openDays.includes(iso)) continue;
+                        days.push({
+                            iso: d.toISOString().slice(0, 10),
+                            weekday: d.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', ''),
+                            day: d.getDate(),
+                            _d: d,
+                        });
+                    }
+                    this.allDays = days;
+                },
+
+                get visibleDays() {
+                    return this.allDays.slice(this.dayWindowStart, this.dayWindowStart + this.dayWindowSize);
+                },
+
+                get windowMonthRange() {
+                    if (!this.visibleDays.length) return '';
+                    const first = this.visibleDays[0]._d;
+                    const last = this.visibleDays[this.visibleDays.length - 1]._d;
+                    const fmt = (d, opts) => d.toLocaleDateString('fr-FR', opts);
+                    if (first.getMonth() === last.getMonth()) {
+                        return fmt(first, { month: 'long', year: 'numeric' });
+                    }
+                    return `${fmt(first, { month: 'long' })} – ${fmt(last, { month: 'long', year: 'numeric' })}`;
+                },
+
+                prevDays() {
+                    this.dayWindowStart = Math.max(0, this.dayWindowStart - this.dayWindowSize);
+                },
+
+                nextDays() {
+                    const max = Math.max(0, this.allDays.length - this.dayWindowSize);
+                    this.dayWindowStart = Math.min(max, this.dayWindowStart + this.dayWindowSize);
+                },
+
+                selectDay(iso) {
+                    this.date = iso;
+                    this.loadSlots();
+                },
+
+                // Cale la fenêtre visible sur la date sélectionnée.
+                centerWindowOnDate() {
+                    const idx = this.allDays.findIndex(d => d.iso === this.date);
+                    if (idx < 0) return;
+                    if (idx < this.dayWindowStart || idx >= this.dayWindowStart + this.dayWindowSize) {
+                        const max = Math.max(0, this.allDays.length - this.dayWindowSize);
+                        this.dayWindowStart = Math.min(max, Math.max(0, idx - Math.floor(this.dayWindowSize / 2)));
+                    }
+                },
 
                 get groupedServices() {
                     const groups = [];
@@ -211,6 +306,7 @@
                         const data = await res.json();
                         // Si aucune date choisie, on adopte le premier jour disponible renvoyé.
                         if (!this.date && data.date) this.date = data.date;
+                        this.centerWindowOnDate();
                         this.slots = data.slots || [];
                     } catch (e) {
                         this.slots = [];
